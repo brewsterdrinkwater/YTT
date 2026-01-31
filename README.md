@@ -1,18 +1,93 @@
 # YTT - Yesterday, Today, Tomorrow
 
-A dual-mode life tracking application that helps users document their daily experiences through either automated data collection or manual privacy-focused entry.
+A personal diary and life tracking app with three unique UI styles. Document your daily experiences, research people you're curious about, and build personal discovery lists.
 
 ## Features
 
-- **Two Modes**: Choose between "Trust Mode" (automated sync with external services) or "Secure Mode" (fully private, local storage only)
-- **Daily Entries**: Track location, mood (1-10 scale), and highlights for each day
-- **Activity Tracking**: Log workouts, travel, work, social activities, wellness, creative projects, food, and sleep
-- **Google Calendar Integration**: View your calendar events alongside daily entries (Trust Mode)
-- **Dashboard**: Automatic extraction and categorization of workouts, food recommendations, travel, books, and ideas
+- **Three UI Styles**: Switch between Modern, Retro, and Structured themes
+- **Two Privacy Modes**: "Trust Mode" (automated sync) or "Secure Mode" (fully private)
+- **Daily Entries**: Track location, mood (1-10 scale), and highlights
+- **Activity Tracking**: Log workouts, travel, work, social, wellness, creative, food, and sleep
+- **Deep Research Agent**: Research anyone with AI-powered web search
+- **Personal Lists**: Build Listen (Spotify), Reading (Kindle), Watchlist (IMDB), and Places to Visit lists
+- **Dashboard**: View research lists + auto-extracted insights from diary entries
 - **Timeline View**: Browse all entries with location filtering
-- **Search**: Full-text search across all entries
+- **Search**: Full-text search + research history with cached results
 - **CSV Export**: Export all data for backup or analysis
-- **Mobile-First Design**: Optimized for phone use with a responsive web app
+
+## UI Styles
+
+Choose your preferred experience from the dropdown in the header:
+
+### ✨ Modern (Instagram/Tinder Style)
+- Swipeable cards with one question at a time
+- Glassmorphism and smooth animations
+- Dark theme with gradient accents
+- Gesture-based interactions
+
+```
+┌───────────────────────────┐
+│     ┌───────────────┐     │
+│     │  📍 Where     │     │
+│     │   are you?    │     │
+│     │  🎸    🗽     │     │
+│     │ ← swipe →     │     │
+│     └───────────────┘     │
+│      ○ ○ ● ○ ○ ○          │
+└───────────────────────────┘
+```
+
+### 👾 Retro (Oregon Trail / 8-Bit)
+- Pixel art aesthetic with chunky borders
+- Game Boy green color palette
+- Keyboard-first navigation
+- HP bar style mood tracking
+
+```
+╔═══════════════════════════╗
+║  Y.T.T. DAILY LOG v1.0    ║
+╠═══════════════════════════╣
+║  WHERE ARE YOU TRAVELER?  ║
+║  [1] ♪ NASHVILLE          ║
+║  [2] ⌂ NEW YORK CITY      ║
+║  HP: ████████░░ 8/10      ║
+╚═══════════════════════════╝
+```
+
+### 📋 Structured (Clean + Colorful)
+- Form-based layout with clear sections
+- Color-coded activity tiles
+- Bold section headers
+- Professional, organized feel
+
+```
+┌───────────────────────────┐
+│ ┃ 📍 LOCATION            ┃│
+│ │ ▣ Nashville ○ NYC      ││
+├───────────────────────────┤
+│ ┃ 😊 FEELING             ┃│
+│ │ [1][2][3][4][5][█][7]  ││
+├───────────────────────────┤
+│ ┃ 📋 ACTIVITIES          ┃│
+│ │ 🏋️ ✈️ 💼 👥            ││
+└───────────────────────────┘
+```
+
+## Deep Research Agent
+
+Research anyone and build personal discovery lists:
+
+- **🎵 Listen List**: Artists to explore on Spotify
+- **📚 Reading List**: Authors with Kindle links
+- **🎬 Watchlist**: Actors with IMDB links
+- **📍 Places to Visit**: Destinations from research
+
+Features include:
+- Timeline of work with links
+- Deep cuts (underrated works)
+- Controversy tracking
+- Primary/secondary source verification
+- Cached results for instant access
 
 ## Tech Stack
 

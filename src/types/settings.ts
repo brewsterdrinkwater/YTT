@@ -1,11 +1,13 @@
 import { ActivityType } from './activity';
 
 export type AppVersion = 'trust' | 'secure';
+export type UIStyle = 'modern' | 'retro' | 'structured';
 
 export interface AppSettings {
   version: AppVersion;
   autoLocation: boolean;
   locationStyle: 'buttons' | 'dropdown';
+  uiStyle: UIStyle;
   apis: {
     gmail: boolean;
     stripe: boolean;
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   version: 'secure',
   autoLocation: false,
   locationStyle: 'buttons',
+  uiStyle: 'structured',
   apis: {
     gmail: false,
     stripe: false,

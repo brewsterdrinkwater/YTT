@@ -126,3 +126,240 @@ input[type="range"]::-moz-range-thumb {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ============================================
+   UI THEME: MODERN (Instagram/Tinder Style)
+   ============================================ */
+[data-ui-style="modern"] {
+  --ui-bg: #0F172A;
+  --ui-card-bg: rgba(255, 255, 255, 0.08);
+  --ui-card-border: rgba(255, 255, 255, 0.1);
+  --ui-text: #F8FAFC;
+  --ui-text-muted: #94A3B8;
+  --ui-primary: #6366F1;
+  --ui-secondary: #EC4899;
+  --ui-accent: #8B5CF6;
+}
+
+[data-ui-style="modern"] body,
+[data-ui-style="modern"] #root {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+  color: var(--ui-text);
+}
+
+[data-ui-style="modern"] .ui-card {
+  background: var(--ui-card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--ui-card-border);
+  border-radius: 20px;
+}
+
+[data-ui-style="modern"] .ui-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: var(--ui-text);
+  border-radius: 12px;
+}
+
+[data-ui-style="modern"] .ui-button {
+  background: linear-gradient(135deg, var(--ui-primary), var(--ui-accent));
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* ============================================
+   UI THEME: RETRO (8-Bit / Oregon Trail)
+   ============================================ */
+@font-face {
+  font-family: 'Press Start 2P';
+  src: local('Press Start 2P');
+}
+
+[data-ui-style="retro"] {
+  --ui-bg: #0F380F;
+  --ui-card-bg: #306230;
+  --ui-card-border: #8BAC0F;
+  --ui-text: #9BBC0F;
+  --ui-text-muted: #306230;
+  --ui-primary: #8BAC0F;
+  --ui-secondary: #E0F8CF;
+  --ui-accent: #9BBC0F;
+}
+
+[data-ui-style="retro"] body,
+[data-ui-style="retro"] #root {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: 'Courier New', 'Monaco', monospace;
+  image-rendering: pixelated;
+}
+
+[data-ui-style="retro"] * {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+[data-ui-style="retro"] .ui-card {
+  background: var(--ui-bg);
+  border: 4px solid var(--ui-card-border);
+  border-radius: 0;
+  box-shadow:
+    4px 4px 0 var(--ui-card-border),
+    inset 2px 2px 0 rgba(255,255,255,0.1);
+}
+
+[data-ui-style="retro"] .ui-input {
+  background: var(--ui-bg);
+  border: 3px solid var(--ui-card-border);
+  color: var(--ui-text);
+  border-radius: 0;
+  font-family: inherit;
+}
+
+[data-ui-style="retro"] .ui-button {
+  background: var(--ui-card-border);
+  color: var(--ui-bg);
+  border: 3px solid var(--ui-secondary);
+  border-radius: 0;
+  font-family: inherit;
+  box-shadow: 3px 3px 0 var(--ui-text);
+}
+
+[data-ui-style="retro"] .ui-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ui-text);
+}
+
+[data-ui-style="retro"] h1,
+[data-ui-style="retro"] h2,
+[data-ui-style="retro"] h3 {
+  text-shadow: 2px 2px 0 var(--ui-card-border);
+}
+
+/* Retro HP bar styling */
+[data-ui-style="retro"] .feeling-bar {
+  height: 20px;
+  background: var(--ui-bg);
+  border: 3px solid var(--ui-card-border);
+}
+
+[data-ui-style="retro"] .feeling-bar-fill {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ui-primary) 0px,
+    var(--ui-primary) 8px,
+    var(--ui-bg) 8px,
+    var(--ui-bg) 10px
+  );
+}
+
+/* ============================================
+   UI THEME: STRUCTURED (Colorful + Clean)
+   ============================================ */
+[data-ui-style="structured"] {
+  --ui-bg: #FAFAFA;
+  --ui-card-bg: #FFFFFF;
+  --ui-card-border: #E5E7EB;
+  --ui-text: #1F2937;
+  --ui-text-muted: #6B7280;
+  --ui-primary: #3B82F6;
+  --ui-secondary: #8B5CF6;
+  --ui-accent: #10B981;
+
+  /* Section colors */
+  --ui-location: #8B5CF6;
+  --ui-feeling: #F59E0B;
+  --ui-activity: #10B981;
+  --ui-workout: #EF4444;
+  --ui-food: #F97316;
+  --ui-sleep: #6366F1;
+  --ui-social: #EC4899;
+  --ui-research: #0EA5E9;
+}
+
+[data-ui-style="structured"] body,
+[data-ui-style="structured"] #root {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+[data-ui-style="structured"] .ui-card {
+  background: var(--ui-card-bg);
+  border: 2px solid var(--ui-card-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-ui-style="structured"] .ui-section {
+  border-left: 4px solid var(--ui-primary);
+  padding-left: 16px;
+}
+
+[data-ui-style="structured"] .ui-section.location { border-color: var(--ui-location); }
+[data-ui-style="structured"] .ui-section.feeling { border-color: var(--ui-feeling); }
+[data-ui-style="structured"] .ui-section.activity { border-color: var(--ui-activity); }
+[data-ui-style="structured"] .ui-section.research { border-color: var(--ui-research); }
+
+[data-ui-style="structured"] .ui-input {
+  background: var(--ui-card-bg);
+  border: 2px solid var(--ui-card-border);
+  color: var(--ui-text);
+  border-radius: 8px;
+}
+
+[data-ui-style="structured"] .ui-input:focus {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+[data-ui-style="structured"] .ui-button {
+  background: var(--ui-primary);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Color-coded activity tiles */
+[data-ui-style="structured"] .activity-workout { background: rgba(239, 68, 68, 0.1); border-color: var(--ui-workout); }
+[data-ui-style="structured"] .activity-food { background: rgba(249, 115, 22, 0.1); border-color: var(--ui-food); }
+[data-ui-style="structured"] .activity-sleep { background: rgba(99, 102, 241, 0.1); border-color: var(--ui-sleep); }
+[data-ui-style="structured"] .activity-social { background: rgba(236, 72, 153, 0.1); border-color: var(--ui-social); }
+
+/* ============================================
+   SWIPE CARD ANIMATIONS (Modern Theme)
+   ============================================ */
+@keyframes swipeLeft {
+  to {
+    transform: translateX(-120%) rotate(-15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeRight {
+  to {
+    transform: translateX(120%) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.swipe-left {
+  animation: swipeLeft 0.3s ease-out forwards;
+}
+
+.swipe-right {
+  animation: swipeRight 0.3s ease-out forwards;
+}
+
+.card-enter {
+  animation: cardEnter 0.3s ease-out;
+}
