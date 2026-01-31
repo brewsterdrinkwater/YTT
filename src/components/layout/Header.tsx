@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
+import UIStyleSwitcher from './UIStyleSwitcher';
 
 const Header: React.FC = () => {
   const { setIsSettingsOpen } = useApp();
@@ -21,9 +22,12 @@ const Header: React.FC = () => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* UI Style Switcher */}
+          <UIStyleSwitcher />
+
           {/* Version badge */}
           <span
-            className={`text-xs px-2 py-1 rounded-full ${
+            className={`text-xs px-2 py-1 rounded-full hidden sm:inline ${
               settings.version === 'trust'
                 ? 'bg-primary/10 text-primary'
                 : 'bg-gray-100 text-gray-600'

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './contexts/AppContext';
-import { SettingsProvider } from './contexts/SettingsContext';
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { EntriesProvider } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 
@@ -21,6 +21,12 @@ import SearchBar from './components/search/SearchBar';
 // Main app content with routing
 const AppContent: React.FC = () => {
   const { isOnboardingComplete } = useApp();
+  const { settings } = useSettings();
+
+  // Apply UI style to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-ui-style', settings.uiStyle);
+  }, [settings.uiStyle]);
 
   // Show onboarding if not complete
   if (!isOnboardingComplete) {
