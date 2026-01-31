@@ -97,8 +97,17 @@ export interface WatchlistItem {
   addedAt: string;
 }
 
+export interface PlacesListItem {
+  name: string;
+  location: string | null;
+  reason: string;
+  addedAt: string;
+}
+
 export interface HistoryItem {
   name: string;
   category: PersonCategory;
   timestamp: string;
+  // Cache the full result for quick access
+  cachedResult?: ResearchResult;
 }
