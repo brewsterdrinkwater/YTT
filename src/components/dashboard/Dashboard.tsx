@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEntries } from '../../contexts/EntriesContext';
 import { Entry, DashboardItem } from '../../types';
+import { SpotifyListItem, ReadingListItem, WatchlistItem, PlacesListItem } from '../../types/research';
 import { DASHBOARD_KEYWORDS } from '../../constants/config';
 import { formatDisplayDate } from '../../utils/dateUtils';
+import { researchService } from '../../services/researchService';
 import Card from '../common/Card';
+import DeepResearchAgent from '../research/DeepResearchAgent';
 
 interface DashboardSectionProps {
   title: string;
@@ -250,8 +253,53 @@ const extractIdeas = (entries: Entry[]): DashboardItem[] => {
   return items.slice(0, 10);
 };
 
+// Research list section component
+interface ResearchListSectionProps {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+  emptyMessage: string;
+  isEmpty: boolean;
+}
+
+const ResearchListSection: React.FC<ResearchListSectionProps> = ({
+  title,
+  icon,
+  children,
+  emptyMessage,
+  isEmpty,
+}) => {
+  return (
+    <Card className="mb-4">
+      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+        <span>{icon}</span>
+        {title}
+      </h3>
+      {isEmpty ? (
+        <p className="text-gray-400 text-sm italic">{emptyMessage}</p>
+      ) : (
+        children
+      )}
+    </Card>
+  );
+};
+
 const Dashboard: React.FC = () => {
   const { entries } = useEntries();
+
+  // Research lists state
+  const [spotifyList, setSpotifyList] = useState<SpotifyListItem[]>([]);
+  const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
+
+  // Load research lists
+  useEffect(() => {
+    setSpotifyList(researchService.getSpotifyList());
+    setReadingList(researchService.getReadingList());
+    setWatchlist(researchService.getWatchlist());
+    setPlacesList(researchService.getPlacesList());
+  }, []);
 
   const workouts = extractWorkouts(entries);
   const foodRecs = extractFoodRecommendations(entries);
@@ -260,11 +308,138 @@ const Dashboard: React.FC = () => {
   const books = extractBooks(entries);
   const ideas = extractIdeas(entries);
 
+  const hasResearchLists = spotifyList.length > 0 || readingList.length > 0 || watchlist.length > 0 || placesList.length > 0;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      {entries.length === 0 ? (
+      {/* Deep Research Agent */}
+      <DeepResearchAgent />
+
+      {/* Research Lists Section */}
+      {hasResearchLists && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <span>🔍</span> Research Lists
+          </h2>
+
+          {/* Listen List */}
+          <ResearchListSection
+            title="Listen List"
+            icon="🎵"
+            isEmpty={spotifyList.length === 0}
+            emptyMessage="No artists to listen to yet"
+          >
+            <ul className="space-y-2">
+              {spotifyList.map((item, i) => (
+                <li key={i} className="p-2 bg-green-50 rounded-lg flex justify-between items-center">
+                  <span className="font-medium text-sm">{item.name}</span>
+                  {item.spotifyUrl && (
+                    <a
+                      href={item.spotifyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-green-600 hover:underline"
+                    >
+                      Open Spotify →
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </ResearchListSection>
+
+          {/* Reading List */}
+          <ResearchListSection
+            title="Reading List"
+            icon="📚"
+            isEmpty={readingList.length === 0}
+            emptyMessage="No books to read yet"
+          >
+            <ul className="space-y-2">
+              {readingList.map((item, i) => (
+                <li key={i} className="p-2 bg-orange-50 rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-medium text-sm">{item.name}</span>
+                      {item.works.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">{item.works.join(', ')}</p>
+                      )}
+                    </div>
+                    {item.kindleUrl && (
+                      <a
+                        href={item.kindleUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-orange-600 hover:underline"
+                      >
+                        Kindle →
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </ResearchListSection>
+
+          {/* Watchlist */}
+          <ResearchListSection
+            title="Watchlist"
+            icon="🎬"
+            isEmpty={watchlist.length === 0}
+            emptyMessage="No films to watch yet"
+          >
+            <ul className="space-y-2">
+              {watchlist.map((item, i) => (
+                <li key={i} className="p-2 bg-red-50 rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-medium text-sm">{item.name}</span>
+                      {item.works.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-1">{item.works.join(', ')}</p>
+                      )}
+                    </div>
+                    {item.imdbUrl && (
+                      <a
+                        href={item.imdbUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-red-600 hover:underline"
+                      >
+                        IMDB →
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </ResearchListSection>
+
+          {/* Places to Visit */}
+          <ResearchListSection
+            title="Places to Visit"
+            icon="📍"
+            isEmpty={placesList.length === 0}
+            emptyMessage="No places to visit yet"
+          >
+            <ul className="space-y-2">
+              {placesList.map((item, i) => (
+                <li key={i} className="p-2 bg-blue-50 rounded-lg">
+                  <span className="font-medium text-sm">{item.name}</span>
+                  {item.location && (
+                    <span className="text-xs text-gray-500 ml-2">({item.location})</span>
+                  )}
+                  <p className="text-xs text-blue-600 mt-1">{item.reason}</p>
+                </li>
+              ))}
+            </ul>
+          </ResearchListSection>
+        </div>
+      )}
+
+      {/* Diary Insights */}
+      {entries.length === 0 && !hasResearchLists ? (
         <Card className="text-center py-12">
           <span className="text-4xl mb-4 block">📊</span>
           <h2 className="text-xl font-semibold mb-2">No Data Yet</h2>
@@ -272,8 +447,12 @@ const Dashboard: React.FC = () => {
             Start adding entries to see insights and recommendations here.
           </p>
         </Card>
-      ) : (
+      ) : entries.length > 0 && (
         <>
+          <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <span>📝</span> Diary Insights
+          </h2>
+
           <DashboardSection
             title="Workouts"
             icon="🏋️"

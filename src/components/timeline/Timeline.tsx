@@ -10,6 +10,7 @@ import { getActiveActivities, getActivityIcon } from '../../utils/formatters';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import FilterBar from './FilterBar';
+import DeepResearchAgent from '../research/DeepResearchAgent';
 
 const Timeline: React.FC = () => {
   const { entries } = useEntries();
@@ -79,6 +80,9 @@ const Timeline: React.FC = () => {
           Export CSV
         </Button>
       </div>
+
+      {/* Deep Research Agent */}
+      <DeepResearchAgent />
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">

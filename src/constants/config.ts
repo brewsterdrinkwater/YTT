@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   RESEARCH_SPOTIFY_LIST: 'ytt-research-spotify-list',
   RESEARCH_READING_LIST: 'ytt-research-reading-list',
   RESEARCH_WATCHLIST: 'ytt-research-watchlist',
+  RESEARCH_PLACES_LIST: 'ytt-research-places-list',
   RESEARCH_HISTORY: 'ytt-research-history',
   RESEARCH_API_KEY: 'ytt-research-api-key',
 } as const;

@@ -67,9 +67,22 @@ The Deep Research Agent is an integrated tool that lets you research people (art
 | **Controversy Check** | Documented issues (sexual misconduct, domestic violence, racism) |
 | **Leader Background** | For CEOs/Presidents: high school, college, fraternities |
 | **Primary Sources** | Only tier-1 sources (interviews, major publications, official records) |
-| **Spotify List** | Track artists you want to listen to |
+| **Listen List** | Track artists you want to listen to (Spotify) |
 | **Reading List** | Track authors with Kindle links |
 | **Watchlist** | Track actors with IMDB links |
+| **Places to Visit** | Track places associated with researched people |
+| **Cached Results** | Past research is cached for instant access |
+
+### Where It Appears
+
+The Deep Research Agent is available on every page:
+
+| Page | Behavior |
+|------|----------|
+| **Home** (`/`) | Collapsible card above "How are you feeling?" |
+| **Dashboard** (`/dashboard`) | Collapsible card + Research Lists section showing all saved items |
+| **Timeline** (`/timeline`) | Collapsible card at top of page |
+| **Search** (`/search`) | Research History with clickable cached results |
 
 ### How It Works
 
@@ -130,11 +143,12 @@ YTT uses browser localStorage for all data persistence. This means your data sta
 | `ytt-entries` | Daily diary entries | `src/contexts/EntriesContext.tsx` |
 | `ytt-settings` | User preferences | `src/contexts/SettingsContext.tsx` |
 | `ytt-activity-order` | Custom activity tile order | `src/contexts/SettingsContext.tsx` |
-| `ytt-research-spotify-list` | Artists to listen to | `src/components/research/DeepResearchAgent.tsx` |
-| `ytt-research-reading-list` | Books to read (Kindle) | `src/components/research/DeepResearchAgent.tsx` |
-| `ytt-research-watchlist` | Films/TV to watch | `src/components/research/DeepResearchAgent.tsx` |
-| `ytt-research-history` | Past research queries | `src/components/research/DeepResearchAgent.tsx` |
-| `ytt-research-api-key` | Claude API key | `src/components/research/DeepResearchAgent.tsx` |
+| `ytt-research-spotify-list` | Artists to listen to | `src/services/researchService.ts` |
+| `ytt-research-reading-list` | Books to read (Kindle) | `src/services/researchService.ts` |
+| `ytt-research-watchlist` | Films/TV to watch | `src/services/researchService.ts` |
+| `ytt-research-places-list` | Places to visit | `src/services/researchService.ts` |
+| `ytt-research-history` | Past research queries (with cached results) | `src/services/researchService.ts` |
+| `ytt-research-api-key` | Claude API key | `src/services/researchService.ts` |
 
 ### Storage Service
 
@@ -258,6 +272,14 @@ interface WatchlistItem {
   name: string;
   works: string[];
   imdbUrl: string | null;
+  addedAt: string;
+}
+
+// Places to Visit
+interface PlacesListItem {
+  name: string;
+  location: string | null;
+  reason: string;
   addedAt: string;
 }
 ```

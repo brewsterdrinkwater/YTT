@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { storageService } from '../../services/storageService';
-import { STORAGE_KEYS } from '../../constants/config';
+import { researchService } from '../../services/researchService';
 import {
   ResearchResult,
   SpotifyListItem,
   ReadingListItem,
   WatchlistItem,
+  PlacesListItem,
   HistoryItem,
 } from '../../types/research';
 import Card from '../common/Card';
@@ -75,14 +75,24 @@ For sources, include 5-8 high-quality primary and secondary sources only.`;
 
 type TabType = 'search' | 'lists' | 'history' | 'settings';
 
-const DeepResearchAgent: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface DeepResearchAgentProps {
+  defaultExpanded?: boolean;
+  showHistoryOnly?: boolean;
+  onHistoryItemClick?: (item: HistoryItem) => void;
+}
+
+const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
+  defaultExpanded = false,
+  showHistoryOnly = false,
+  onHistoryItemClick,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [searchName, setSearchName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState('');
   const [result, setResult] = useState<ResearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('search');
+  const [activeTab, setActiveTab] = useState<TabType>(showHistoryOnly ? 'history' : 'search');
 
   // API Key state
   const [apiKey, setApiKey] = useState('');
@@ -92,32 +102,24 @@ const DeepResearchAgent: React.FC = () => {
   const [spotifyList, setSpotifyList] = useState<SpotifyListItem[]>([]);
   const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  // Place input state
+  const [placeReason, setPlaceReason] = useState('');
 
   // Load lists from storage on mount
   useEffect(() => {
-    const loadAllLists = () => {
-      const spotify = storageService.get<SpotifyListItem[]>(STORAGE_KEYS.RESEARCH_SPOTIFY_LIST);
-      if (spotify) setSpotifyList(spotify);
-
-      const reading = storageService.get<ReadingListItem[]>(STORAGE_KEYS.RESEARCH_READING_LIST);
-      if (reading) setReadingList(reading);
-
-      const watch = storageService.get<WatchlistItem[]>(STORAGE_KEYS.RESEARCH_WATCHLIST);
-      if (watch) setWatchlist(watch);
-
-      const hist = storageService.get<HistoryItem[]>(STORAGE_KEYS.RESEARCH_HISTORY);
-      if (hist) setHistory(hist);
-
-      const savedApiKey = storageService.get<string>(STORAGE_KEYS.RESEARCH_API_KEY);
-      if (savedApiKey) setApiKey(savedApiKey);
-    };
-
-    loadAllLists();
+    setSpotifyList(researchService.getSpotifyList());
+    setReadingList(researchService.getReadingList());
+    setWatchlist(researchService.getWatchlist());
+    setPlacesList(researchService.getPlacesList());
+    setHistory(researchService.getHistory());
+    setApiKey(researchService.getApiKey());
   }, []);
 
   const saveApiKey = () => {
-    storageService.set(STORAGE_KEYS.RESEARCH_API_KEY, apiKey);
+    researchService.saveApiKey(apiKey);
   };
 
   const doResearch = useCallback(async () => {
@@ -137,8 +139,6 @@ const DeepResearchAgent: React.FC = () => {
     try {
       setLoadingStatus('Searching primary sources...');
 
-      // NOTE: This API call requires a backend proxy due to CORS restrictions
-      // See the "Where to Plug in Persistent Storage" section in the docs
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -182,13 +182,9 @@ const DeepResearchAgent: React.FC = () => {
         const parsed = JSON.parse(jsonMatch[0]) as ResearchResult;
         setResult(parsed);
 
-        // Add to history
-        const newHistory: HistoryItem[] = [
-          { name: parsed.name, category: parsed.category, timestamp: new Date().toISOString() },
-          ...history.filter((h) => h.name !== parsed.name),
-        ].slice(0, 50);
+        // Add to history with cached result
+        const newHistory = researchService.addToHistory(parsed);
         setHistory(newHistory);
-        storageService.set(STORAGE_KEYS.RESEARCH_HISTORY, newHistory);
       } else {
         throw new Error('Could not parse research results');
       }
@@ -199,28 +195,44 @@ const DeepResearchAgent: React.FC = () => {
       setIsLoading(false);
       setLoadingStatus('');
     }
-  }, [searchName, apiKey, history]);
+  }, [searchName, apiKey]);
+
+  const loadFromHistory = (item: HistoryItem) => {
+    if (item.cachedResult) {
+      setResult(item.cachedResult);
+      setSearchName(item.name);
+      setActiveTab('search');
+    } else {
+      // If no cached result, trigger new search
+      setSearchName(item.name);
+      setActiveTab('search');
+    }
+    if (onHistoryItemClick) {
+      onHistoryItemClick(item);
+    }
+  };
 
   const addToSpotify = () => {
     if (!result) return;
-    const newList: SpotifyListItem[] = [
-      { name: result.name, spotifyUrl: result.actionLinks?.spotify || null, addedAt: new Date().toISOString() },
-      ...spotifyList.filter((s) => s.name !== result.name),
-    ];
+    const newList = researchService.addToSpotifyList({
+      name: result.name,
+      spotifyUrl: result.actionLinks?.spotify || null,
+      addedAt: new Date().toISOString(),
+    });
     setSpotifyList(newList);
-    storageService.set(STORAGE_KEYS.RESEARCH_SPOTIFY_LIST, newList);
   };
 
   const addToReading = () => {
     if (!result) return;
     const works =
       result.timeline?.filter((t) => t.type === 'book' || t.type === 'novel').map((t) => t.title) || [];
-    const newList: ReadingListItem[] = [
-      { name: result.name, works, kindleUrl: result.actionLinks?.kindle || null, addedAt: new Date().toISOString() },
-      ...readingList.filter((r) => r.name !== result.name),
-    ];
+    const newList = researchService.addToReadingList({
+      name: result.name,
+      works,
+      kindleUrl: result.actionLinks?.kindle || null,
+      addedAt: new Date().toISOString(),
+    });
     setReadingList(newList);
-    storageService.set(STORAGE_KEYS.RESEARCH_READING_LIST, newList);
   };
 
   const addToWatchlist = () => {
@@ -228,34 +240,41 @@ const DeepResearchAgent: React.FC = () => {
     const works =
       result.timeline?.filter((t) => t.type === 'film' || t.type === 'role' || t.type === 'tv').map((t) => t.title) ||
       [];
-    const newList: WatchlistItem[] = [
-      { name: result.name, works, imdbUrl: result.actionLinks?.imdb || null, addedAt: new Date().toISOString() },
-      ...watchlist.filter((w) => w.name !== result.name),
-    ];
+    const newList = researchService.addToWatchlist({
+      name: result.name,
+      works,
+      imdbUrl: result.actionLinks?.imdb || null,
+      addedAt: new Date().toISOString(),
+    });
     setWatchlist(newList);
-    storageService.set(STORAGE_KEYS.RESEARCH_WATCHLIST, newList);
   };
 
-  const removeFromList = (listType: 'spotify' | 'reading' | 'watchlist', name: string) => {
+  const addToPlaces = () => {
+    if (!result) return;
+    const newList = researchService.addToPlacesList({
+      name: result.name,
+      location: result.birthPlace,
+      reason: placeReason || `Visit places associated with ${result.name}`,
+      addedAt: new Date().toISOString(),
+    });
+    setPlacesList(newList);
+    setPlaceReason('');
+  };
+
+  const removeFromList = (listType: 'spotify' | 'reading' | 'watchlist' | 'places', name: string) => {
     switch (listType) {
-      case 'spotify': {
-        const newSpotify = spotifyList.filter((s) => s.name !== name);
-        setSpotifyList(newSpotify);
-        storageService.set(STORAGE_KEYS.RESEARCH_SPOTIFY_LIST, newSpotify);
+      case 'spotify':
+        setSpotifyList(researchService.removeFromSpotifyList(name));
         break;
-      }
-      case 'reading': {
-        const newReading = readingList.filter((r) => r.name !== name);
-        setReadingList(newReading);
-        storageService.set(STORAGE_KEYS.RESEARCH_READING_LIST, newReading);
+      case 'reading':
+        setReadingList(researchService.removeFromReadingList(name));
         break;
-      }
-      case 'watchlist': {
-        const newWatch = watchlist.filter((w) => w.name !== name);
-        setWatchlist(newWatch);
-        storageService.set(STORAGE_KEYS.RESEARCH_WATCHLIST, newWatch);
+      case 'watchlist':
+        setWatchlist(researchService.removeFromWatchlist(name));
         break;
-      }
+      case 'places':
+        setPlacesList(researchService.removeFromPlacesList(name));
+        break;
     }
   };
 
@@ -265,7 +284,49 @@ const DeepResearchAgent: React.FC = () => {
       (result.controversies?.domesticViolence?.length || 0) > 0 ||
       (result.controversies?.racism?.length || 0) > 0);
 
-  const totalListItems = spotifyList.length + readingList.length + watchlist.length;
+  const totalListItems = spotifyList.length + readingList.length + watchlist.length + placesList.length;
+
+  // If showing history only mode (for Search page)
+  if (showHistoryOnly) {
+    return (
+      <Card className="mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">🔍</span>
+          <div>
+            <h3 className="font-semibold text-gray-900">Research History</h3>
+            <p className="text-xs text-gray-500">Click to view past research results</p>
+          </div>
+        </div>
+
+        {history.length === 0 ? (
+          <p className="text-sm text-gray-500 italic text-center py-4">
+            No research history yet. Use the Deep Research Agent to search for people.
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {history.map((item, i) => (
+              <div
+                key={i}
+                onClick={() => loadFromHistory(item)}
+                className="bg-gray-50 rounded p-3 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+              >
+                <div>
+                  <strong className="text-sm">{item.name}</strong>
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                    {item.category}
+                  </span>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {new Date(item.timestamp).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className="text-blue-500 text-sm">View →</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   // Collapsed view
   if (!isExpanded) {
@@ -556,7 +617,7 @@ const DeepResearchAgent: React.FC = () => {
               <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
                 {(result.category === 'artist' || result.category === 'musician') && (
                   <Button variant="secondary" onClick={addToSpotify}>
-                    🎵 Add to Spotify List
+                    🎵 Add to Listen List
                   </Button>
                 )}
                 {result.actionLinks?.spotify && (
@@ -612,6 +673,22 @@ const DeepResearchAgent: React.FC = () => {
                     📖 Wikipedia
                   </a>
                 )}
+
+                {/* Places to Visit */}
+                <div className="w-full mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Why visit? (e.g., birthplace, museum)"
+                      value={placeReason}
+                      onChange={(e) => setPlaceReason(e.target.value)}
+                      className="flex-1 text-sm"
+                    />
+                    <Button variant="secondary" onClick={addToPlaces}>
+                      📍 Add Place
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -621,9 +698,9 @@ const DeepResearchAgent: React.FC = () => {
       {/* Lists Tab */}
       {activeTab === 'lists' && (
         <div className="space-y-6">
-          {/* Spotify List */}
+          {/* Spotify/Listen List */}
           <div>
-            <h5 className="font-semibold text-green-700 mb-2">🎵 Spotify Artists to Explore</h5>
+            <h5 className="font-semibold text-green-700 mb-2">🎵 Listen List (Spotify)</h5>
             {spotifyList.length === 0 ? (
               <p className="text-sm text-gray-500 italic">No artists added yet.</p>
             ) : (
@@ -726,6 +803,32 @@ const DeepResearchAgent: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Places to Visit */}
+          <div>
+            <h5 className="font-semibold text-blue-700 mb-2">📍 Places to Visit</h5>
+            {placesList.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">No places added yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {placesList.map((item, i) => (
+                  <div key={i} className="bg-blue-50 rounded p-2 flex justify-between items-start">
+                    <div>
+                      <strong className="text-sm">{item.name}</strong>
+                      {item.location && <span className="text-xs text-gray-500 ml-2">({item.location})</span>}
+                      <p className="text-xs text-blue-600">{item.reason}</p>
+                    </div>
+                    <button
+                      onClick={() => removeFromList('places', item.name)}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -737,7 +840,11 @@ const DeepResearchAgent: React.FC = () => {
           ) : (
             <div className="space-y-2">
               {history.map((item, i) => (
-                <div key={i} className="bg-gray-50 rounded p-2 flex justify-between items-center">
+                <div
+                  key={i}
+                  className="bg-gray-50 rounded p-2 flex justify-between items-center cursor-pointer hover:bg-gray-100"
+                  onClick={() => loadFromHistory(item)}
+                >
                   <div>
                     <strong className="text-sm">{item.name}</strong>
                     <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
@@ -746,16 +853,11 @@ const DeepResearchAgent: React.FC = () => {
                     <span className="text-xs text-gray-400 ml-2">
                       {new Date(item.timestamp).toLocaleDateString()}
                     </span>
+                    {item.cachedResult && (
+                      <span className="text-xs text-green-500 ml-2">• Cached</span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      setSearchName(item.name);
-                      setActiveTab('search');
-                    }}
-                    className="text-xs text-blue-500 hover:text-blue-700"
-                  >
-                    Search Again
-                  </button>
+                  <span className="text-xs text-blue-500">View →</span>
                 </div>
               ))}
             </div>
