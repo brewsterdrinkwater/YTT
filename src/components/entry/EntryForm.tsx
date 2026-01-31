@@ -11,6 +11,7 @@ import ActivityModal from './ActivityModal';
 import LocationSelector from '../location/LocationSelector';
 import AutoLocationDetector from '../location/AutoLocationDetector';
 import CalendarQuickView from '../calendar/CalendarQuickView';
+import DeepResearchAgent from '../research/DeepResearchAgent';
 import { TextArea } from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -139,6 +140,9 @@ const EntryForm: React.FC = () => {
           />
         </Card>
       )}
+
+      {/* Deep Research Agent */}
+      <DeepResearchAgent />
 
       {/* Feeling Scale */}
       <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />

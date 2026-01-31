@@ -7,6 +7,12 @@ export const STORAGE_KEYS = {
   GMAIL_TOKEN: 'ytt-gmail-token',
   LAST_NOTIFICATION: 'ytt-last-notification',
   ONBOARDING_COMPLETE: 'ytt-onboarding-complete',
+  // Deep Research Agent storage
+  RESEARCH_SPOTIFY_LIST: 'ytt-research-spotify-list',
+  RESEARCH_READING_LIST: 'ytt-research-reading-list',
+  RESEARCH_WATCHLIST: 'ytt-research-watchlist',
+  RESEARCH_HISTORY: 'ytt-research-history',
+  RESEARCH_API_KEY: 'ytt-research-api-key',
 } as const;
 
 export const LOCATIONS = [
@@ -32,6 +38,8 @@ export const API_CONFIG = {
   GOOGLE_CALENDAR_API_URL: 'https://www.googleapis.com/calendar/v3',
   GOOGLE_GEOLOCATION_API_URL: 'https://www.googleapis.com/geolocation/v1/geolocate',
   GMAIL_API_URL: 'https://gmail.googleapis.com/gmail/v1',
+  // Note: Claude API requires a backend proxy due to CORS restrictions in browsers
+  CLAUDE_API_URL: 'https://api.anthropic.com/v1/messages',
 } as const;
 
 export const NOTIFICATION_CONFIG = {
