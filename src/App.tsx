@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
-import { EntriesProvider } from './contexts/EntriesContext';
+import { EntriesProvider, useEntries } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -19,6 +19,35 @@ import Dashboard from './components/dashboard/Dashboard';
 import Timeline from './components/timeline/Timeline';
 import SearchBar from './components/search/SearchBar';
 import AuthPage from './components/auth/AuthPage';
+
+// Smart home page - shows dashboard if today's entry is complete, otherwise entry form
+const SmartHomePage: React.FC = () => {
+  const { currentEntry, loading } = useEntries();
+
+  // Check if today's entry is "complete" (has location and feeling set)
+  const isTodayComplete = useMemo(() => {
+    if (!currentEntry) return false;
+    // Entry is complete if it has a location set
+    return currentEntry.location !== '';
+  }, [currentEntry]);
+
+  // Show loading while checking entries
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If today's entry is complete, show dashboard
+  if (isTodayComplete) {
+    return <Dashboard />;
+  }
+
+  // Otherwise show entry form
+  return <EntryForm />;
+};
 
 // Main app content with routing
 const AppContent: React.FC = () => {
@@ -60,7 +89,8 @@ const AppContent: React.FC = () => {
 
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<EntryForm />} />
+          <Route path="/" element={<SmartHomePage />} />
+          <Route path="/entry" element={<EntryForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/search" element={<SearchBar />} />
