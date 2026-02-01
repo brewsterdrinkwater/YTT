@@ -240,7 +240,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   UI THEME: RETRO (8-Bit Game / Oregon Trail)
+   UI THEME: RETRO (8-Bit Game / Maze Adventure)
    ============================================ */
 @keyframes blink {
   0%, 50% { opacity: 1; }
@@ -258,35 +258,72 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @keyframes pixelPulse {
-  0%, 100% { box-shadow: 0 0 0 2px #8BAC0F; }
-  50% { box-shadow: 0 0 0 4px #8BAC0F, 0 0 20px #8BAC0F; }
+  0%, 100% { box-shadow: 0 0 0 2px #FFD700; }
+  50% { box-shadow: 0 0 0 4px #FFD700, 0 0 20px #FFD700; }
+}
+
+@keyframes walkRight {
+  0% { left: 5%; top: 20%; }
+  25% { left: 25%; top: 20%; }
+  50% { left: 25%; top: 60%; }
+  75% { left: 60%; top: 60%; }
+  100% { left: 60%; top: 20%; }
+}
+
+@keyframes characterBounce {
+  0%, 100% { transform: translateY(0) scaleX(1); }
+  25% { transform: translateY(-2px) scaleX(1); }
+  50% { transform: translateY(0) scaleX(-1); }
+  75% { transform: translateY(-2px) scaleX(-1); }
+}
+
+@keyframes mazeGlow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.25; }
 }
 
 [data-ui-style="retro"] body,
 [data-ui-style="retro"] {
-  background: #0F380F !important;
-  color: #8BAC0F !important;
+  background: #1a0a2e !important;
+  color: #FFFFFF !important;
   font-family: 'Courier New', 'Monaco', monospace !important;
   image-rendering: pixelated;
 }
 
-/* CRT Scanline overlay */
-[data-ui-style="retro"]::after {
+/* Maze background with walking character */
+[data-ui-style="retro"]::before {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.1) 0px,
-    rgba(0, 0, 0, 0.1) 1px,
-    transparent 1px,
-    transparent 2px
-  );
+  background-image:
+    /* Maze pattern */
+    linear-gradient(90deg, transparent 45px, rgba(138, 43, 226, 0.3) 45px, rgba(138, 43, 226, 0.3) 50px, transparent 50px),
+    linear-gradient(0deg, transparent 45px, rgba(138, 43, 226, 0.3) 45px, rgba(138, 43, 226, 0.3) 50px, transparent 50px),
+    linear-gradient(90deg, transparent 95px, rgba(138, 43, 226, 0.2) 95px, rgba(138, 43, 226, 0.2) 100px, transparent 100px),
+    linear-gradient(0deg, transparent 95px, rgba(138, 43, 226, 0.2) 95px, rgba(138, 43, 226, 0.2) 100px, transparent 100px);
+  background-size: 100px 100px, 100px 100px, 100px 100px, 100px 100px;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 0;
+  animation: mazeGlow 4s ease-in-out infinite;
+}
+
+/* Walking character (pixel person) */
+[data-ui-style="retro"]::after {
+  content: "🚶";
+  position: fixed;
+  font-size: 24px;
+  animation: walkRight 15s linear infinite, characterBounce 0.5s steps(4) infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 0 8px #FFD700);
+}
+
+[data-ui-style="retro"] #root {
+  position: relative;
+  z-index: 10;
 }
 
 [data-ui-style="retro"] * {
@@ -296,71 +333,72 @@ input[type="range"]::-moz-range-thumb {
 }
 
 [data-ui-style="retro"] header {
-  background: #0F380F !important;
-  border-bottom: 4px solid #8BAC0F !important;
-  box-shadow: 0 4px 0 #306230;
+  background: linear-gradient(180deg, #2d1b4e 0%, #1a0a2e 100%) !important;
+  border-bottom: 4px solid #FFD700 !important;
+  box-shadow: 0 4px 0 #9932CC, 0 0 30px rgba(255, 215, 0, 0.3);
 }
 
 [data-ui-style="retro"] header span[class*="bg-gradient"] {
   background: none !important;
-  -webkit-text-fill-color: #9BBC0F !important;
-  color: #9BBC0F !important;
-  text-shadow: 2px 2px 0 #306230, 4px 4px 0 #0F380F;
+  -webkit-text-fill-color: #FFD700 !important;
+  color: #FFD700 !important;
+  text-shadow: 2px 2px 0 #9932CC, 4px 4px 0 #1a0a2e, 0 0 20px #FFD700;
   animation: bounce8bit 1s infinite;
 }
 
 [data-ui-style="retro"] nav {
-  background: #0F380F !important;
-  border-top: 4px solid #8BAC0F !important;
+  background: linear-gradient(0deg, #2d1b4e 0%, #1a0a2e 100%) !important;
+  border-top: 4px solid #FFD700 !important;
   border-bottom: none !important;
 }
 
 [data-ui-style="retro"] nav a {
-  color: #306230 !important;
+  color: #9370DB !important;
   border: 2px solid transparent;
   transition: all 0.1s steps(2);
 }
 
 [data-ui-style="retro"] nav a.text-primary,
 [data-ui-style="retro"] nav a[class*="border-primary"] {
-  color: #9BBC0F !important;
-  border: 2px solid #8BAC0F !important;
-  background: #306230 !important;
+  color: #FFD700 !important;
+  border: 2px solid #FFD700 !important;
+  background: rgba(153, 50, 204, 0.5) !important;
   animation: pixelPulse 2s infinite;
 }
 
 /* Pixelated cards */
 [data-ui-style="retro"] .bg-white,
 [data-ui-style="retro"] [class*="bg-white"] {
-  background: #0F380F !important;
-  border: 4px solid #8BAC0F !important;
+  background: linear-gradient(135deg, #2d1b4e 0%, #1a0a2e 100%) !important;
+  border: 4px solid #BA55D3 !important;
   border-radius: 0 !important;
   box-shadow:
-    8px 8px 0 #306230,
-    inset 4px 4px 0 rgba(155, 188, 15, 0.1);
+    8px 8px 0 #9932CC,
+    inset 4px 4px 0 rgba(255, 215, 0, 0.1);
   position: relative;
 }
 
 [data-ui-style="retro"] .bg-gray-50,
 [data-ui-style="retro"] .bg-gray-100 {
-  background: #306230 !important;
+  background: rgba(153, 50, 204, 0.3) !important;
 }
 
-/* Retro buttons */
+/* Retro buttons - Yellow with purple shadow */
 [data-ui-style="retro"] button {
-  background: #8BAC0F !important;
-  color: #0F380F !important;
-  border: 4px solid #9BBC0F !important;
+  background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%) !important;
+  color: #1a0a2e !important;
+  border: 4px solid #FFEC8B !important;
   border-radius: 0 !important;
-  box-shadow: 4px 4px 0 #306230;
+  box-shadow: 4px 4px 0 #9932CC, 0 0 15px rgba(255, 215, 0, 0.3);
   font-weight: bold !important;
   transition: all 0.05s steps(1);
-  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 
 [data-ui-style="retro"] button:hover {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #306230;
+  box-shadow: 2px 2px 0 #9932CC;
+  background: linear-gradient(180deg, #FFEC8B 0%, #FFD700 100%) !important;
 }
 
 [data-ui-style="retro"] button:active {
@@ -368,40 +406,41 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: none;
 }
 
-/* Retro headers */
+/* Retro headers - Yellow glow */
 [data-ui-style="retro"] h1,
 [data-ui-style="retro"] h2,
 [data-ui-style="retro"] h3 {
-  color: #9BBC0F !important;
-  text-shadow: 3px 3px 0 #306230, 6px 6px 0 #0F380F;
+  color: #FFD700 !important;
+  text-shadow: 3px 3px 0 #9932CC, 6px 6px 0 #1a0a2e, 0 0 30px rgba(255, 215, 0, 0.5);
   animation: bounce8bit 2s infinite;
 }
 
-/* HP Bar style inputs */
+/* Inputs with purple/yellow theme */
 [data-ui-style="retro"] input,
 [data-ui-style="retro"] textarea {
-  background: #0F380F !important;
-  border: 3px solid #8BAC0F !important;
-  color: #9BBC0F !important;
+  background: #1a0a2e !important;
+  border: 3px solid #BA55D3 !important;
+  color: #FFFFFF !important;
   border-radius: 0 !important;
-  caret-color: #9BBC0F;
+  caret-color: #FFD700;
 }
 
 [data-ui-style="retro"] input::placeholder,
 [data-ui-style="retro"] textarea::placeholder {
-  color: #306230 !important;
+  color: #9370DB !important;
 }
 
 [data-ui-style="retro"] input:focus,
 [data-ui-style="retro"] textarea:focus {
-  outline: 4px solid #9BBC0F !important;
+  outline: 4px solid #FFD700 !important;
   outline-offset: 2px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
-/* Retro range = HP Bar */
+/* Retro range = XP Bar style */
 [data-ui-style="retro"] input[type="range"] {
-  background: #0F380F !important;
-  border: 3px solid #8BAC0F;
+  background: #1a0a2e !important;
+  border: 3px solid #BA55D3;
   height: 24px;
   border-radius: 0;
 }
@@ -409,28 +448,29 @@ input[type="range"]::-moz-range-thumb {
 [data-ui-style="retro"] input[type="range"]::-webkit-slider-thumb {
   width: 20px;
   height: 30px;
-  background: #9BBC0F;
-  border: 3px solid #E0F8CF;
+  background: linear-gradient(180deg, #FFD700, #FFA500);
+  border: 3px solid #FFEC8B;
   border-radius: 0;
-  box-shadow: 2px 2px 0 #306230;
+  box-shadow: 2px 2px 0 #9932CC;
 }
 
-/* Blinking cursor effect on focus */
-[data-ui-style="retro"] input:focus::after {
-  content: "█";
-  animation: blink 1s infinite;
-}
-
+/* Text colors */
 [data-ui-style="retro"] .text-gray-500,
 [data-ui-style="retro"] .text-gray-600,
 [data-ui-style="retro"] .text-gray-700 {
-  color: #306230 !important;
+  color: #9370DB !important;
 }
 
 [data-ui-style="retro"] .text-gray-900,
 [data-ui-style="retro"] .font-semibold,
 [data-ui-style="retro"] .font-bold {
-  color: #9BBC0F !important;
+  color: #FFFFFF !important;
+}
+
+[data-ui-style="retro"] p,
+[data-ui-style="retro"] span,
+[data-ui-style="retro"] label {
+  color: #E6E6FA !important;
 }
 
 /* ============================================

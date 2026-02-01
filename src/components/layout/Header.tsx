@@ -1,11 +1,13 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
+import { useAuth } from '../../contexts/AuthContext';
 import UIStyleSwitcher from './UIStyleSwitcher';
 
 const Header: React.FC = () => {
   const { setIsSettingsOpen } = useApp();
   const { settings } = useSettings();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-40">
@@ -22,6 +24,13 @@ const Header: React.FC = () => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* User email */}
+          {user && (
+            <span className="text-xs text-gray-500 hidden md:inline truncate max-w-[150px]">
+              {user.email}
+            </span>
+          )}
+
           {/* UI Style Switcher */}
           <UIStyleSwitcher />
 
@@ -62,6 +71,30 @@ const Header: React.FC = () => {
               />
             </svg>
           </button>
+
+          {/* Sign out button */}
+          {user && (
+            <button
+              onClick={signOut}
+              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </header>
