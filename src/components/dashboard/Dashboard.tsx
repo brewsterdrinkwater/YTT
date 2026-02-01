@@ -285,13 +285,15 @@ const ResearchListSection: React.FC<ResearchListSectionProps> = ({
 };
 
 const Dashboard: React.FC = () => {
-  const { entries } = useEntries();
+  const { entries, exportToCSV, migrateFromLocalStorage } = useEntries();
 
   // Research lists state
   const [spotifyList, setSpotifyList] = useState<SpotifyListItem[]>([]);
   const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
+  const [migrating, setMigrating] = useState(false);
+  const [migrateMessage, setMigrateMessage] = useState('');
 
   // Load research lists
   useEffect(() => {
@@ -300,6 +302,26 @@ const Dashboard: React.FC = () => {
     setWatchlist(researchService.getWatchlist());
     setPlacesList(researchService.getPlacesList());
   }, []);
+
+  const handleExport = () => {
+    exportToCSV();
+  };
+
+  const handleMigrate = async () => {
+    setMigrating(true);
+    setMigrateMessage('');
+    try {
+      const count = await migrateFromLocalStorage();
+      if (count > 0) {
+        setMigrateMessage(`Migrated ${count} entries from local storage!`);
+      } else {
+        setMigrateMessage('No new entries to migrate.');
+      }
+    } catch (err) {
+      setMigrateMessage('Migration failed. Please try again.');
+    }
+    setMigrating(false);
+  };
 
   const workouts = extractWorkouts(entries);
   const foodRecs = extractFoodRecommendations(entries);
@@ -312,7 +334,38 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1"
+            title="Export all entries to CSV"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
+          <button
+            onClick={handleMigrate}
+            disabled={migrating}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+            title="Import entries from browser storage"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            {migrating ? 'Migrating...' : 'Import Local'}
+          </button>
+        </div>
+      </div>
+
+      {migrateMessage && (
+        <div className={`mb-4 p-3 rounded-lg text-sm ${migrateMessage.includes('failed') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+          {migrateMessage}
+        </div>
+      )}
 
       {/* Deep Research Agent */}
       <DeepResearchAgent />
