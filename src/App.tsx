@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Layout components
 import Header from './components/layout/Header';
 import Navigation from './components/layout/Navigation';
-import GlobalSearch from './components/layout/GlobalSearch';
+import DeepResearchAgent from './components/research/DeepResearchAgent';
 import SettingsPanel from './components/layout/SettingsPanel';
 import Toast from './components/common/Toast';
 
@@ -87,7 +87,7 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <Navigation />
-      <GlobalSearch />
+      <DeepResearchAgent compact />
 
       <main className="flex-1 pb-24 md:pb-6">
         <Routes>
