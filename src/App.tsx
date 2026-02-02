@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Layout components
 import Header from './components/layout/Header';
 import Navigation from './components/layout/Navigation';
+import GlobalSearch from './components/layout/GlobalSearch';
 import SettingsPanel from './components/layout/SettingsPanel';
 import Toast from './components/common/Toast';
 
@@ -86,8 +87,9 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <Navigation />
+      <GlobalSearch />
 
-      <main className="flex-1">
+      <main className="flex-1 pb-24 md:pb-6">
         <Routes>
           <Route path="/" element={<SmartHomePage />} />
           <Route path="/entry" element={<EntryForm />} />
