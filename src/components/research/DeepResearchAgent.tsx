@@ -78,12 +78,14 @@ type TabType = 'search' | 'lists' | 'history' | 'settings';
 interface DeepResearchAgentProps {
   defaultExpanded?: boolean;
   showHistoryOnly?: boolean;
+  compact?: boolean; // New: compact mode for top bar
   onHistoryItemClick?: (item: HistoryItem) => void;
 }
 
 const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
   defaultExpanded = false,
   showHistoryOnly = false,
+  compact = false,
   onHistoryItemClick,
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -325,6 +327,305 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
           </div>
         )}
       </Card>
+    );
+  }
+
+  // Compact mode - wide search bar at top of app
+  if (compact) {
+    return (
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200 sticky top-[73px] z-30">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xl hidden sm:block">🧠</span>
+            <div className="flex-1 flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Research a person, artist, author..."
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !isLoading && doResearch()}
+                  className="w-full pl-4 pr-4 py-2.5 text-base"
+                />
+              </div>
+              <Button
+                onClick={doResearch}
+                disabled={isLoading || !searchName.trim()}
+                className="whitespace-nowrap"
+              >
+                {isLoading ? '...' : 'Research'}
+              </Button>
+            </div>
+            {totalListItems > 0 && (
+              <button
+                onClick={() => {
+                  setIsExpanded(true);
+                  setActiveTab('lists');
+                }}
+                className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-white rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors border border-blue-200"
+              >
+                📋 {totalListItems} saved
+              </button>
+            )}
+          </div>
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent" />
+              {loadingStatus}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <p className="mt-2 text-sm text-red-600">{error}</p>
+          )}
+
+          {/* Quick result preview */}
+          {result && !isLoading && (
+            <div className="mt-2 bg-white rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">✓</span>
+                <div>
+                  <strong className="text-sm">{result.name}</strong>
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                    {result.category}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {(result.category === 'artist' || result.category === 'musician') && (
+                  <button onClick={addToSpotify} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                    + Listen
+                  </button>
+                )}
+                {result.category === 'author' && (
+                  <button onClick={addToReading} className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200">
+                    + Read
+                  </button>
+                )}
+                {result.category === 'actor' && (
+                  <button onClick={addToWatchlist} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
+                    + Watch
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
+                >
+                  View Full →
+                </button>
+                <button
+                  onClick={() => setResult(null)}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Full expanded modal when clicking "View Full" */}
+        {isExpanded && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20 px-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h3 className="font-semibold">Deep Research Agent</h3>
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="text-gray-400 hover:text-gray-600 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4">
+                {/* Tabs */}
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                  {(['search', 'lists', 'history', 'settings'] as TabType[]).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                        activeTab === tab
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tab === 'search' && '🔍 Research'}
+                      {tab === 'lists' && `📋 Lists (${totalListItems})`}
+                      {tab === 'history' && `🕐 History (${history.length})`}
+                      {tab === 'settings' && '⚙️ Settings'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Render the appropriate tab content - reuse logic from expanded view */}
+                {activeTab === 'search' && result && (
+                  <div className="space-y-4">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                      <h4 className="text-xl font-bold text-gray-900">{result.name}</h4>
+                      <div className="flex flex-wrap gap-2 mt-2 text-sm">
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium uppercase">
+                          {result.category}
+                        </span>
+                        <span className="text-gray-600">
+                          {result.birthYear}
+                          {result.deathYear ? ` – ${result.deathYear}` : ' – Present'}
+                        </span>
+                      </div>
+                      {result.summary && <p className="mt-3 text-sm text-gray-700">{result.summary}</p>}
+                    </div>
+
+                    {/* Timeline */}
+                    {result.timeline && result.timeline.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-sm text-blue-700 mb-2">📅 Timeline</h5>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {result.timeline.slice(0, 8).map((item, i) => (
+                            <div key={i} className="flex gap-3 text-sm border-b border-gray-100 pb-2">
+                              <span className="font-bold text-purple-600 w-12">{item.year}</span>
+                              <strong>{item.title}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 pt-4 border-t">
+                      {(result.category === 'artist' || result.category === 'musician') && (
+                        <Button variant="secondary" onClick={addToSpotify}>🎵 Add to Listen List</Button>
+                      )}
+                      {result.category === 'author' && (
+                        <Button variant="secondary" onClick={addToReading}>📖 Add to Reading List</Button>
+                      )}
+                      {result.category === 'actor' && (
+                        <Button variant="secondary" onClick={addToWatchlist}>🎬 Add to Watchlist</Button>
+                      )}
+                      {result.actionLinks?.wikipedia && (
+                        <a href={result.actionLinks.wikipedia} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
+                          📖 Wikipedia
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'lists' && (
+                  <div className="space-y-4">
+                    {/* Spotify List */}
+                    {spotifyList.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-green-700 mb-2">🎵 Listen List</h5>
+                        {spotifyList.map((item, i) => (
+                          <div key={i} className="bg-green-50 rounded p-2 mb-1 flex justify-between">
+                            <strong className="text-sm">{item.name}</strong>
+                            <button onClick={() => removeFromList('spotify', item.name)} className="text-xs text-red-500">Remove</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Reading List */}
+                    {readingList.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-orange-700 mb-2">📚 Reading List</h5>
+                        {readingList.map((item, i) => (
+                          <div key={i} className="bg-orange-50 rounded p-2 mb-1 flex justify-between">
+                            <strong className="text-sm">{item.name}</strong>
+                            <button onClick={() => removeFromList('reading', item.name)} className="text-xs text-red-500">Remove</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Watchlist */}
+                    {watchlist.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-red-700 mb-2">🎬 Watchlist</h5>
+                        {watchlist.map((item, i) => (
+                          <div key={i} className="bg-red-50 rounded p-2 mb-1 flex justify-between">
+                            <strong className="text-sm">{item.name}</strong>
+                            <button onClick={() => removeFromList('watchlist', item.name)} className="text-xs text-red-500">Remove</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Places */}
+                    {placesList.length > 0 && (
+                      <div>
+                        <h5 className="font-semibold text-blue-700 mb-2">📍 Places to Visit</h5>
+                        {placesList.map((item, i) => (
+                          <div key={i} className="bg-blue-50 rounded p-2 mb-1 flex justify-between">
+                            <strong className="text-sm">{item.name}</strong>
+                            <button onClick={() => removeFromList('places', item.name)} className="text-xs text-red-500">Remove</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {totalListItems === 0 && (
+                      <p className="text-sm text-gray-500 italic text-center py-8">No items saved yet. Research someone to add to your lists!</p>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'history' && (
+                  <div className="space-y-2">
+                    {history.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic text-center py-4">No research history yet.</p>
+                    ) : (
+                      history.map((item, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            loadFromHistory(item);
+                          }}
+                          className="bg-gray-50 rounded p-2 flex justify-between items-center cursor-pointer hover:bg-gray-100"
+                        >
+                          <div>
+                            <strong className="text-sm">{item.name}</strong>
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">{item.category}</span>
+                          </div>
+                          <span className="text-xs text-blue-500">View →</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-sm text-gray-700 mb-2">🔑 Claude API Key</h5>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Required for research. Get your API key from{' '}
+                        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                          console.anthropic.com
+                        </a>
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          type={showApiKey ? 'text' : 'password'}
+                          placeholder="sk-ant-api..."
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          className="flex-1 font-mono text-sm"
+                        />
+                        <button onClick={() => setShowApiKey(!showApiKey)} className="px-3 py-2 text-sm bg-gray-100 rounded-lg">
+                          {showApiKey ? '🙈' : '👁️'}
+                        </button>
+                      </div>
+                      <Button onClick={saveApiKey} className="mt-2" variant="secondary">Save API Key</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 

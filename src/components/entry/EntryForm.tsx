@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -11,10 +11,63 @@ import ActivityModal from './ActivityModal';
 import LocationSelector from '../location/LocationSelector';
 import AutoLocationDetector from '../location/AutoLocationDetector';
 import CalendarQuickView from '../calendar/CalendarQuickView';
-import DeepResearchAgent from '../research/DeepResearchAgent';
 import { TextArea } from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
+
+// Collapsible Section Component
+interface CollapsibleSectionProps {
+  title: string;
+  icon?: React.ReactNode;
+  isComplete?: boolean;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}
+
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+  title,
+  icon,
+  isComplete = false,
+  defaultOpen = true,
+  children,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen && !isComplete);
+
+  // Auto-collapse when marked as complete
+  useEffect(() => {
+    if (isComplete && isOpen) {
+      setIsOpen(false);
+    }
+  }, [isComplete]);
+
+  return (
+    <Card className="mb-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-lg">{icon}</span>}
+          <span className="font-semibold">{title}</span>
+          {isComplete && (
+            <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+              Done
+            </span>
+          )}
+        </div>
+        <svg
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && <div className="mt-4">{children}</div>}
+    </Card>
+  );
+};
 
 const EntryForm: React.FC = () => {
   const { currentDate, showToast } = useApp();
@@ -112,57 +165,84 @@ const EntryForm: React.FC = () => {
     );
   }
 
+  // Check completion status for collapsible sections
+  const isLocationComplete = entry.location !== '';
+  const isFeelingComplete = entry.feeling > 0;
+  const hasAnyActivity = Object.values(entry.activities).some(a => a !== undefined);
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
+      {/* Date Navigation - Now at top below global search */}
       <DateNavigator />
 
       {/* Calendar Quick View */}
       {settings.apis.calendar && <CalendarQuickView date={currentDate} />}
 
-      {/* Auto Location Detection */}
-      {showAutoLocation && (
-        <div className="mb-6">
-          <AutoLocationDetector
-            onLocationDetected={handleAutoLocationDetected}
-            onSkip={() => setShowAutoLocation(false)}
-          />
-        </div>
-      )}
+      {/* Location Section - Collapsible */}
+      <CollapsibleSection
+        title="Where are you?"
+        icon="📍"
+        isComplete={isLocationComplete}
+        defaultOpen={!isLocationComplete}
+      >
+        {/* Auto Location Detection */}
+        {showAutoLocation && (
+          <div className="mb-4">
+            <AutoLocationDetector
+              onLocationDetected={handleAutoLocationDetected}
+              onSkip={() => setShowAutoLocation(false)}
+            />
+          </div>
+        )}
 
-      {/* Location Selector */}
-      {!showAutoLocation && (
-        <Card className="mb-6">
+        {/* Location Selector */}
+        {!showAutoLocation && (
           <LocationSelector
             value={entry.location}
             otherLocationName={entry.otherLocationName}
             tripType={entry.tripType}
             onChange={handleLocationChange}
           />
-        </Card>
-      )}
+        )}
+      </CollapsibleSection>
 
-      {/* Deep Research Agent */}
-      <DeepResearchAgent />
+      {/* Feeling Section - Collapsible */}
+      <CollapsibleSection
+        title="How are you feeling?"
+        icon="😊"
+        isComplete={isFeelingComplete}
+        defaultOpen={!isFeelingComplete}
+      >
+        <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
+      </CollapsibleSection>
 
-      {/* Feeling Scale */}
-      <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
+      {/* Activities Section - Collapsible */}
+      <CollapsibleSection
+        title="What did you do today?"
+        icon="📝"
+        isComplete={hasAnyActivity}
+        defaultOpen={!hasAnyActivity}
+      >
+        <ActivityTiles
+          activities={entry.activities}
+          onActivityClick={(type) => setActiveActivity(type)}
+        />
+      </CollapsibleSection>
 
-      {/* Activity Tiles */}
-      <ActivityTiles
-        activities={entry.activities}
-        onActivityClick={(type) => setActiveActivity(type)}
-      />
-
-      {/* Highlights */}
-      <Card className="mb-6">
+      {/* Highlights Section - Collapsible */}
+      <CollapsibleSection
+        title="Highlights & Notes"
+        icon="✨"
+        isComplete={!!entry.highlights && entry.highlights.length > 0}
+        defaultOpen={!entry.highlights}
+      >
         <TextArea
-          label="Highlights & Notes"
           placeholder="What made today special? Any thoughts or reflections?"
           value={entry.highlights || ''}
           onChange={(e) => handleHighlightsChange(e.target.value)}
           rows={4}
         />
-      </Card>
+      </CollapsibleSection>
 
       {/* Save Button */}
       <div className="sticky bottom-20 md:bottom-4 bg-gray-50/80 backdrop-blur-sm py-4 -mx-4 px-4">

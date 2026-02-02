@@ -18,11 +18,11 @@ const VersionSelector: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Welcome to YTT
+            Welcome to Walt-Tab
           </h1>
-          <p className="text-xl text-gray-600">Yesterday, Today, Tomorrow</p>
+          <p className="text-xl text-gray-600">Your personal life dashboard</p>
           <p className="text-gray-500 mt-4">
-            Track your life, your way. Choose how you want to use YTT.
+            Track your life, your way. Choose how you want to use Walt-Tab.
           </p>
         </div>
 

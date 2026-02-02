@@ -6,7 +6,6 @@ import { Entry } from '../../types';
 import { parseISO } from '../../utils/dateUtils';
 import SearchResults from './SearchResults';
 import Card from '../common/Card';
-import DeepResearchAgent from '../research/DeepResearchAgent';
 
 const SearchBar: React.FC = () => {
   const { searchEntries } = useEntries();
@@ -114,48 +113,35 @@ const SearchBar: React.FC = () => {
         />
       )}
 
-      {/* Empty State - Show Research History */}
+      {/* Empty State */}
       {!query && (
-        <>
-          {/* Research History */}
-          <DeepResearchAgent showHistoryOnly />
-
-          {/* Entry Search Help */}
-          <Card className="text-center py-12">
-            <span className="text-4xl mb-4 block">📝</span>
-            <h2 className="text-xl font-semibold mb-2">Search Your Entries</h2>
-            <p className="text-gray-500 max-w-sm mx-auto">
-              Search across locations, highlights, activities, and notes to find any entry.
-            </p>
-            <div className="mt-6 text-left max-w-xs mx-auto">
-              <p className="text-sm font-medium text-gray-700 mb-2">Try searching for:</p>
-              <ul className="text-sm text-gray-500 space-y-1">
-                <li
-                  onClick={() => setQuery('Nashville')}
-                  className="cursor-pointer hover:text-primary"
-                >
-                  • Nashville
-                </li>
-                <li onClick={() => setQuery('workout')} className="cursor-pointer hover:text-primary">
-                  • workout
-                </li>
-                <li
-                  onClick={() => setQuery('restaurant')}
-                  className="cursor-pointer hover:text-primary"
-                >
-                  • restaurant
-                </li>
-              </ul>
-            </div>
-          </Card>
-        </>
-      )}
-
-      {/* Deep Research Agent - Full (when searching) */}
-      {query && (
-        <div className="mt-6">
-          <DeepResearchAgent />
-        </div>
+        <Card className="text-center py-12">
+          <span className="text-4xl mb-4 block">📝</span>
+          <h2 className="text-xl font-semibold mb-2">Search Your Entries</h2>
+          <p className="text-gray-500 max-w-sm mx-auto">
+            Search across locations, highlights, activities, and notes to find any entry.
+          </p>
+          <div className="mt-6 text-left max-w-xs mx-auto">
+            <p className="text-sm font-medium text-gray-700 mb-2">Try searching for:</p>
+            <ul className="text-sm text-gray-500 space-y-1">
+              <li
+                onClick={() => setQuery('Nashville')}
+                className="cursor-pointer hover:text-primary"
+              >
+                • Nashville
+              </li>
+              <li onClick={() => setQuery('workout')} className="cursor-pointer hover:text-primary">
+                • workout
+              </li>
+              <li
+                onClick={() => setQuery('restaurant')}
+                className="cursor-pointer hover:text-primary"
+              >
+                • restaurant
+              </li>
+            </ul>
+          </div>
+        </Card>
       )}
     </div>
   );

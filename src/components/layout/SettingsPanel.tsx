@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useEntries } from '../../contexts/EntriesContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { exportToCSV } from '../../utils/exportCSV';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
@@ -10,6 +11,7 @@ const SettingsPanel: React.FC = () => {
   const { isSettingsOpen, setIsSettingsOpen, showToast } = useApp();
   const { settings, updateSettings, setVersion, toggleApi, resetSettings } = useSettings();
   const { entries } = useEntries();
+  const { user, signOut } = useAuth();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleExport = () => {
@@ -231,6 +233,23 @@ const SettingsPanel: React.FC = () => {
               <p className="text-xs text-gray-400 mt-2">{entries.length} entries available</p>
             </div>
           </section>
+
+          {/* Account */}
+          {user && (
+            <section>
+              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                Account
+              </h3>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Signed in as <strong>{user.email}</strong>
+                </p>
+                <Button variant="secondary" onClick={signOut}>
+                  Sign Out
+                </Button>
+              </div>
+            </section>
+          )}
 
           {/* Danger Zone */}
           <section>
