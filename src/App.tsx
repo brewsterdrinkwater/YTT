@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Layout components
 import Header from './components/layout/Header';
 import Navigation from './components/layout/Navigation';
-import DeepResearchAgent from './components/research/DeepResearchAgent';
 import SettingsPanel from './components/layout/SettingsPanel';
 import Toast from './components/common/Toast';
 
@@ -18,7 +17,7 @@ import VersionSelector from './components/onboarding/VersionSelector';
 import EntryForm from './components/entry/EntryForm';
 import Dashboard from './components/dashboard/Dashboard';
 import Timeline from './components/timeline/Timeline';
-import SearchBar from './components/search/SearchBar';
+import ToolsPage from './components/tools/ToolsPage';
 import AuthPage from './components/auth/AuthPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
@@ -87,7 +86,6 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <Navigation />
-      <DeepResearchAgent compact />
 
       <main className="flex-1 pb-24 md:pb-6">
         <Routes>
@@ -95,7 +93,9 @@ const AppContent: React.FC = () => {
           <Route path="/entry" element={<EntryForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/timeline" element={<Timeline />} />
-          <Route path="/search" element={<SearchBar />} />
+          <Route path="/tools" element={<ToolsPage />} />
+          {/* Redirect old /search to /tools */}
+          <Route path="/search" element={<Navigate to="/tools" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

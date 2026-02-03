@@ -14,6 +14,10 @@ export const STORAGE_KEYS = {
   RESEARCH_PLACES_LIST: 'ytt-research-places-list',
   RESEARCH_HISTORY: 'ytt-research-history',
   RESEARCH_API_KEY: 'ytt-research-api-key',
+  // Grocery & Recipe storage
+  GROCERY_LIST: 'ytt-grocery-list',
+  RECIPES_LIST: 'ytt-recipes-list',
+  RESTAURANTS_LIST: 'ytt-restaurants-list',
 } as const;
 
 export const LOCATIONS = [

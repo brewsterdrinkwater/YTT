@@ -7,7 +7,13 @@ import {
   PlacesListItem,
   HistoryItem,
   ResearchResult,
+  GroceryItem,
+  Recipe,
+  RestaurantItem,
 } from '../types/research';
+
+// Generate unique ID
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 // Research service for managing lists and history
 export const researchService = {
@@ -141,6 +147,178 @@ export const researchService = {
     storageService.set(STORAGE_KEYS.RESEARCH_API_KEY, key);
   },
 
+  // Grocery List
+  getGroceryList: (): GroceryItem[] => {
+    return storageService.get<GroceryItem[]>(STORAGE_KEYS.GROCERY_LIST) || [];
+  },
+
+  saveGroceryList: (list: GroceryItem[]): void => {
+    storageService.set(STORAGE_KEYS.GROCERY_LIST, list);
+  },
+
+  addGroceryItem: (item: Omit<GroceryItem, 'id' | 'addedAt' | 'checked'>): GroceryItem[] => {
+    const list = researchService.getGroceryList();
+    const newItem: GroceryItem = {
+      ...item,
+      id: generateId(),
+      checked: false,
+      addedAt: new Date().toISOString(),
+    };
+    const newList = [newItem, ...list];
+    researchService.saveGroceryList(newList);
+    return newList;
+  },
+
+  updateGroceryItem: (id: string, updates: Partial<GroceryItem>): GroceryItem[] => {
+    const list = researchService.getGroceryList();
+    const newList = list.map((item) => (item.id === id ? { ...item, ...updates } : item));
+    researchService.saveGroceryList(newList);
+    return newList;
+  },
+
+  removeGroceryItem: (id: string): GroceryItem[] => {
+    const newList = researchService.getGroceryList().filter((item) => item.id !== id);
+    researchService.saveGroceryList(newList);
+    return newList;
+  },
+
+  toggleGroceryItem: (id: string): GroceryItem[] => {
+    const list = researchService.getGroceryList();
+    const newList = list.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item));
+    researchService.saveGroceryList(newList);
+    return newList;
+  },
+
+  clearCheckedGroceryItems: (): GroceryItem[] => {
+    const list = researchService.getGroceryList();
+    const newList = list.filter((item) => !item.checked || item.isStaple);
+    // Reset staple items to unchecked
+    const resetList = newList.map((item) => (item.isStaple ? { ...item, checked: false } : item));
+    researchService.saveGroceryList(resetList);
+    return resetList;
+  },
+
+  getStapleItems: (): GroceryItem[] => {
+    return researchService.getGroceryList().filter((item) => item.isStaple);
+  },
+
+  addStaplesToList: (): GroceryItem[] => {
+    const list = researchService.getGroceryList();
+    const staples = list.filter((item) => item.isStaple);
+    // Reset checked status for staples
+    const newList = list.map((item) => (item.isStaple ? { ...item, checked: false } : item));
+    researchService.saveGroceryList(newList);
+    return newList;
+  },
+
+  // Recipes List
+  getRecipes: (): Recipe[] => {
+    return storageService.get<Recipe[]>(STORAGE_KEYS.RECIPES_LIST) || [];
+  },
+
+  saveRecipes: (list: Recipe[]): void => {
+    storageService.set(STORAGE_KEYS.RECIPES_LIST, list);
+  },
+
+  addRecipe: (recipe: Omit<Recipe, 'id' | 'addedAt'>): Recipe[] => {
+    const list = researchService.getRecipes();
+    const newRecipe: Recipe = {
+      ...recipe,
+      id: generateId(),
+      addedAt: new Date().toISOString(),
+    };
+    const newList = [newRecipe, ...list];
+    researchService.saveRecipes(newList);
+    return newList;
+  },
+
+  updateRecipe: (id: string, updates: Partial<Recipe>): Recipe[] => {
+    const list = researchService.getRecipes();
+    const newList = list.map((recipe) => (recipe.id === id ? { ...recipe, ...updates } : recipe));
+    researchService.saveRecipes(newList);
+    return newList;
+  },
+
+  removeRecipe: (id: string): Recipe[] => {
+    const newList = researchService.getRecipes().filter((recipe) => recipe.id !== id);
+    researchService.saveRecipes(newList);
+    return newList;
+  },
+
+  addRecipeIngredientsToGrocery: (recipeId: string): GroceryItem[] => {
+    const recipes = researchService.getRecipes();
+    const recipe = recipes.find((r) => r.id === recipeId);
+    if (!recipe) return researchService.getGroceryList();
+
+    let groceryList = researchService.getGroceryList();
+    recipe.ingredients.forEach((ingredient) => {
+      // Check if item already exists
+      const existingIndex = groceryList.findIndex(
+        (g) => g.name.toLowerCase() === ingredient.name.toLowerCase()
+      );
+      if (existingIndex === -1) {
+        const newItem: GroceryItem = {
+          id: generateId(),
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          checked: false,
+          isStaple: false,
+          addedAt: new Date().toISOString(),
+        };
+        groceryList = [newItem, ...groceryList];
+      }
+    });
+    researchService.saveGroceryList(groceryList);
+    return groceryList;
+  },
+
+  // Restaurant List
+  getRestaurants: (): RestaurantItem[] => {
+    return storageService.get<RestaurantItem[]>(STORAGE_KEYS.RESTAURANTS_LIST) || [];
+  },
+
+  saveRestaurants: (list: RestaurantItem[]): void => {
+    storageService.set(STORAGE_KEYS.RESTAURANTS_LIST, list);
+  },
+
+  addRestaurant: (restaurant: Omit<RestaurantItem, 'id' | 'addedAt' | 'visited'>): RestaurantItem[] => {
+    const list = researchService.getRestaurants();
+    const newRestaurant: RestaurantItem = {
+      ...restaurant,
+      id: generateId(),
+      visited: false,
+      addedAt: new Date().toISOString(),
+    };
+    const newList = [newRestaurant, ...list];
+    researchService.saveRestaurants(newList);
+    return newList;
+  },
+
+  updateRestaurant: (id: string, updates: Partial<RestaurantItem>): RestaurantItem[] => {
+    const list = researchService.getRestaurants();
+    const newList = list.map((restaurant) =>
+      restaurant.id === id ? { ...restaurant, ...updates } : restaurant
+    );
+    researchService.saveRestaurants(newList);
+    return newList;
+  },
+
+  removeRestaurant: (id: string): RestaurantItem[] => {
+    const newList = researchService.getRestaurants().filter((restaurant) => restaurant.id !== id);
+    researchService.saveRestaurants(newList);
+    return newList;
+  },
+
+  toggleRestaurantVisited: (id: string): RestaurantItem[] => {
+    const list = researchService.getRestaurants();
+    const newList = list.map((restaurant) =>
+      restaurant.id === id ? { ...restaurant, visited: !restaurant.visited } : restaurant
+    );
+    researchService.saveRestaurants(newList);
+    return newList;
+  },
+
   // Get all lists summary for dashboard
   getAllListsCounts: () => {
     return {
@@ -149,6 +327,9 @@ export const researchService = {
       watchlist: researchService.getWatchlist().length,
       places: researchService.getPlacesList().length,
       history: researchService.getHistory().length,
+      grocery: researchService.getGroceryList().length,
+      recipes: researchService.getRecipes().length,
+      restaurants: researchService.getRestaurants().length,
     };
   },
 };
