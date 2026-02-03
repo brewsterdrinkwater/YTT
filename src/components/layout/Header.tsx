@@ -2,7 +2,6 @@ import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useAuth } from '../../contexts/AuthContext';
-import UIStyleSwitcher from './UIStyleSwitcher';
 
 const Header: React.FC = () => {
   const { setIsSettingsOpen } = useApp();
@@ -11,7 +10,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-40">
-      <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -27,9 +26,6 @@ const Header: React.FC = () => {
               {user.email}
             </span>
           )}
-
-          {/* UI Style Switcher */}
-          <UIStyleSwitcher />
 
           {/* Version badge */}
           <span

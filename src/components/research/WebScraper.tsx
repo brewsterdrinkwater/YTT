@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { researchService } from '../../services/researchService';
+import { listService } from '../../services/listService';
 import { ScrapedContentType } from '../../types/research';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -144,66 +145,75 @@ const WebScraper: React.FC = () => {
     if (!result) return;
 
     let message = '';
+    const lists = listService.getLists();
 
     switch (result.type) {
-      case 'recipe':
+      case 'recipe': {
         // Add ingredients to grocery list
-        result.items.forEach((item) => {
-          researchService.addGroceryItem({
-            name: item.name,
-            quantity: item.quantity || 1,
-            unit: item.unit || '',
-            isStaple: false,
+        const groceryList = lists.find((l) => l.typeId === 'grocery');
+        if (groceryList) {
+          result.items.forEach((item) => {
+            listService.addItem(groceryList.id, {
+              name: item.name,
+              details: `From: ${result.title}`,
+              tags: [],
+              quantity: item.quantity || 1,
+              unit: item.unit || '',
+              url: result.sourceUrl,
+            });
           });
-        });
-        // Also save as a recipe
-        researchService.addRecipe({
-          name: result.title,
-          ingredients: result.items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity || 1,
-            unit: item.unit || '',
-          })),
-          sourceUrl: result.sourceUrl,
-        });
-        message = `Added ${result.items.length} ingredients to grocery list and saved recipe "${result.title}"`;
+        }
+        message = `Added ${result.items.length} ingredients to grocery list`;
         break;
+      }
 
-      case 'restaurant':
-        result.items.forEach((item) => {
-          researchService.addRestaurant({
-            name: item.name,
-            location: item.notes,
-            url: item.url,
-            notes: item.notes,
+      case 'restaurant': {
+        const restaurantList = lists.find((l) => l.typeId === 'restaurants');
+        if (restaurantList) {
+          result.items.forEach((item) => {
+            listService.addItem(restaurantList.id, {
+              name: item.name,
+              details: item.notes || '',
+              tags: [],
+              url: item.url,
+            });
           });
-        });
+        }
         message = `Added ${result.items.length} restaurants to your list`;
         break;
+      }
 
-      case 'book':
-        result.items.forEach((item) => {
-          researchService.addToReadingList({
-            name: item.name,
-            works: [],
-            kindleUrl: item.url || null,
-            addedAt: new Date().toISOString(),
+      case 'book': {
+        const readingList = lists.find((l) => l.typeId === 'reading');
+        if (readingList) {
+          result.items.forEach((item) => {
+            listService.addItem(readingList.id, {
+              name: item.name,
+              details: item.notes || '',
+              tags: [],
+              url: item.url,
+            });
           });
-        });
+        }
         message = `Added ${result.items.length} books to reading list`;
         break;
+      }
 
-      case 'movie':
-        result.items.forEach((item) => {
-          researchService.addToWatchlist({
-            name: item.name,
-            works: item.notes ? [item.notes] : [],
-            imdbUrl: item.url || null,
-            addedAt: new Date().toISOString(),
+      case 'movie': {
+        const watchList = lists.find((l) => l.typeId === 'watchlist');
+        if (watchList) {
+          result.items.forEach((item) => {
+            listService.addItem(watchList.id, {
+              name: item.name,
+              details: item.notes || '',
+              tags: [],
+              url: item.url,
+            });
           });
-        });
+        }
         message = `Added ${result.items.length} titles to watchlist`;
         break;
+      }
 
       default:
         message = 'Content type not supported for auto-adding';

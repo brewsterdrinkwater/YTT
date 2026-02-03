@@ -3,389 +3,66 @@ import { useNavigate } from 'react-router-dom';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useApp } from '../../contexts/AppContext';
 import { Entry, DashboardItem } from '../../types';
-import {
-  SpotifyListItem,
-  ReadingListItem,
-  WatchlistItem,
-  PlacesListItem,
-  GroceryItem,
-  Recipe,
-  RestaurantItem,
-} from '../../types/research';
+import { UserList, ListTag } from '../../types/lists';
 import { DASHBOARD_KEYWORDS } from '../../constants/config';
 import { formatDisplayDate, parseISO } from '../../utils/dateUtils';
-import { researchService } from '../../services/researchService';
+import { listService } from '../../services/listService';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { Input } from '../common/Input';
+import Modal from '../common/Modal';
 
 // Dashboard tab type
 type DashboardTab = 'lists' | 'insights' | 'search';
 
-// Grocery List Component with Shopping Mode
-const GroceryListSection: React.FC = () => {
-  const [groceryList, setGroceryList] = useState<GroceryItem[]>([]);
-  const [shoppingMode, setShoppingMode] = useState(false);
-  const [newItem, setNewItem] = useState({ name: '', quantity: 1, unit: '' });
-  const [showAddForm, setShowAddForm] = useState(false);
+// List Card Component - Shows summary with drill-in
+interface ListCardProps {
+  list: UserList;
+  onOpen: () => void;
+}
 
-  useEffect(() => {
-    setGroceryList(researchService.getGroceryList());
-  }, []);
-
-  const handleAddItem = () => {
-    if (!newItem.name.trim()) return;
-    const updated = researchService.addGroceryItem({
-      name: newItem.name,
-      quantity: newItem.quantity,
-      unit: newItem.unit,
-      isStaple: false,
-    });
-    setGroceryList(updated);
-    setNewItem({ name: '', quantity: 1, unit: '' });
-    setShowAddForm(false);
-  };
-
-  const handleToggle = (id: string) => {
-    const updated = researchService.toggleGroceryItem(id);
-    setGroceryList(updated);
-  };
-
-  const handleRemove = (id: string) => {
-    const updated = researchService.removeGroceryItem(id);
-    setGroceryList(updated);
-  };
-
-  const handleToggleStaple = (id: string) => {
-    const item = groceryList.find((g) => g.id === id);
-    if (item) {
-      const updated = researchService.updateGroceryItem(id, { isStaple: !item.isStaple });
-      setGroceryList(updated);
-    }
-  };
-
-  const handleClearChecked = () => {
-    const updated = researchService.clearCheckedGroceryItems();
-    setGroceryList(updated);
-  };
-
-  const uncheckedCount = groceryList.filter((g) => !g.checked).length;
-  const checkedCount = groceryList.filter((g) => g.checked).length;
+const ListCard: React.FC<ListCardProps> = ({ list, onOpen }) => {
+  const activeCount = list.items.filter((i) => !i.completed).length;
+  const completedCount = list.items.filter((i) => i.completed).length;
 
   return (
-    <Card className="mb-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-lg flex items-center gap-2">
-          <span>🛒</span> Grocery List
-          {uncheckedCount > 0 && (
-            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-              {uncheckedCount} items
-            </span>
-          )}
-        </h3>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShoppingMode(!shoppingMode)}
-            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
-              shoppingMode
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {shoppingMode ? '✓ Shopping' : '🛍️ Shop Mode'}
-          </button>
-        </div>
-      </div>
-
-      {groceryList.length === 0 ? (
-        <p className="text-gray-400 text-sm italic mb-3">No items in your grocery list</p>
-      ) : (
-        <ul className={`space-y-1 mb-3 ${shoppingMode ? 'divide-y divide-gray-100' : ''}`}>
-          {groceryList
-            .sort((a, b) => (a.checked === b.checked ? 0 : a.checked ? 1 : -1))
-            .map((item) => (
-              <li
-                key={item.id}
-                className={`flex items-center gap-3 py-2 ${shoppingMode ? 'px-2 rounded-lg' : ''} ${
-                  item.checked ? 'opacity-50' : ''
-                } ${shoppingMode && !item.checked ? 'bg-yellow-50' : ''}`}
-              >
-                {shoppingMode ? (
-                  <button
-                    onClick={() => handleToggle(item.id)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      item.checked
-                        ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-green-400'
-                    }`}
-                  >
-                    {item.checked && '✓'}
-                  </button>
-                ) : (
-                  <input
-                    type="checkbox"
-                    checked={item.checked}
-                    onChange={() => handleToggle(item.id)}
-                    className="w-4 h-4 rounded"
-                  />
-                )}
-                <span className={`flex-1 text-sm ${item.checked ? 'line-through text-gray-400' : ''}`}>
-                  {item.name}
-                  {item.quantity > 0 && item.unit && (
-                    <span className="text-gray-400 ml-1">
-                      ({item.quantity} {item.unit})
-                    </span>
-                  )}
-                  {item.isStaple && (
-                    <span className="ml-2 text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">
-                      staple
-                    </span>
-                  )}
-                </span>
-                {!shoppingMode && (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleToggleStaple(item.id)}
-                      className="text-xs text-gray-400 hover:text-purple-600 p-1"
-                      title={item.isStaple ? 'Remove from staples' : 'Mark as staple'}
-                    >
-                      {item.isStaple ? '★' : '☆'}
-                    </button>
-                    <button
-                      onClick={() => handleRemove(item.id)}
-                      className="text-xs text-red-400 hover:text-red-600 p-1"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-        </ul>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-2 flex-wrap">
-        {!showAddForm ? (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            + Add item
-          </button>
-        ) : (
-          <div className="w-full flex gap-2">
-            <Input
-              placeholder="Item name"
-              value={newItem.name}
-              onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-              className="flex-1 text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-            />
-            <Input
-              type="number"
-              placeholder="Qty"
-              value={newItem.quantity}
-              onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
-              className="w-16 text-sm"
-            />
-            <Input
-              placeholder="Unit"
-              value={newItem.unit}
-              onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-              className="w-20 text-sm"
-            />
-            <Button size="sm" onClick={handleAddItem}>Add</Button>
-            <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+    <button
+      onClick={onOpen}
+      className={`w-full p-4 rounded-xl text-left transition-all hover:shadow-md ${list.color} border border-gray-100`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{list.icon}</span>
+          <div>
+            <h3 className="font-semibold text-gray-900">{list.name}</h3>
+            <p className="text-xs text-gray-500">
+              {activeCount > 0 ? `${activeCount} active` : 'No items'}
+              {completedCount > 0 && ` • ${completedCount} done`}
+            </p>
           </div>
-        )}
-        {checkedCount > 0 && (
-          <button
-            onClick={handleClearChecked}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Clear checked ({checkedCount})
-          </button>
-        )}
+        </div>
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       </div>
-    </Card>
-  );
-};
-
-// Recipe List Component
-const RecipeListSection: React.FC = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
-
-  useEffect(() => {
-    setRecipes(researchService.getRecipes());
-  }, []);
-
-  const handleAddToGrocery = (recipeId: string) => {
-    researchService.addRecipeIngredientsToGrocery(recipeId);
-    // Trigger a notification or feedback
-  };
-
-  const handleRemove = (id: string) => {
-    const updated = researchService.removeRecipe(id);
-    setRecipes(updated);
-  };
-
-  if (recipes.length === 0) {
-    return null;
-  }
-
-  return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-        <span>🍳</span> Recipes
-        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-          {recipes.length}
-        </span>
-      </h3>
-      <ul className="space-y-2">
-        {recipes.map((recipe) => (
-          <li key={recipe.id} className="bg-orange-50 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setExpandedRecipe(expandedRecipe === recipe.id ? null : recipe.id)}
-              className="w-full p-3 flex items-center justify-between text-left"
-            >
-              <span className="font-medium text-sm">{recipe.name}</span>
-              <span className="text-xs text-gray-500">
-                {recipe.ingredients.length} ingredients
-                <span className="ml-2">{expandedRecipe === recipe.id ? '▲' : '▼'}</span>
-              </span>
-            </button>
-            {expandedRecipe === recipe.id && (
-              <div className="px-3 pb-3 border-t border-orange-100">
-                <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                  {recipe.ingredients.map((ing, i) => (
-                    <li key={i}>
-                      • {ing.name} {ing.quantity > 0 && `(${ing.quantity} ${ing.unit})`}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => handleAddToGrocery(recipe.id)}
-                    className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
-                  >
-                    🛒 Add to Grocery
-                  </button>
-                  {recipe.sourceUrl && (
-                    <a
-                      href={recipe.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline px-2 py-1"
-                    >
-                      View Source →
-                    </a>
-                  )}
-                  <button
-                    onClick={() => handleRemove(recipe.id)}
-                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1 ml-auto"
-                  >
-                    Remove
-                  </button>
-                </div>
+      {/* Preview of first 2 active items */}
+      {activeCount > 0 && (
+        <div className="mt-3 space-y-1">
+          {list.items
+            .filter((i) => !i.completed)
+            .slice(0, 2)
+            .map((item) => (
+              <div key={item.id} className="flex items-center gap-2 text-sm text-gray-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                <span className="truncate">{item.name}</span>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </Card>
-  );
-};
-
-// Restaurant List Component
-const RestaurantListSection: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
-
-  useEffect(() => {
-    setRestaurants(researchService.getRestaurants());
-  }, []);
-
-  const handleToggleVisited = (id: string) => {
-    const updated = researchService.toggleRestaurantVisited(id);
-    setRestaurants(updated);
-  };
-
-  const handleRemove = (id: string) => {
-    const updated = researchService.removeRestaurant(id);
-    setRestaurants(updated);
-  };
-
-  if (restaurants.length === 0) {
-    return null;
-  }
-
-  const unvisited = restaurants.filter((r) => !r.visited);
-  const visited = restaurants.filter((r) => r.visited);
-
-  return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-        <span>🍽️</span> Restaurants to Try
-        {unvisited.length > 0 && (
-          <span className="text-xs bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">
-            {unvisited.length} to visit
-          </span>
-        )}
-      </h3>
-      <ul className="space-y-2">
-        {[...unvisited, ...visited].map((restaurant) => (
-          <li
-            key={restaurant.id}
-            className={`p-2 rounded-lg flex items-start justify-between ${
-              restaurant.visited ? 'bg-gray-50 opacity-60' : 'bg-pink-50'
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              <button
-                onClick={() => handleToggleVisited(restaurant.id)}
-                className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs ${
-                  restaurant.visited
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-gray-300 hover:border-green-400'
-                }`}
-              >
-                {restaurant.visited && '✓'}
-              </button>
-              <div>
-                <span className={`font-medium text-sm ${restaurant.visited ? 'line-through' : ''}`}>
-                  {restaurant.name}
-                </span>
-                {restaurant.cuisine && (
-                  <span className="text-xs text-gray-500 ml-2">{restaurant.cuisine}</span>
-                )}
-                {restaurant.location && (
-                  <p className="text-xs text-gray-400">{restaurant.location}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {restaurant.url && (
-                <a
-                  href={restaurant.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-500 hover:underline"
-                >
-                  View →
-                </a>
-              )}
-              <button
-                onClick={() => handleRemove(restaurant.id)}
-                className="text-xs text-red-400 hover:text-red-600"
-              >
-                ✕
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Card>
+            ))}
+          {activeCount > 2 && (
+            <p className="text-xs text-gray-400 pl-3.5">+{activeCount - 2} more</p>
+          )}
+        </div>
+      )}
+    </button>
   );
 };
 
@@ -456,48 +133,14 @@ const DiarySearchSection: React.FC = () => {
   );
 };
 
-// Research List Section (existing)
-interface ResearchListSectionProps {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-  emptyMessage: string;
-  isEmpty: boolean;
-}
-
-const ResearchListSection: React.FC<ResearchListSectionProps> = ({
-  title,
-  icon,
-  children,
-  emptyMessage,
-  isEmpty,
-}) => {
-  if (isEmpty) return null;
-  return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-        <span>{icon}</span>
-        {title}
-      </h3>
-      {children}
-    </Card>
-  );
-};
-
 // Dashboard Section for diary insights
 interface DashboardSectionProps {
   title: string;
   icon: string;
   items: DashboardItem[];
-  emptyMessage: string;
 }
 
-const DashboardSection: React.FC<DashboardSectionProps> = ({
-  title,
-  icon,
-  items,
-  emptyMessage,
-}) => {
+const DashboardSection: React.FC<DashboardSectionProps> = ({ title, icon, items }) => {
   if (items.length === 0) return null;
   return (
     <Card className="mb-4">
@@ -519,7 +162,7 @@ const DashboardSection: React.FC<DashboardSectionProps> = ({
   );
 };
 
-// Extract functions (simplified)
+// Extract functions
 const extractWorkouts = (entries: Entry[]): DashboardItem[] => {
   return entries
     .filter((e) => e.activities.workout)
@@ -545,26 +188,73 @@ const extractIdeas = (entries: Entry[]): DashboardItem[] => {
     .slice(0, 5);
 };
 
-const Dashboard: React.FC = () => {
-  const { entries, exportToCSV, migrateFromLocalStorage } = useEntries();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('lists');
+// List icons for custom list creation
+const LIST_ICONS = ['📋', '🎯', '💡', '🎁', '✈️', '🏠', '💰', '🎮', '🎨', '📷', '🎵', '🍕'];
+const LIST_COLORS = [
+  'bg-blue-50',
+  'bg-green-50',
+  'bg-yellow-50',
+  'bg-red-50',
+  'bg-purple-50',
+  'bg-pink-50',
+  'bg-indigo-50',
+  'bg-orange-50',
+];
 
-  // Research lists state
-  const [spotifyList, setSpotifyList] = useState<SpotifyListItem[]>([]);
-  const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
+const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { entries, migrateFromLocalStorage } = useEntries();
+  const { showToast } = useApp();
+  const [activeTab, setActiveTab] = useState<DashboardTab>('lists');
+  const [lists, setLists] = useState<UserList[]>([]);
+  const [tags, setTags] = useState<ListTag[]>([]);
+  const [showCreateList, setShowCreateList] = useState(false);
+  const [showManageLists, setShowManageLists] = useState(false);
+  const [newList, setNewList] = useState({ name: '', icon: '📋', color: 'bg-blue-50' });
   const [migrating, setMigrating] = useState(false);
   const [migrateMessage, setMigrateMessage] = useState('');
 
   useEffect(() => {
-    setSpotifyList(researchService.getSpotifyList());
-    setReadingList(researchService.getReadingList());
-    setWatchlist(researchService.getWatchlist());
-    setPlacesList(researchService.getPlacesList());
+    // Initialize lists and migrate old data
+    listService.migrateOldLists();
+    setLists(listService.getVisibleLists());
+    setTags(listService.getTags());
   }, []);
 
-  const handleExport = () => exportToCSV();
+  const refreshLists = () => {
+    setLists(listService.getVisibleLists());
+    setTags(listService.getTags());
+  };
+
+  const handleCreateList = () => {
+    if (!newList.name.trim()) return;
+    listService.createList(newList.name, newList.icon, newList.color);
+    setNewList({ name: '', icon: '📋', color: 'bg-blue-50' });
+    setShowCreateList(false);
+    refreshLists();
+    showToast(`Created "${newList.name}" list`, 'success');
+  };
+
+  const handleToggleListVisibility = (listId: string) => {
+    listService.toggleListVisibility(listId);
+    refreshLists();
+  };
+
+  const handleDeleteList = (listId: string) => {
+    const list = listService.getListById(listId);
+    if (list?.isDefault) {
+      listService.updateList(listId, { isVisible: false });
+      showToast(`Hidden "${list.name}"`, 'success');
+    } else {
+      listService.deleteList(listId);
+      showToast('List deleted', 'success');
+    }
+    refreshLists();
+  };
+
+  const handleOpenList = (listId: string) => {
+    navigate(`/lists/${listId}`);
+  };
 
   const handleMigrate = async () => {
     setMigrating(true);
@@ -581,9 +271,12 @@ const Dashboard: React.FC = () => {
   const workouts = extractWorkouts(entries);
   const ideas = extractIdeas(entries);
 
+  // Get all lists including hidden for management
+  const allLists = listService.getLists();
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <div className="mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
       </div>
 
@@ -597,7 +290,7 @@ const Dashboard: React.FC = () => {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button
           onClick={() => setActiveTab('lists')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
             activeTab === 'lists'
               ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -607,7 +300,7 @@ const Dashboard: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('insights')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
             activeTab === 'insights'
               ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -617,7 +310,7 @@ const Dashboard: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('search')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
             activeTab === 'search'
               ? 'bg-green-100 text-green-700 border-2 border-green-200'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
@@ -630,67 +323,50 @@ const Dashboard: React.FC = () => {
       {/* Lists Tab */}
       {activeTab === 'lists' && (
         <>
-          <GroceryListSection />
-          <RecipeListSection />
-          <RestaurantListSection />
+          {/* List Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            {lists.map((list) => (
+              <ListCard
+                key={list.id}
+                list={list}
+                onOpen={() => handleOpenList(list.id)}
+              />
+            ))}
+          </div>
 
-          {/* Research Lists */}
-          <ResearchListSection title="Listen List" icon="🎵" isEmpty={spotifyList.length === 0} emptyMessage="">
-            <ul className="space-y-1">
-              {spotifyList.map((item, i) => (
-                <li key={i} className="p-2 bg-green-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
-                  {item.spotifyUrl && (
-                    <a href={item.spotifyUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 hover:underline">
-                      Spotify →
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </ResearchListSection>
+          {/* Actions */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setShowCreateList(true)}
+              className="flex-1 p-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-500 hover:border-gray-300 hover:text-gray-600 transition-colors text-sm font-medium"
+            >
+              + Create New List
+            </button>
+            <button
+              onClick={() => setShowManageLists(true)}
+              className="p-3 bg-gray-100 rounded-xl text-gray-600 hover:bg-gray-200 transition-colors"
+              title="Manage lists"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </button>
+          </div>
 
-          <ResearchListSection title="Reading List" icon="📚" isEmpty={readingList.length === 0} emptyMessage="">
-            <ul className="space-y-1">
-              {readingList.map((item, i) => (
-                <li key={i} className="p-2 bg-orange-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
-                  {item.kindleUrl && (
-                    <a href={item.kindleUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 hover:underline">
-                      Kindle →
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </ResearchListSection>
-
-          <ResearchListSection title="Watchlist" icon="🎬" isEmpty={watchlist.length === 0} emptyMessage="">
-            <ul className="space-y-1">
-              {watchlist.map((item, i) => (
-                <li key={i} className="p-2 bg-red-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
-                  {item.imdbUrl && (
-                    <a href={item.imdbUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-red-600 hover:underline">
-                      IMDB →
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </ResearchListSection>
-
-          <ResearchListSection title="Places to Visit" icon="📍" isEmpty={placesList.length === 0} emptyMessage="">
-            <ul className="space-y-1">
-              {placesList.map((item, i) => (
-                <li key={i} className="p-2 bg-blue-50 rounded-lg text-sm">
-                  <span className="font-medium">{item.name}</span>
-                  {item.location && <span className="text-gray-500 ml-2">({item.location})</span>}
-                  <p className="text-xs text-blue-600">{item.reason}</p>
-                </li>
-              ))}
-            </ul>
-          </ResearchListSection>
+          {/* Data Management */}
+          <Card className="bg-gray-50">
+            <h3 className="font-semibold text-lg mb-3">Data</h3>
+            <div className="flex gap-3">
+              <button
+                onClick={handleMigrate}
+                disabled={migrating}
+                className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {migrating ? 'Migrating...' : '📤 Import Local'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">{entries.length} diary entries</p>
+          </Card>
         </>
       )}
 
@@ -705,8 +381,8 @@ const Dashboard: React.FC = () => {
             </Card>
           ) : (
             <>
-              <DashboardSection title="Recent Workouts" icon="🏋️" items={workouts} emptyMessage="" />
-              <DashboardSection title="Ideas & Insights" icon="💡" items={ideas} emptyMessage="" />
+              <DashboardSection title="Recent Workouts" icon="🏋️" items={workouts} />
+              <DashboardSection title="Ideas & Insights" icon="💡" items={ideas} />
             </>
           )}
         </>
@@ -715,19 +391,130 @@ const Dashboard: React.FC = () => {
       {/* Search Tab */}
       {activeTab === 'search' && <DiarySearchSection />}
 
-      {/* Data Management */}
-      <Card className="mt-8 bg-gray-50">
-        <h3 className="font-semibold text-lg mb-4">Data Management</h3>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button onClick={handleExport} className="flex-1 px-4 py-3 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
-            📥 Export CSV
-          </button>
-          <button onClick={handleMigrate} disabled={migrating} className="flex-1 px-4 py-3 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {migrating ? 'Migrating...' : '📤 Import Local'}
-          </button>
+      {/* Create List Modal */}
+      <Modal
+        isOpen={showCreateList}
+        onClose={() => setShowCreateList(false)}
+        title="Create New List"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">List Name</label>
+            <Input
+              value={newList.name}
+              onChange={(e) => setNewList({ ...newList, name: e.target.value })}
+              placeholder="e.g., Gift Ideas, Travel Bucket List"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Choose Icon</label>
+            <div className="flex flex-wrap gap-2">
+              {LIST_ICONS.map((icon) => (
+                <button
+                  key={icon}
+                  onClick={() => setNewList({ ...newList, icon })}
+                  className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-all ${
+                    newList.icon === icon
+                      ? 'bg-blue-100 border-2 border-blue-400'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Choose Color</label>
+            <div className="flex flex-wrap gap-2">
+              {LIST_COLORS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setNewList({ ...newList, color })}
+                  className={`w-10 h-10 rounded-lg ${color} transition-all ${
+                    newList.color === color
+                      ? 'ring-2 ring-blue-400 ring-offset-2'
+                      : 'hover:opacity-80'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button onClick={handleCreateList} className="flex-1">
+              Create List
+            </Button>
+            <Button variant="secondary" onClick={() => setShowCreateList(false)}>
+              Cancel
+            </Button>
+          </div>
         </div>
-        <p className="text-xs text-gray-500 mt-3 text-center">{entries.length} entries</p>
-      </Card>
+      </Modal>
+
+      {/* Manage Lists Modal */}
+      <Modal
+        isOpen={showManageLists}
+        onClose={() => setShowManageLists(false)}
+        title="Manage Lists"
+        size="md"
+      >
+        <div className="space-y-2">
+          {allLists.map((list) => (
+            <div
+              key={list.id}
+              className={`flex items-center justify-between p-3 rounded-lg ${list.color} ${
+                !list.isVisible ? 'opacity-50' : ''
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{list.icon}</span>
+                <div>
+                  <p className="font-medium text-sm">{list.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {list.items.length} items
+                    {list.isDefault && ' • Default'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleToggleListVisibility(list.id)}
+                  className="p-1.5 text-gray-500 hover:text-gray-700 rounded"
+                  title={list.isVisible ? 'Hide list' : 'Show list'}
+                >
+                  {list.isVisible ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  )}
+                </button>
+                {!list.isDefault && (
+                  <button
+                    onClick={() => handleDeleteList(list.id)}
+                    className="p-1.5 text-red-400 hover:text-red-600 rounded"
+                    title="Delete list"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <Button variant="secondary" onClick={() => setShowManageLists(false)} className="w-full">
+            Done
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

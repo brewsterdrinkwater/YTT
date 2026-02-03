@@ -18,6 +18,7 @@ import EntryForm from './components/entry/EntryForm';
 import Dashboard from './components/dashboard/Dashboard';
 import Timeline from './components/timeline/Timeline';
 import ToolsPage from './components/tools/ToolsPage';
+import ListDetailPage from './components/lists/ListDetailPage';
 import AuthPage from './components/auth/AuthPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
@@ -94,6 +95,7 @@ const AppContent: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/lists/:listId" element={<ListDetailPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
