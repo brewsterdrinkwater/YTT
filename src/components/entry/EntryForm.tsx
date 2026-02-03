@@ -175,8 +175,12 @@ const EntryForm: React.FC = () => {
       {/* Date Navigation - Now at top below global search */}
       <DateNavigator />
 
-      {/* Calendar Quick View */}
-      {settings.apis.calendar && <CalendarQuickView date={currentDate} />}
+      {/* Calendar Quick View - Hidden on mobile */}
+      {settings.apis.calendar && (
+        <div className="hidden md:block">
+          <CalendarQuickView date={currentDate} />
+        </div>
+      )}
 
       {/* Location Section - Collapsible */}
       <CollapsibleSection

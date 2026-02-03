@@ -111,3 +111,61 @@ export interface HistoryItem {
   // Cache the full result for quick access
   cachedResult?: ResearchResult;
 }
+
+// Grocery & Recipe Types
+export interface GroceryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  checked: boolean;
+  isStaple: boolean; // Staple items persist and can be quickly re-added
+  category?: 'produce' | 'dairy' | 'meat' | 'pantry' | 'frozen' | 'beverages' | 'other';
+  addedAt: string;
+}
+
+export interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  ingredients: RecipeIngredient[];
+  servings?: number;
+  notes?: string;
+  sourceUrl?: string;
+  addedAt: string;
+}
+
+export interface RestaurantItem {
+  id: string;
+  name: string;
+  cuisine?: string;
+  location?: string;
+  url?: string;
+  notes?: string;
+  visited: boolean;
+  rating?: number; // 1-5
+  addedAt: string;
+}
+
+// Web Scraper Types
+export type ScrapedContentType = 'recipe' | 'restaurant' | 'book' | 'movie' | 'article' | 'unknown';
+
+export interface ScrapedContent {
+  type: ScrapedContentType;
+  title: string;
+  items: ScrapedItem[];
+  sourceUrl: string;
+}
+
+export interface ScrapedItem {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  url?: string;
+  notes?: string;
+}
