@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { UIStyle } from '../../types/settings';
+import { cn } from '../../utils/cn';
 
 const UI_STYLES: { id: UIStyle; label: string; icon: string; description: string }[] = [
   { id: 'modern', label: 'Modern', icon: '✨', description: 'Swipe cards, glassmorphism' },
@@ -20,16 +21,26 @@ const UIStyleSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <>
+      {/* Trigger Button - More prominent on mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2 py-1 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+        className={cn(
+          'flex items-center gap-2 px-3 py-2 rounded-xl transition-all',
+          'bg-gradient-to-r from-purple-100 to-blue-100 hover:from-purple-200 hover:to-blue-200',
+          'border-2 border-purple-200 hover:border-purple-300',
+          'text-purple-700 font-medium',
+          'shadow-sm hover:shadow-md'
+        )}
         aria-label="Change UI style"
       >
-        <span>{currentStyle.icon}</span>
-        <span className="hidden sm:inline text-gray-700">{currentStyle.label}</span>
+        <span className="text-xl">{currentStyle.icon}</span>
+        <span className="text-sm">{currentStyle.label}</span>
         <svg
-          className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={cn(
+            'w-4 h-4 transition-transform',
+            isOpen && 'rotate-180'
+          )}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -38,46 +49,99 @@ const UIStyleSwitcher: React.FC = () => {
         </svg>
       </button>
 
+      {/* Modal/Sheet - Full screen on mobile, dropdown on desktop */}
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          {/* Backdrop with blur */}
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+            onClick={() => setIsOpen(false)}
+          />
 
-          {/* Dropdown */}
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden animate-fadeIn">
-            <div className="p-2 border-b border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">UI Style</p>
+          {/* Bottom Sheet on mobile, centered modal on desktop */}
+          <div
+            className={cn(
+              'fixed z-50 bg-white overflow-hidden',
+              // Mobile: bottom sheet
+              'inset-x-0 bottom-0 rounded-t-3xl',
+              // Desktop: centered modal
+              'sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2',
+              'sm:rounded-2xl sm:w-80 sm:max-w-[90vw]',
+              'shadow-2xl',
+              'animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:fade-in duration-200'
+            )}
+          >
+            {/* Handle bar for mobile */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
             </div>
-            {UI_STYLES.map((style) => (
-              <button
-                key={style.id}
-                onClick={() => handleStyleChange(style.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
-                  settings.uiStyle === style.id
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-gray-50 text-gray-700'
-                }`}
-              >
-                <span className="text-xl">{style.icon}</span>
+
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-sm">{style.label}</p>
-                  <p className="text-xs text-gray-500">{style.description}</p>
+                  <h3 className="text-lg font-bold text-gray-900">Choose Your Style</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Pick your preferred UI theme</p>
                 </div>
-                {settings.uiStyle === style.id && (
-                  <svg className="w-5 h-5 ml-auto text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                )}
-              </button>
-            ))}
+                </button>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="p-4 space-y-3">
+              {UI_STYLES.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => handleStyleChange(style.id)}
+                  className={cn(
+                    'w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all',
+                    settings.uiStyle === style.id
+                      ? 'bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300 shadow-md'
+                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                  )}
+                >
+                  <span className="text-3xl">{style.icon}</span>
+                  <div className="flex-1">
+                    <p className={cn(
+                      'font-semibold',
+                      settings.uiStyle === style.id ? 'text-purple-700' : 'text-gray-900'
+                    )}>
+                      {style.label}
+                    </p>
+                    <p className="text-sm text-gray-500">{style.description}</p>
+                  </div>
+                  {settings.uiStyle === style.id && (
+                    <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Footer hint */}
+            <div className="px-6 pb-6 pt-2">
+              <p className="text-xs text-center text-gray-400">
+                Your preference is saved automatically
+              </p>
+            </div>
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 
