@@ -371,9 +371,9 @@ You should see "Success. No rows returned" - that means it worked.
 
 Go to **Authentication → URL Configuration**:
 
-- **Site URL:** Your production URL (e.g., `https://walt-tab.com`) or `http://localhost:5173` for dev
+- **Site URL:** Your production URL (e.g., `https://www.walt-tab.com`) or `http://localhost:5173` for dev
 - **Redirect URLs:** Add both:
-  - `https://walt-tab.com`
+  - `https://www.walt-tab.com`
   - `http://localhost:5173` (for development)
 
 ### Step 3.4: Configure Session Duration (2 Weeks)
