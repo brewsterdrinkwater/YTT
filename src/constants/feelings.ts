@@ -18,11 +18,16 @@ export const FEELINGS: FeelingLabel[] = [
 ];
 
 export const getFeelingLabel = (value: number): FeelingLabel => {
+  // Handle unset state (0)
+  if (value === 0) {
+    return { value: 0, label: 'Tap to set', emoji: '❓' };
+  }
   const feeling = FEELINGS.find((f) => f.value === value);
   return feeling || FEELINGS[4]; // Default to "Meh"
 };
 
 export const getFeelingColor = (value: number): string => {
+  if (value === 0) return '#9ca3af'; // Gray for unset
   if (value <= 2) return '#f44336'; // Red
   if (value <= 4) return '#ff9800'; // Orange
   if (value <= 6) return '#ffeb3b'; // Yellow

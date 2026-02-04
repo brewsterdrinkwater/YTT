@@ -391,9 +391,9 @@ export default async function handler(req, res) {
 | Component | Free Tier | Paid (if needed) |
 |-----------|-----------|------------------|
 | Anthropic API | N/A | ~$0.03/research query |
-| Vercel Hosting | 100GB bandwidth | $20/mo |
+| Web Hosting | Varies by provider | $5-20/mo |
 | Supabase DB | 500MB, 50K requests | $25/mo |
-| Domain | N/A | $12/year |
+| Domain (walt-tab.com) | N/A | $12/year |
 
 **For personal use**: Likely $0-5/month total
 

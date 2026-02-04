@@ -131,9 +131,9 @@ const GroceryListSection: React.FC = () => {
                 )}
                 <span className={`flex-1 text-sm ${item.checked ? 'line-through text-gray-400' : ''}`}>
                   {item.name}
-                  {item.quantity > 0 && item.unit && (
+                  {item.quantity > 0 && (
                     <span className="text-gray-400 ml-1">
-                      ({item.quantity} {item.unit})
+                      ({item.quantity}{item.unit ? ` ${item.unit}` : ''})
                     </span>
                   )}
                   {item.isStaple && (
@@ -174,29 +174,41 @@ const GroceryListSection: React.FC = () => {
             + Add item
           </button>
         ) : (
-          <div className="w-full flex gap-2">
-            <Input
-              placeholder="Item name"
-              value={newItem.name}
-              onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-              className="flex-1 text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
-            />
-            <Input
-              type="number"
-              placeholder="Qty"
-              value={newItem.quantity}
-              onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
-              className="w-16 text-sm"
-            />
-            <Input
-              placeholder="Unit"
-              value={newItem.unit}
-              onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-              className="w-20 text-sm"
-            />
-            <Button size="sm" onClick={handleAddItem}>Add</Button>
-            <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+          <div className="w-full space-y-2">
+            {/* Item name - full width */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Item name (e.g., Apples)"
+                value={newItem.name}
+                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                className="flex-1"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
+              />
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="text-gray-400 hover:text-gray-600 px-2"
+              >
+                ✕
+              </button>
+            </div>
+            {/* Quantity and unit - second row */}
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder="Qty"
+                value={newItem.quantity}
+                onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
+                className="w-20"
+                min={1}
+              />
+              <Input
+                placeholder="Unit (lbs, oz, bags...)"
+                value={newItem.unit}
+                onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                className="flex-1"
+              />
+              <Button onClick={handleAddItem}>Add</Button>
+            </div>
           </div>
         )}
         {checkedCount > 0 && (
