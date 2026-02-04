@@ -1,8 +1,12 @@
-# YTT (Yesterday, Today, Tomorrow) - Personal Life Tracking App
+# Walt-Tab - Personal Life Tracking App
 
 ## Mission
 
-YTT is a personal diary and life tracking tool designed to help you reflect on your days, track your activities, and build a meaningful record of your life. The app provides a simple, intentional way to:
+Walt-Tab is a personal data management application built for human experience. It helps you organize all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
+
+**Walt-Tab is a product of Alt-Tab.**
+
+The app provides a simple, intentional way to:
 
 - **Track how you feel** each day on a 1-10 scale
 - **Log activities** like workouts, travel, work, social events, wellness, creative projects, food, and sleep
@@ -10,7 +14,7 @@ YTT is a personal diary and life tracking tool designed to help you reflect on y
 - **Research and discover** new artists, authors, and creators to explore
 - **Build personal lists** of music to listen to, books to read, and films to watch
 
-YTT is built with privacy in mind—your data stays on your device unless you explicitly choose to integrate external services.
+Walt-Tab is built with privacy in mind—your data stays on your device unless you explicitly choose to integrate external services.
 
 ---
 
@@ -18,7 +22,7 @@ YTT is built with privacy in mind—your data stays on your device unless you ex
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         YTT Application                              │
+│                       Walt-Tab Application                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
@@ -134,21 +138,21 @@ The Deep Research Agent is available on every page:
 
 ## Persistent Storage
 
-YTT uses browser localStorage for all data persistence. This means your data stays on your device and is available offline.
+Walt-Tab uses browser localStorage for all data persistence. This means your data stays on your device and is available offline.
 
 ### Storage Keys
 
 | Key | Purpose | File Location |
 |-----|---------|---------------|
-| `ytt-entries` | Daily diary entries | `src/contexts/EntriesContext.tsx` |
-| `ytt-settings` | User preferences | `src/contexts/SettingsContext.tsx` |
-| `ytt-activity-order` | Custom activity tile order | `src/contexts/SettingsContext.tsx` |
-| `ytt-research-spotify-list` | Artists to listen to | `src/services/researchService.ts` |
-| `ytt-research-reading-list` | Books to read (Kindle) | `src/services/researchService.ts` |
-| `ytt-research-watchlist` | Films/TV to watch | `src/services/researchService.ts` |
-| `ytt-research-places-list` | Places to visit | `src/services/researchService.ts` |
-| `ytt-research-history` | Past research queries (with cached results) | `src/services/researchService.ts` |
-| `ytt-research-api-key` | Claude API key | `src/services/researchService.ts` |
+| `walt-tab-entries` | Daily diary entries | `src/contexts/EntriesContext.tsx` |
+| `walt-tab-settings` | User preferences | `src/contexts/SettingsContext.tsx` |
+| `walt-tab-activity-order` | Custom activity tile order | `src/contexts/SettingsContext.tsx` |
+| `walt-tab-research-spotify-list` | Artists to listen to | `src/services/researchService.ts` |
+| `walt-tab-research-reading-list` | Books to read (Kindle) | `src/services/researchService.ts` |
+| `walt-tab-research-watchlist` | Films/TV to watch | `src/services/researchService.ts` |
+| `walt-tab-research-places-list` | Places to visit | `src/services/researchService.ts` |
+| `walt-tab-research-history` | Past research queries (with cached results) | `src/services/researchService.ts` |
+| `walt-tab-research-api-key` | Claude API key | `src/services/researchService.ts` |
 
 ### Storage Service
 
@@ -158,16 +162,16 @@ All storage operations go through a single service at `src/services/storageServi
 import { storageService } from './services/storageService';
 
 // Read data
-const entries = storageService.get<Entry[]>('ytt-entries');
+const entries = storageService.get<Entry[]>('walt-tab-entries');
 
 // Write data
-storageService.set('ytt-entries', entries);
+storageService.set('walt-tab-entries', entries);
 
 // Check if data exists
-if (storageService.exists('ytt-entries')) { ... }
+if (storageService.exists('walt-tab-entries')) { ... }
 
 // Remove data
-storageService.remove('ytt-entries');
+storageService.remove('walt-tab-entries');
 ```
 
 ### Switching to a Different Storage Backend

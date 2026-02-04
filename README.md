@@ -1,6 +1,8 @@
-# YTT - Yesterday, Today, Tomorrow
+# Walt-Tab
 
-A personal diary and life tracking app with three unique UI styles. Document your daily experiences, research people you're curious about, and build personal discovery lists.
+A personal data management application built for human experience. Walt-Tab organizes all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
+
+**Walt-Tab is a product of Alt-Tab.**
 
 ## Features
 
@@ -19,7 +21,7 @@ A personal diary and life tracking app with three unique UI styles. Document you
 
 Choose your preferred experience from the dropdown in the header:
 
-### ✨ Modern (Instagram/Tinder Style)
+### Modern (Instagram/Tinder Style)
 - Swipeable cards with one question at a time
 - Glassmorphism and smooth animations
 - Dark theme with gradient accents
@@ -37,7 +39,7 @@ Choose your preferred experience from the dropdown in the header:
 └───────────────────────────┘
 ```
 
-### 👾 Retro (Oregon Trail / 8-Bit)
+### Retro (Oregon Trail / 8-Bit)
 - Pixel art aesthetic with chunky borders
 - Game Boy green color palette
 - Keyboard-first navigation
@@ -45,7 +47,7 @@ Choose your preferred experience from the dropdown in the header:
 
 ```
 ╔═══════════════════════════╗
-║  Y.T.T. DAILY LOG v1.0    ║
+║  WALT-TAB DAILY LOG v1.0  ║
 ╠═══════════════════════════╣
 ║  WHERE ARE YOU TRAVELER?  ║
 ║  [1] ♪ NASHVILLE          ║
@@ -54,7 +56,7 @@ Choose your preferred experience from the dropdown in the header:
 ╚═══════════════════════════╝
 ```
 
-### 📋 Structured (Clean + Colorful)
+### Structured (Clean + Colorful)
 - Form-based layout with clear sections
 - Color-coded activity tiles
 - Bold section headers
