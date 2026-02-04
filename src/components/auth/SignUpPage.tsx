@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
+/**
+ * Walt-tab Sign Up Page
+ * Brutalist style: Clean white card, black accents, minimal decoration
+ */
+
 interface SignUpPageProps {
   onToggleMode: () => void;
 }
@@ -49,19 +54,23 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-          <div className="text-green-500 text-5xl mb-4">✓</div>
-          <h2 className="text-xl font-semibold mb-2">Check your email</h2>
-          <p className="text-gray-600 mb-4">
-            We've sent a confirmation link to <strong>{email}</strong>
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full bg-white border-2 border-black rounded-sm p-8 text-center">
+          <div className="w-16 h-16 bg-success rounded-sm flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-h3 font-semibold text-black mb-2">Check your email</h2>
+          <p className="text-slate mb-4">
+            We've sent a confirmation link to <strong className="text-black">{email}</strong>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-small text-slate">
             Click the link in your email to activate your account.
           </p>
           <button
             onClick={onToggleMode}
-            className="mt-6 text-blue-600 hover:text-blue-700 font-medium"
+            className="mt-6 text-black hover:text-tab-red font-semibold transition-colors"
           >
             Back to Sign In
           </button>
@@ -71,25 +80,32 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
       <div className="max-w-md w-full">
+        {/* Logo Section */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Walt-Tab</h1>
-          <p className="text-gray-600 mt-2">Your personal life dashboard</p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-black rounded-sm flex items-center justify-center">
+              <span className="text-white text-2xl font-bold">W</span>
+            </div>
+            <h1 className="text-h1 font-bold text-black tracking-tight">Walt-Tab</h1>
+          </div>
+          <p className="text-slate">Own Your Story. Navigate Your Life.</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-xl font-semibold mb-6">Create Account</h2>
+        {/* Sign Up Card */}
+        <div className="bg-white border-2 border-black rounded-sm p-8">
+          <h2 className="text-h3 font-semibold text-black mb-6">Create Account</h2>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+            <div className="bg-danger/10 text-danger border border-danger/20 p-3 rounded-sm mb-4 text-small">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-small font-semibold text-black mb-2">
                 Email
               </label>
               <input
@@ -97,13 +113,13 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-steel rounded-sm focus:outline-none focus:border-black transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-small font-semibold text-black mb-2">
                 Password
               </label>
               <input
@@ -111,14 +127,14 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-steel rounded-sm focus:outline-none focus:border-black transition-colors"
                 required
                 minLength={6}
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-small font-semibold text-black mb-2">
                 Confirm Password
               </label>
               <input
@@ -126,7 +142,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-steel rounded-sm focus:outline-none focus:border-black transition-colors"
                 required
               />
             </div>
@@ -134,21 +150,21 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-black text-white font-semibold rounded-sm hover:bg-charcoal disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
           <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="px-4 text-sm text-gray-500">or</span>
-            <div className="flex-1 border-t border-gray-300"></div>
+            <div className="flex-1 border-t-2 border-steel"></div>
+            <span className="px-4 text-small text-slate">or</span>
+            <div className="flex-1 border-t-2 border-steel"></div>
           </div>
 
           <button
             onClick={handleGoogleSignIn}
-            className="w-full py-2 px-4 border border-gray-300 rounded-md flex items-center justify-center gap-2 hover:bg-gray-50"
+            className="w-full py-3 px-4 border-2 border-black rounded-sm flex items-center justify-center gap-3 hover:bg-concrete font-medium transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -171,11 +187,11 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({ onToggleMode }) => {
             Continue with Google
           </button>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-small text-slate">
             Already have an account?{' '}
             <button
               onClick={onToggleMode}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-black hover:text-tab-red font-semibold transition-colors"
             >
               Sign In
             </button>

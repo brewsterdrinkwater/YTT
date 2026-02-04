@@ -3,28 +3,42 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../utils/cn';
 
+/**
+ * Walt-tab Button Component
+ * Brutalist style: high contrast, minimal decoration
+ */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center font-semibold rounded-xl transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
+        // Primary: Black background, white text (main CTA)
         primary:
-          'bg-primary hover:bg-primary-dark text-white focus-visible:ring-primary hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0',
+          'bg-black hover:bg-charcoal text-white rounded-sm active:scale-[0.98]',
+        // Secondary: White background, black text, black border
         secondary:
-          'bg-gray-100 hover:bg-gray-200 text-gray-900 focus-visible:ring-gray-300 border border-gray-200',
+          'bg-white hover:bg-concrete text-black border-2 border-black rounded-sm active:scale-[0.98]',
+        // Accent: Red background (use sparingly)
+        accent:
+          'bg-tab-red hover:bg-red-600 text-white rounded-sm active:scale-[0.98]',
+        // Danger: For destructive actions
         danger:
-          'bg-danger hover:bg-red-700 text-white focus-visible:ring-danger',
+          'bg-danger hover:bg-red-600 text-white rounded-sm active:scale-[0.98]',
+        // Ghost: Transparent with hover
         ghost:
-          'bg-transparent hover:bg-gray-100 text-gray-600 focus-visible:ring-gray-200',
+          'bg-transparent hover:bg-concrete text-charcoal rounded-sm',
+        // Outline: Border only
         outline:
-          'border-2 border-primary text-primary hover:bg-primary hover:text-white focus-visible:ring-primary',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'border-2 border-black text-black hover:bg-black hover:text-white rounded-sm active:scale-[0.98]',
+        // Link: Text only, underline on hover
+        link:
+          'text-black underline-offset-4 hover:underline hover:text-tab-red p-0 h-auto',
       },
       size: {
-        sm: 'h-9 px-3 text-sm',
+        sm: 'h-9 px-4 text-sm',
         md: 'h-11 px-6 text-base',
         lg: 'h-13 px-8 text-lg',
-        icon: 'h-10 w-10',
+        icon: 'h-10 w-10 p-0',
       },
     },
     defaultVariants: {

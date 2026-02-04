@@ -1,5 +1,10 @@
 import React, { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from 'react';
 
+/**
+ * Walt-tab Input Components
+ * Brutalist style: clean borders, high contrast focus states
+ */
+
 interface BaseInputProps {
   label?: string;
   error?: string;
@@ -7,7 +12,7 @@ interface BaseInputProps {
 }
 
 interface InputFieldProps extends BaseInputProps, InputHTMLAttributes<HTMLInputElement> {
-  type?: 'text' | 'number' | 'email' | 'password' | 'time' | 'date';
+  type?: 'text' | 'number' | 'email' | 'password' | 'time' | 'date' | 'search' | 'tel' | 'url';
 }
 
 interface TextAreaProps extends BaseInputProps, TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -27,21 +32,22 @@ interface SelectProps extends BaseInputProps {
 export const Input = forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, error, helperText, className = '', ...props }, ref) => {
     const inputClasses = `
-      w-full px-4 py-3 border-2 rounded-xl transition-colors
-      focus:outline-none focus:border-primary
-      ${error ? 'border-danger' : 'border-gray-200'}
-      ${props.disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}
+      w-full px-4 py-3 border-2 rounded-sm transition-colors duration-150
+      focus:outline-none focus:border-black
+      placeholder:text-slate
+      ${error ? 'border-danger' : 'border-steel'}
+      ${props.disabled ? 'bg-concrete cursor-not-allowed text-slate' : 'bg-white text-black'}
       ${className}
-    `;
+    `.trim();
 
     return (
       <div className="mb-4">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+          <label className="block text-sm font-semibold text-black mb-2">{label}</label>
         )}
         <input ref={ref} className={inputClasses} {...props} />
         {error && <p className="mt-1 text-sm text-danger">{error}</p>}
-        {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
+        {helperText && !error && <p className="mt-1 text-sm text-slate">{helperText}</p>}
       </div>
     );
   }
@@ -52,21 +58,22 @@ Input.displayName = 'Input';
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ label, error, helperText, rows = 3, className = '', ...props }, ref) => {
     const textareaClasses = `
-      w-full px-4 py-3 border-2 rounded-xl transition-colors resize-none
-      focus:outline-none focus:border-primary
-      ${error ? 'border-danger' : 'border-gray-200'}
-      ${props.disabled ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}
+      w-full px-4 py-3 border-2 rounded-sm transition-colors duration-150 resize-none
+      focus:outline-none focus:border-black
+      placeholder:text-slate
+      ${error ? 'border-danger' : 'border-steel'}
+      ${props.disabled ? 'bg-concrete cursor-not-allowed text-slate' : 'bg-white text-black'}
       ${className}
-    `;
+    `.trim();
 
     return (
       <div className="mb-4">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+          <label className="block text-sm font-semibold text-black mb-2">{label}</label>
         )}
         <textarea ref={ref} rows={rows} className={textareaClasses} {...props} />
         {error && <p className="mt-1 text-sm text-danger">{error}</p>}
-        {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
+        {helperText && !error && <p className="mt-1 text-sm text-slate">{helperText}</p>}
       </div>
     );
   }
@@ -84,17 +91,17 @@ export const Select: React.FC<SelectProps> = ({
   ...props
 }) => {
   const selectClasses = `
-    w-full px-4 py-3 border-2 rounded-xl transition-colors appearance-none
-    focus:outline-none focus:border-primary bg-white
-    ${error ? 'border-danger' : 'border-gray-200'}
-    ${props.disabled ? 'bg-gray-50 cursor-not-allowed' : ''}
+    w-full px-4 py-3 border-2 rounded-sm transition-colors duration-150 appearance-none
+    focus:outline-none focus:border-black bg-white text-black
+    ${error ? 'border-danger' : 'border-steel'}
+    ${props.disabled ? 'bg-concrete cursor-not-allowed text-slate' : ''}
     ${className}
-  `;
+  `.trim();
 
   return (
     <div className="mb-4">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <label className="block text-sm font-semibold text-black mb-2">{label}</label>
       )}
       <div className="relative">
         <select className={selectClasses} {...props}>
@@ -110,13 +117,13 @@ export const Select: React.FC<SelectProps> = ({
           ))}
         </select>
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </div>
       {error && <p className="mt-1 text-sm text-danger">{error}</p>}
-      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-slate">{helperText}</p>}
     </div>
   );
 };

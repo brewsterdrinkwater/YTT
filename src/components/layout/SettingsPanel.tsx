@@ -7,6 +7,11 @@ import { exportToCSV } from '../../utils/exportCSV';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 
+/**
+ * Walt-tab Settings Panel
+ * Brutalist style: Clean sections, high contrast, minimal decoration
+ */
+
 const SettingsPanel: React.FC = () => {
   const { isSettingsOpen, setIsSettingsOpen, showToast } = useApp();
   const { settings, updateSettings, setVersion, toggleApi, resetSettings } = useSettings();
@@ -33,23 +38,22 @@ const SettingsPanel: React.FC = () => {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 z-50"
+        className="fixed inset-0 bg-black/60 z-50"
         onClick={() => setIsSettingsOpen(false)}
       />
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto animate-slideInRight">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white border-l-2 border-black z-50 overflow-y-auto animate-slideInRight">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Settings</h2>
+        <div className="sticky top-0 bg-white border-b-2 border-black p-4 flex items-center justify-between">
+          <h2 className="text-h3 font-semibold text-black">Settings</h2>
           <button
             onClick={() => setIsSettingsOpen(false)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-concrete rounded-sm transition-colors"
             aria-label="Close settings"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
@@ -59,25 +63,25 @@ const SettingsPanel: React.FC = () => {
         <div className="p-4 space-y-6">
           {/* App Version */}
           <section>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
               App Version
             </h3>
-            <div className="bg-gray-50 rounded-xl p-4">
+            <div className="bg-concrete rounded-sm p-4 border border-steel">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">
+                <span className="font-semibold text-black">
                   {settings.version === 'trust' ? 'Trust Mode' : 'Secure Mode'}
                 </span>
                 <span
-                  className={`text-xs px-2 py-1 rounded-full ${
+                  className={`text-tiny px-2 py-1 rounded-sm font-medium ${
                     settings.version === 'trust'
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-gray-200 text-gray-600'
+                      ? 'bg-black text-white'
+                      : 'bg-steel text-charcoal'
                   }`}
                 >
                   Active
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mb-3">
+              <p className="text-small text-slate mb-3">
                 {settings.version === 'trust'
                   ? 'Auto-sync with external services for convenience'
                   : 'All data stored locally for maximum privacy'}
@@ -95,19 +99,19 @@ const SettingsPanel: React.FC = () => {
           {/* Location Settings */}
           {settings.version === 'trust' && (
             <section>
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
                 Location Tracking
               </h3>
-              <label className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer">
+              <label className="flex items-center justify-between p-4 bg-concrete rounded-sm border border-steel cursor-pointer">
                 <div>
-                  <span className="font-medium">Auto-detect Location</span>
-                  <p className="text-sm text-gray-500">Use GPS/WiFi to detect your location</p>
+                  <span className="font-semibold text-black">Auto-detect Location</span>
+                  <p className="text-small text-slate">Use GPS/WiFi to detect your location</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={settings.autoLocation}
                   onChange={(e) => updateSettings({ autoLocation: e.target.checked })}
-                  className="w-5 h-5 text-primary rounded focus:ring-primary"
+                  className="w-5 h-5 text-black rounded-sm border-2 border-black focus:ring-black"
                 />
               </label>
             </section>
@@ -115,27 +119,27 @@ const SettingsPanel: React.FC = () => {
 
           {/* Location Input Style */}
           <section>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
               Location Input Style
             </h3>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <div className="flex gap-3">
+            <div className="bg-concrete rounded-sm p-4 border border-steel">
+              <div className="flex gap-2">
                 <button
                   onClick={() => updateSettings({ locationStyle: 'buttons' })}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
                     settings.locationStyle === 'buttons'
-                      ? 'bg-primary text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      ? 'bg-black text-white'
+                      : 'bg-white text-charcoal border-2 border-steel hover:border-black'
                   }`}
                 >
                   Buttons
                 </button>
                 <button
                   onClick={() => updateSettings({ locationStyle: 'dropdown' })}
-                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                  className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
                     settings.locationStyle === 'dropdown'
-                      ? 'bg-primary text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      ? 'bg-black text-white'
+                      : 'bg-white text-charcoal border-2 border-steel hover:border-black'
                   }`}
                 >
                   Dropdown
@@ -147,7 +151,7 @@ const SettingsPanel: React.FC = () => {
           {/* Data Sources (Trust Mode) */}
           {settings.version === 'trust' && (
             <section>
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
                 Data Sources
               </h3>
               <div className="space-y-2">
@@ -163,17 +167,17 @@ const SettingsPanel: React.FC = () => {
                 ].map((api) => (
                   <label
                     key={api.key}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-concrete rounded-sm border border-steel cursor-pointer hover:border-charcoal transition-colors"
                   >
                     <div>
-                      <span className="font-medium">{api.label}</span>
-                      <p className="text-xs text-gray-500">{api.desc}</p>
+                      <span className="font-semibold text-black">{api.label}</span>
+                      <p className="text-tiny text-slate">{api.desc}</p>
                     </div>
                     <input
                       type="checkbox"
                       checked={settings.apis[api.key]}
                       onChange={() => toggleApi(api.key)}
-                      className="w-5 h-5 text-primary rounded focus:ring-primary"
+                      className="w-5 h-5 text-black rounded-sm border-2 border-black focus:ring-black"
                     />
                   </label>
                 ))}
@@ -183,12 +187,12 @@ const SettingsPanel: React.FC = () => {
 
           {/* Notifications */}
           <section>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
               Notifications
             </h3>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+            <div className="bg-concrete rounded-sm p-4 border border-steel space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="font-medium">Daily Reminder</span>
+                <span className="font-semibold text-black">Daily Reminder</span>
                 <input
                   type="checkbox"
                   checked={settings.notifications.enabled}
@@ -197,12 +201,12 @@ const SettingsPanel: React.FC = () => {
                       notifications: { ...settings.notifications, enabled: e.target.checked },
                     })
                   }
-                  className="w-5 h-5 text-primary rounded focus:ring-primary"
+                  className="w-5 h-5 text-black rounded-sm border-2 border-black focus:ring-black"
                 />
               </label>
               {settings.notifications.enabled && (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500">Remind at:</span>
+                  <span className="text-small text-slate">Remind at:</span>
                   <input
                     type="time"
                     value={settings.notifications.time}
@@ -211,7 +215,7 @@ const SettingsPanel: React.FC = () => {
                         notifications: { ...settings.notifications, time: e.target.value },
                       })
                     }
-                    className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary"
+                    className="px-3 py-2 border-2 border-steel rounded-sm focus:outline-none focus:border-black"
                   />
                 </div>
               )}
@@ -220,29 +224,29 @@ const SettingsPanel: React.FC = () => {
 
           {/* Data Export */}
           <section>
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
               Data Export
             </h3>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-sm text-gray-500 mb-3">
+            <div className="bg-concrete rounded-sm p-4 border border-steel">
+              <p className="text-small text-slate mb-3">
                 Export all your entries as a CSV file for backup or analysis.
               </p>
               <Button variant="secondary" onClick={handleExport}>
                 Export All Data as CSV
               </Button>
-              <p className="text-xs text-gray-400 mt-2">{entries.length} entries available</p>
+              <p className="text-tiny text-slate mt-2">{entries.length} entries available</p>
             </div>
           </section>
 
           {/* Account */}
           {user && (
             <section>
-              <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
                 Account
               </h3>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-sm text-gray-600 mb-3">
-                  Signed in as <strong>{user.email}</strong>
+              <div className="bg-concrete rounded-sm p-4 border border-steel">
+                <p className="text-small text-charcoal mb-3">
+                  Signed in as <strong className="text-black">{user.email}</strong>
                 </p>
                 <Button variant="secondary" onClick={signOut}>
                   Sign Out
@@ -253,11 +257,11 @@ const SettingsPanel: React.FC = () => {
 
           {/* Danger Zone */}
           <section>
-            <h3 className="text-sm font-medium text-danger uppercase tracking-wider mb-3">
+            <h3 className="text-tiny font-semibold text-danger uppercase tracking-wider mb-3">
               Danger Zone
             </h3>
-            <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-              <p className="text-sm text-gray-600 mb-3">
+            <div className="bg-danger/5 border-2 border-danger/30 rounded-sm p-4">
+              <p className="text-small text-charcoal mb-3">
                 This will permanently delete all your data. This action cannot be undone.
               </p>
               <Button variant="danger" onClick={() => setShowClearConfirm(true)}>
@@ -275,7 +279,7 @@ const SettingsPanel: React.FC = () => {
         title="Clear All Data?"
         size="sm"
       >
-        <p className="text-gray-600 mb-4">
+        <p className="text-slate mb-4">
           Are you sure you want to delete all your entries and settings? This action cannot be
           undone.
         </p>
