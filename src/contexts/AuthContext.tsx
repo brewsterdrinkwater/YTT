@@ -2,6 +2,21 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+// Get the site URL for OAuth redirects
+// Priority: env variable > production URL > current origin
+const getSiteUrl = (): string => {
+  // Check for environment variable first
+  if (import.meta.env.VITE_SITE_URL) {
+    return import.meta.env.VITE_SITE_URL;
+  }
+  // In production, always use the walt-tab.com domain
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return 'https://www.walt-tab.com';
+  }
+  // For local development, use current origin
+  return typeof window !== 'undefined' ? window.location.origin : 'https://www.walt-tab.com';
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -60,10 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
+    const redirectUrl = getSiteUrl();
+    console.log('[Auth] OAuth redirect URL:', redirectUrl);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: redirectUrl,
       },
     });
     return { error };
