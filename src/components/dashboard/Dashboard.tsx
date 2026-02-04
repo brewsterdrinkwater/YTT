@@ -484,14 +484,17 @@ const ResearchListSection: React.FC<ResearchListSectionProps> = ({
   emptyMessage,
   isEmpty,
 }) => {
-  if (isEmpty) return null;
   return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+    <Card className="mb-4 border-2 border-steel hover:border-charcoal transition-colors">
+      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2 text-black">
         <span>{icon}</span>
         {title}
       </h3>
-      {children}
+      {isEmpty ? (
+        <p className="text-slate text-sm italic py-2">{emptyMessage || `No items yet. Add some ${title.toLowerCase()}!`}</p>
+      ) : (
+        children
+      )}
     </Card>
   );
 };
@@ -558,7 +561,7 @@ const extractIdeas = (entries: Entry[]): DashboardItem[] => {
 };
 
 const Dashboard: React.FC = () => {
-  const { entries, exportToCSV, migrateFromLocalStorage } = useEntries();
+  const { entries } = useEntries();
   const [activeTab, setActiveTab] = useState<DashboardTab>('lists');
 
   // Research lists state
@@ -566,8 +569,6 @@ const Dashboard: React.FC = () => {
   const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
-  const [migrating, setMigrating] = useState(false);
-  const [migrateMessage, setMigrateMessage] = useState('');
 
   useEffect(() => {
     setSpotifyList(researchService.getSpotifyList());
@@ -576,63 +577,44 @@ const Dashboard: React.FC = () => {
     setPlacesList(researchService.getPlacesList());
   }, []);
 
-  const handleExport = () => exportToCSV();
-
-  const handleMigrate = async () => {
-    setMigrating(true);
-    setMigrateMessage('');
-    try {
-      const count = await migrateFromLocalStorage();
-      setMigrateMessage(count > 0 ? `Migrated ${count} entries!` : 'No new entries.');
-    } catch {
-      setMigrateMessage('Migration failed.');
-    }
-    setMigrating(false);
-  };
-
   const workouts = extractWorkouts(entries);
   const ideas = extractIdeas(entries);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-h2 font-bold text-black">Dashboard</h1>
+        <p className="text-small text-slate mt-1">Your lists, insights, and search</p>
       </div>
 
-      {migrateMessage && (
-        <div className={`mb-4 p-3 rounded-lg text-sm ${migrateMessage.includes('failed') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-          {migrateMessage}
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      {/* Tabs - Walt-tab brutalist style with color accents */}
+      <div className="flex gap-1 mb-6 border-b-2 border-black">
         <button
           onClick={() => setActiveTab('lists')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 ${
             activeTab === 'lists'
-              ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+              ? 'bg-tab-orange/10 text-black border-tab-orange'
+              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
           📋 Lists
         </button>
         <button
           onClick={() => setActiveTab('insights')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 ${
             activeTab === 'insights'
-              ? 'bg-purple-100 text-purple-700 border-2 border-purple-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+              ? 'bg-tab-blue/10 text-black border-tab-blue'
+              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
           💡 Insights
         </button>
         <button
           onClick={() => setActiveTab('search')}
-          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 ${
             activeTab === 'search'
-              ? 'bg-green-100 text-green-700 border-2 border-green-200'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-transparent'
+              ? 'bg-success/10 text-black border-success'
+              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
           🔍 Search
@@ -647,13 +629,13 @@ const Dashboard: React.FC = () => {
           <RestaurantListSection />
 
           {/* Research Lists */}
-          <ResearchListSection title="Listen List" icon="🎵" isEmpty={spotifyList.length === 0} emptyMessage="">
+          <ResearchListSection title="Listen List" icon="🎵" isEmpty={spotifyList.length === 0} emptyMessage="Add music, podcasts, or albums to listen to">
             <ul className="space-y-1">
               {spotifyList.map((item, i) => (
-                <li key={i} className="p-2 bg-green-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
+                <li key={i} className="p-3 bg-success/5 border border-success/20 rounded-sm flex justify-between items-center text-sm">
+                  <span className="font-medium">{item.name}</span>
                   {item.spotifyUrl && (
-                    <a href={item.spotifyUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 hover:underline">
+                    <a href={item.spotifyUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-success font-semibold hover:underline">
                       Spotify →
                     </a>
                   )}
@@ -662,13 +644,13 @@ const Dashboard: React.FC = () => {
             </ul>
           </ResearchListSection>
 
-          <ResearchListSection title="Reading List" icon="📚" isEmpty={readingList.length === 0} emptyMessage="">
+          <ResearchListSection title="Reading List" icon="📚" isEmpty={readingList.length === 0} emptyMessage="Add books, articles, or papers to read">
             <ul className="space-y-1">
               {readingList.map((item, i) => (
-                <li key={i} className="p-2 bg-orange-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
+                <li key={i} className="p-3 bg-tab-orange/5 border border-tab-orange/20 rounded-sm flex justify-between items-center text-sm">
+                  <span className="font-medium">{item.name}</span>
                   {item.kindleUrl && (
-                    <a href={item.kindleUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-orange-600 hover:underline">
+                    <a href={item.kindleUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-tab-orange font-semibold hover:underline">
                       Kindle →
                     </a>
                   )}
@@ -677,13 +659,13 @@ const Dashboard: React.FC = () => {
             </ul>
           </ResearchListSection>
 
-          <ResearchListSection title="Watchlist" icon="🎬" isEmpty={watchlist.length === 0} emptyMessage="">
+          <ResearchListSection title="Watchlist" icon="🎬" isEmpty={watchlist.length === 0} emptyMessage="Add movies or shows to watch">
             <ul className="space-y-1">
               {watchlist.map((item, i) => (
-                <li key={i} className="p-2 bg-red-50 rounded-lg flex justify-between items-center text-sm">
-                  <span>{item.name}</span>
+                <li key={i} className="p-3 bg-tab-red/5 border border-tab-red/20 rounded-sm flex justify-between items-center text-sm">
+                  <span className="font-medium">{item.name}</span>
                   {item.imdbUrl && (
-                    <a href={item.imdbUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-red-600 hover:underline">
+                    <a href={item.imdbUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-tab-red font-semibold hover:underline">
                       IMDB →
                     </a>
                   )}
@@ -692,13 +674,13 @@ const Dashboard: React.FC = () => {
             </ul>
           </ResearchListSection>
 
-          <ResearchListSection title="Places to Visit" icon="📍" isEmpty={placesList.length === 0} emptyMessage="">
+          <ResearchListSection title="Places to Visit" icon="📍" isEmpty={placesList.length === 0} emptyMessage="Add destinations, restaurants, or attractions">
             <ul className="space-y-1">
               {placesList.map((item, i) => (
-                <li key={i} className="p-2 bg-blue-50 rounded-lg text-sm">
-                  <span className="font-medium">{item.name}</span>
-                  {item.location && <span className="text-gray-500 ml-2">({item.location})</span>}
-                  <p className="text-xs text-blue-600">{item.reason}</p>
+                <li key={i} className="p-3 bg-tab-blue/5 border border-tab-blue/20 rounded-sm text-sm">
+                  <span className="font-semibold">{item.name}</span>
+                  {item.location && <span className="text-slate ml-2">({item.location})</span>}
+                  <p className="text-xs text-tab-blue mt-1">{item.reason}</p>
                 </li>
               ))}
             </ul>
@@ -726,20 +708,6 @@ const Dashboard: React.FC = () => {
 
       {/* Search Tab */}
       {activeTab === 'search' && <DiarySearchSection />}
-
-      {/* Data Management */}
-      <Card className="mt-8 bg-gray-50">
-        <h3 className="font-semibold text-lg mb-4">Data Management</h3>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button onClick={handleExport} className="flex-1 px-4 py-3 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
-            📥 Export CSV
-          </button>
-          <button onClick={handleMigrate} disabled={migrating} className="flex-1 px-4 py-3 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-            {migrating ? 'Migrating...' : '📤 Import Local'}
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-3 text-center">{entries.length} entries</p>
-      </Card>
     </div>
   );
 };

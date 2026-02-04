@@ -11,8 +11,10 @@ export default {
         'walt-black': '#000000',
         'walt-white': '#FFFFFF',
 
-        // Accent Colors
+        // Accent Colors - Vibrant palette
         'tab-red': '#FF0000',
+        'tab-orange': '#FF6B00',
+        'tab-blue': '#0066FF',
         'memory-blue': '#0055FF',
 
         // Neutrals
@@ -23,9 +25,9 @@ export default {
 
         // System Colors
         success: '#00CC66',
-        warning: '#FFAA00',
+        warning: '#FF9500',
         danger: '#FF3333',
-        info: '#0055FF',
+        info: '#0066FF',
 
         // Legacy support (mapped to new system)
         primary: {
