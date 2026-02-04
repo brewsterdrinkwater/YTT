@@ -367,14 +367,37 @@ You should see "Success. No rows returned" - that means it worked.
 7. Copy the **Client ID** and **Client Secret**
 8. Paste them in Supabase Google provider settings
 
-### Step 3.3: Configure Auth Settings
+### Step 3.3: Configure Auth Settings (CRITICAL)
+
+⚠️ **IMPORTANT:** These settings control where users are redirected after SSO login. Incorrect settings will cause 404 errors.
 
 Go to **Authentication → URL Configuration**:
 
-- **Site URL:** Your production URL (e.g., `https://www.walt-tab.com`) or `http://localhost:5173` for dev
-- **Redirect URLs:** Add both:
+- **Site URL:** `https://www.walt-tab.com`
+  - This is the PRIMARY redirect URL after OAuth authentication
+  - **MUST be set to your production domain, NOT the Vercel URL**
+  - The app will NOT work correctly if this points to a Vercel URL
+
+- **Redirect URLs:** Add ALL of these (one per line):
   - `https://www.walt-tab.com`
+  - `https://www.walt-tab.com/`
+  - `https://www.walt-tab.com/dashboard`
   - `http://localhost:5173` (for development)
+  - `http://localhost:5173/` (for development)
+
+**Verification:** After saving, when you click "Sign in with Google", the OAuth flow should redirect back to `https://www.walt-tab.com`, NOT to any Vercel URL.
+
+### Step 3.3b: Update Google OAuth Redirect URIs
+
+If using Google Sign-In, you must also update Google Cloud Console:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Navigate to **APIs & Services → Credentials**
+3. Click on your OAuth 2.0 Client ID
+4. Under **Authorized redirect URIs**, ensure you have:
+   - `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
+5. Under **Authorized JavaScript origins**, add:
+   - `https://www.walt-tab.com`
 
 ### Step 3.4: Configure Session Duration (2 Weeks)
 
