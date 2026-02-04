@@ -83,7 +83,7 @@ const EntryForm: React.FC = () => {
   const [showAutoLocation, setShowAutoLocation] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load entry for current date
   useEffect(() => {
