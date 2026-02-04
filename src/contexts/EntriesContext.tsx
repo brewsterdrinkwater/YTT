@@ -107,7 +107,7 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
       id: uuidv4(),
       date: date.toISOString(),
       location: '',
-      feeling: 5,
+      feeling: 0, // 0 means "not set" - user must actively choose a feeling
       activities: {},
       createdAt: now,
       updatedAt: now,

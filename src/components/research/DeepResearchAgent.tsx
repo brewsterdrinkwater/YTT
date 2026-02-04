@@ -2,10 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { researchService } from '../../services/researchService';
 import {
   ResearchResult,
-  SpotifyListItem,
-  ReadingListItem,
-  WatchlistItem,
-  PlacesListItem,
   HistoryItem,
 } from '../../types/research';
 import Card from '../common/Card';
@@ -73,7 +69,7 @@ For timeline, include 8-15 significant works/events in chronological order.
 For deepCuts, include 3-5 underrated or overlooked works.
 For sources, include 5-8 high-quality primary and secondary sources only.`;
 
-type TabType = 'search' | 'lists' | 'history' | 'settings';
+type TabType = 'search' | 'history' | 'settings';
 
 interface DeepResearchAgentProps {
   defaultExpanded?: boolean;
@@ -100,22 +96,14 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // Lists state
-  const [spotifyList, setSpotifyList] = useState<SpotifyListItem[]>([]);
-  const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
+  // History state
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   // Place input state
   const [placeReason, setPlaceReason] = useState('');
 
-  // Load lists from storage on mount
+  // Load history and API key from storage on mount
   useEffect(() => {
-    setSpotifyList(researchService.getSpotifyList());
-    setReadingList(researchService.getReadingList());
-    setWatchlist(researchService.getWatchlist());
-    setPlacesList(researchService.getPlacesList());
     setHistory(researchService.getHistory());
     setApiKey(researchService.getApiKey());
   }, []);
@@ -214,27 +202,35 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     }
   };
 
+  // State for showing "Added!" feedback
+  const [addedFeedback, setAddedFeedback] = useState<string | null>(null);
+
+  const showAddedFeedback = (message: string) => {
+    setAddedFeedback(message);
+    setTimeout(() => setAddedFeedback(null), 2000);
+  };
+
   const addToSpotify = () => {
     if (!result) return;
-    const newList = researchService.addToSpotifyList({
+    researchService.addToSpotifyList({
       name: result.name,
       spotifyUrl: result.actionLinks?.spotify || null,
       addedAt: new Date().toISOString(),
     });
-    setSpotifyList(newList);
+    showAddedFeedback('Added to Listen List! View in Dashboard.');
   };
 
   const addToReading = () => {
     if (!result) return;
     const works =
       result.timeline?.filter((t) => t.type === 'book' || t.type === 'novel').map((t) => t.title) || [];
-    const newList = researchService.addToReadingList({
+    researchService.addToReadingList({
       name: result.name,
       works,
       kindleUrl: result.actionLinks?.kindle || null,
       addedAt: new Date().toISOString(),
     });
-    setReadingList(newList);
+    showAddedFeedback('Added to Reading List! View in Dashboard.');
   };
 
   const addToWatchlist = () => {
@@ -242,42 +238,25 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     const works =
       result.timeline?.filter((t) => t.type === 'film' || t.type === 'role' || t.type === 'tv').map((t) => t.title) ||
       [];
-    const newList = researchService.addToWatchlist({
+    researchService.addToWatchlist({
       name: result.name,
       works,
       imdbUrl: result.actionLinks?.imdb || null,
       addedAt: new Date().toISOString(),
     });
-    setWatchlist(newList);
+    showAddedFeedback('Added to Watchlist! View in Dashboard.');
   };
 
   const addToPlaces = () => {
     if (!result) return;
-    const newList = researchService.addToPlacesList({
+    researchService.addToPlacesList({
       name: result.name,
       location: result.birthPlace,
       reason: placeReason || `Visit places associated with ${result.name}`,
       addedAt: new Date().toISOString(),
     });
-    setPlacesList(newList);
     setPlaceReason('');
-  };
-
-  const removeFromList = (listType: 'spotify' | 'reading' | 'watchlist' | 'places', name: string) => {
-    switch (listType) {
-      case 'spotify':
-        setSpotifyList(researchService.removeFromSpotifyList(name));
-        break;
-      case 'reading':
-        setReadingList(researchService.removeFromReadingList(name));
-        break;
-      case 'watchlist':
-        setWatchlist(researchService.removeFromWatchlist(name));
-        break;
-      case 'places':
-        setPlacesList(researchService.removeFromPlacesList(name));
-        break;
-    }
+    showAddedFeedback('Added to Places! View in Dashboard.');
   };
 
   const hasControversies =
@@ -285,8 +264,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     ((result.controversies?.sexualMisconduct?.length || 0) > 0 ||
       (result.controversies?.domesticViolence?.length || 0) > 0 ||
       (result.controversies?.racism?.length || 0) > 0);
-
-  const totalListItems = spotifyList.length + readingList.length + watchlist.length + placesList.length;
 
   // If showing history only mode (for Search page)
   if (showHistoryOnly) {
@@ -356,17 +333,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                 {isLoading ? '...' : 'Research'}
               </Button>
             </div>
-            {totalListItems > 0 && (
-              <button
-                onClick={() => {
-                  setIsExpanded(true);
-                  setActiveTab('lists');
-                }}
-                className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-white rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors border border-blue-200"
-              >
-                📋 {totalListItems} saved
-              </button>
-            )}
           </div>
 
           {/* Loading indicator */}
@@ -441,9 +407,16 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                 </button>
               </div>
               <div className="p-4">
+                {/* Feedback toast */}
+                {addedFeedback && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    {addedFeedback}
+                  </div>
+                )}
+
                 {/* Tabs */}
                 <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                  {(['search', 'lists', 'history', 'settings'] as TabType[]).map((tab) => (
+                  {(['search', 'history', 'settings'] as TabType[]).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -454,7 +427,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                       }`}
                     >
                       {tab === 'search' && '🔍 Research'}
-                      {tab === 'lists' && `📋 Lists (${totalListItems})`}
                       {tab === 'history' && `🕐 History (${history.length})`}
                       {tab === 'settings' && '⚙️ Settings'}
                     </button>
@@ -512,62 +484,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                         </a>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {activeTab === 'lists' && (
-                  <div className="space-y-4">
-                    {/* Spotify List */}
-                    {spotifyList.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold text-green-700 mb-2">🎵 Listen List</h5>
-                        {spotifyList.map((item, i) => (
-                          <div key={i} className="bg-green-50 rounded p-2 mb-1 flex justify-between">
-                            <strong className="text-sm">{item.name}</strong>
-                            <button onClick={() => removeFromList('spotify', item.name)} className="text-xs text-red-500">Remove</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Reading List */}
-                    {readingList.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold text-orange-700 mb-2">📚 Reading List</h5>
-                        {readingList.map((item, i) => (
-                          <div key={i} className="bg-orange-50 rounded p-2 mb-1 flex justify-between">
-                            <strong className="text-sm">{item.name}</strong>
-                            <button onClick={() => removeFromList('reading', item.name)} className="text-xs text-red-500">Remove</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Watchlist */}
-                    {watchlist.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold text-red-700 mb-2">🎬 Watchlist</h5>
-                        {watchlist.map((item, i) => (
-                          <div key={i} className="bg-red-50 rounded p-2 mb-1 flex justify-between">
-                            <strong className="text-sm">{item.name}</strong>
-                            <button onClick={() => removeFromList('watchlist', item.name)} className="text-xs text-red-500">Remove</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Places */}
-                    {placesList.length > 0 && (
-                      <div>
-                        <h5 className="font-semibold text-blue-700 mb-2">📍 Places to Visit</h5>
-                        {placesList.map((item, i) => (
-                          <div key={i} className="bg-blue-50 rounded p-2 mb-1 flex justify-between">
-                            <strong className="text-sm">{item.name}</strong>
-                            <button onClick={() => removeFromList('places', item.name)} className="text-xs text-red-500">Remove</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {totalListItems === 0 && (
-                      <p className="text-sm text-gray-500 italic text-center py-8">No items saved yet. Research someone to add to your lists!</p>
-                    )}
                   </div>
                 )}
 
@@ -638,15 +554,10 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
             <span className="text-2xl">🔍</span>
             <div>
               <h3 className="font-semibold text-gray-900">Deep Research Agent</h3>
-              <p className="text-sm text-gray-500">Research people, track artists, books & films</p>
+              <p className="text-sm text-gray-500">Research people and discover new content</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {totalListItems > 0 && (
-              <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-full">
-                {totalListItems} saved
-              </span>
-            )}
             <span className="text-gray-400">▼</span>
           </div>
         </div>
@@ -675,9 +586,16 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
         </button>
       </div>
 
+      {/* Feedback toast */}
+      {addedFeedback && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          {addedFeedback}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        {(['search', 'lists', 'history', 'settings'] as TabType[]).map((tab) => (
+        {(['search', 'history', 'settings'] as TabType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -688,7 +606,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
             }`}
           >
             {tab === 'search' && '🔍 Research'}
-            {tab === 'lists' && `📋 Lists (${totalListItems})`}
             {tab === 'history' && `🕐 History (${history.length})`}
             {tab === 'settings' && '⚙️ Settings'}
           </button>
@@ -993,143 +910,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Lists Tab */}
-      {activeTab === 'lists' && (
-        <div className="space-y-6">
-          {/* Spotify/Listen List */}
-          <div>
-            <h5 className="font-semibold text-green-700 mb-2">🎵 Listen List (Spotify)</h5>
-            {spotifyList.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">No artists added yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {spotifyList.map((item, i) => (
-                  <div key={i} className="bg-green-50 rounded p-2 flex justify-between items-center">
-                    <div>
-                      <strong className="text-sm">{item.name}</strong>
-                      {item.spotifyUrl && (
-                        <a
-                          href={item.spotifyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-green-600 hover:underline ml-2"
-                        >
-                          Open →
-                        </a>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeFromList('spotify', item.name)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Reading List */}
-          <div>
-            <h5 className="font-semibold text-orange-700 mb-2">📚 Reading List (Kindle)</h5>
-            {readingList.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">No authors added yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {readingList.map((item, i) => (
-                  <div key={i} className="bg-orange-50 rounded p-2 flex justify-between items-start">
-                    <div>
-                      <strong className="text-sm">{item.name}</strong>
-                      {item.works.length > 0 && (
-                        <p className="text-xs text-gray-500">Works: {item.works.join(', ')}</p>
-                      )}
-                      {item.kindleUrl && (
-                        <a
-                          href={item.kindleUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-orange-600 hover:underline"
-                        >
-                          Kindle →
-                        </a>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeFromList('reading', item.name)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Watchlist */}
-          <div>
-            <h5 className="font-semibold text-red-700 mb-2">🎬 Watchlist</h5>
-            {watchlist.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">No actors added yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {watchlist.map((item, i) => (
-                  <div key={i} className="bg-red-50 rounded p-2 flex justify-between items-start">
-                    <div>
-                      <strong className="text-sm">{item.name}</strong>
-                      {item.works.length > 0 && <p className="text-xs text-gray-500">Films: {item.works.join(', ')}</p>}
-                      {item.imdbUrl && (
-                        <a
-                          href={item.imdbUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-red-600 hover:underline"
-                        >
-                          IMDB →
-                        </a>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeFromList('watchlist', item.name)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Places to Visit */}
-          <div>
-            <h5 className="font-semibold text-blue-700 mb-2">📍 Places to Visit</h5>
-            {placesList.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">No places added yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {placesList.map((item, i) => (
-                  <div key={i} className="bg-blue-50 rounded p-2 flex justify-between items-start">
-                    <div>
-                      <strong className="text-sm">{item.name}</strong>
-                      {item.location && <span className="text-xs text-gray-500 ml-2">({item.location})</span>}
-                      <p className="text-xs text-blue-600">{item.reason}</p>
-                    </div>
-                    <button
-                      onClick={() => removeFromList('places', item.name)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
 

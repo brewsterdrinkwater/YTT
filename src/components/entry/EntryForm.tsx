@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -14,6 +14,9 @@ import CalendarQuickView from '../calendar/CalendarQuickView';
 import { TextArea } from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
+
+// Auto-save debounce delay in milliseconds
+const AUTO_SAVE_DELAY = 1500;
 
 // Collapsible Section Component
 interface CollapsibleSectionProps {
@@ -79,19 +82,63 @@ const EntryForm: React.FC = () => {
   const [activeActivity, setActiveActivity] = useState<ActivityType | null>(null);
   const [showAutoLocation, setShowAutoLocation] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load entry for current date
   useEffect(() => {
     const existingEntry = getOrCreateEntryForDate(currentDate);
     setEntry(existingEntry);
     setHasChanges(false);
+    setSaveStatus('idle');
     setShowAutoLocation(settings.version === 'trust' && settings.autoLocation);
   }, [currentDate, getOrCreateEntryForDate, settings.version, settings.autoLocation]);
+
+  // Auto-save effect - saves after delay when entry changes
+  useEffect(() => {
+    if (!entry || !hasChanges) return;
+
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Set new timer for auto-save
+    autoSaveTimerRef.current = setTimeout(() => {
+      setSaveStatus('saving');
+      saveEntry(entry);
+      setHasChanges(false);
+      setSaveStatus('saved');
+
+      // Reset status after a brief delay
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    }, AUTO_SAVE_DELAY);
+
+    // Cleanup on unmount or when entry changes
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [entry, hasChanges, saveEntry]);
+
+  // Save immediately before navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (entry && hasChanges) {
+        saveEntry(entry);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [entry, hasChanges, saveEntry]);
 
   const updateEntry = (updates: Partial<Entry>) => {
     if (entry) {
       setEntry({ ...entry, ...updates });
       setHasChanges(true);
+      setSaveStatus('idle');
     }
   };
 
@@ -248,15 +295,37 @@ const EntryForm: React.FC = () => {
         />
       </CollapsibleSection>
 
-      {/* Save Button */}
+      {/* Save Status Indicator */}
       <div className="sticky bottom-20 md:bottom-4 bg-gray-50/80 backdrop-blur-sm py-4 -mx-4 px-4">
-        <Button
-          onClick={handleSave}
-          className="w-full"
-          disabled={!hasChanges}
-        >
-          {hasChanges ? 'Save Entry' : 'No Changes'}
-        </Button>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            {saveStatus === 'saving' && (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
+                Saving...
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="flex items-center gap-2 text-green-600">
+                <span>✓</span>
+                Saved
+              </span>
+            )}
+            {saveStatus === 'idle' && hasChanges && (
+              <span className="text-amber-600">Unsaved changes</span>
+            )}
+            {saveStatus === 'idle' && !hasChanges && (
+              <span className="text-gray-400">All changes saved</span>
+            )}
+          </span>
+          <Button
+            onClick={handleSave}
+            size="sm"
+            disabled={!hasChanges}
+          >
+            {hasChanges ? 'Save Now' : 'Saved'}
+          </Button>
+        </div>
       </div>
 
       {/* Activity Modal */}

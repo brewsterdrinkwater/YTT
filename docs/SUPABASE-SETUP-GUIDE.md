@@ -371,10 +371,17 @@ You should see "Success. No rows returned" - that means it worked.
 
 Go to **Authentication → URL Configuration**:
 
-- **Site URL:** Your production URL (e.g., `https://ytt.yourdomain.com`) or `http://localhost:5173` for dev
+- **Site URL:** Your production URL (e.g., `https://walt-tab.com`) or `http://localhost:5173` for dev
 - **Redirect URLs:** Add both:
-  - `http://localhost:5173`
-  - Your production URL
+  - `https://walt-tab.com`
+  - `http://localhost:5173` (for development)
+
+### Step 3.4: Configure Session Duration (2 Weeks)
+
+Go to **Authentication → Settings → Auth Settings**:
+
+- **JWT expiry time:** Set to `1209600` seconds (14 days / 2 weeks)
+- This ensures users stay logged in for 2 weeks before needing to re-authenticate
 
 ---
 
