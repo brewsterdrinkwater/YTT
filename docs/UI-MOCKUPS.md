@@ -1,4 +1,4 @@
-# YTT UI/UX Options - Mockups
+# Walt-Tab UI/UX Options - Mockups
 
 ## Option 1: Modern Flow (Instagram/Tinder Style)
 
@@ -157,7 +157,7 @@ Text:       #F8FAFC (Light)
 ```
 ╔════════════════════════════════════╗
 ║  ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  ║
-║  ║  Y.T.T. DAILY LOG v1.0    ║  ║
+║  ║  WALT-TAB DAILY LOG v1.0  ║  ║
 ║  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  ║
 ║                                    ║
 ║  ┌────────────────────────────┐    ║

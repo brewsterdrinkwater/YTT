@@ -1,6 +1,6 @@
-# YTT Supabase Setup Guide
+# Walt-Tab Supabase Setup Guide
 
-Complete step-by-step guide to add authentication and persistent storage to YTT.
+Complete step-by-step guide to add authentication and persistent storage to Walt-Tab.
 
 ---
 
@@ -8,7 +8,7 @@ Complete step-by-step guide to add authentication and persistent storage to YTT.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Your YTT App                           │
+│                     Your Walt-Tab App                       │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │   Login     │  │   Entries   │  │   CSV Export        │  │
 │  │   Page      │  │   CRUD      │  │   (taxes, mapping)  │  │
@@ -49,7 +49,7 @@ Complete step-by-step guide to add authentication and persistent storage to YTT.
 ### Step 1.2: Create Your Project
 
 Fill in:
-- **Name:** `ytt-diary` (or whatever you prefer)
+- **Name:** `walt-tab` (or whatever you prefer)
 - **Database Password:** Generate a strong one and SAVE IT somewhere safe
 - **Region:** Choose closest to you (e.g., `us-east-1` for East Coast US)
 - **Plan:** Free tier is fine
@@ -83,7 +83,7 @@ Paste this SQL and click **Run**:
 
 ```sql
 -- =============================================
--- YTT Database Schema
+-- Walt-Tab Database Schema
 -- =============================================
 
 -- Enable UUID extension

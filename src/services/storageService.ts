@@ -29,7 +29,7 @@ export const storageService = {
 
   clear(): void {
     try {
-      // Only clear YTT-related keys
+      // Only clear Walt-Tab-related keys
       Object.values(STORAGE_KEYS).forEach((key) => {
         localStorage.removeItem(key);
       });
