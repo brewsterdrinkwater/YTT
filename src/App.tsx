@@ -19,6 +19,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import Timeline from './components/timeline/Timeline';
 import ToolsPage from './components/tools/ToolsPage';
 import AuthPage from './components/auth/AuthPage';
+import ListPage from './components/lists/ListPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
 const SmartHomePage: React.FC = () => {
@@ -94,6 +95,7 @@ const AppContent: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/lists" element={<ListPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
