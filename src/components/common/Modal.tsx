@@ -1,5 +1,10 @@
 import React, { ReactNode, useEffect, useCallback } from 'react';
 
+/**
+ * Walt-tab Modal Component
+ * Brutalist style: Clean borders, high contrast, minimal decoration
+ */
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,27 +61,27 @@ const Modal: React.FC<ModalProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/60 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal content */}
       <div
-        className={`relative bg-white rounded-2xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-auto animate-fadeIn`}
+        className={`relative bg-white border-2 border-black rounded-sm shadow-lg w-full ${sizeClasses[size]} max-h-[90vh] overflow-auto animate-fadeIn`}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between p-4 border-b-2 border-steel">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+              <h2 id="modal-title" className="text-h3 font-semibold text-black">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+                className="p-2 text-charcoal hover:text-black transition-colors rounded-sm hover:bg-concrete"
                 aria-label="Close modal"
               >
                 <svg
@@ -84,11 +89,11 @@ const Modal: React.FC<ModalProps> = ({
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  strokeWidth={2}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
