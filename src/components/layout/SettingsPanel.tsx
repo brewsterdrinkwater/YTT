@@ -15,9 +15,10 @@ import Modal from '../common/Modal';
 const SettingsPanel: React.FC = () => {
   const { isSettingsOpen, setIsSettingsOpen, showToast } = useApp();
   const { settings, updateSettings, setVersion, toggleApi, resetSettings } = useSettings();
-  const { entries } = useEntries();
+  const { entries, migrateFromLocalStorage } = useEntries();
   const { user, signOut } = useAuth();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [migrating, setMigrating] = useState(false);
 
   const handleExport = () => {
     if (entries.length === 0) {
@@ -26,6 +27,21 @@ const SettingsPanel: React.FC = () => {
     }
     exportToCSV(entries);
     showToast(`Exported ${entries.length} entries`, 'success');
+  };
+
+  const handleImport = async () => {
+    setMigrating(true);
+    try {
+      const count = await migrateFromLocalStorage();
+      if (count > 0) {
+        showToast(`Imported ${count} entries from local storage`, 'success');
+      } else {
+        showToast('No new entries to import', 'info');
+      }
+    } catch {
+      showToast('Import failed', 'error');
+    }
+    setMigrating(false);
   };
 
   const handleClearData = () => {
@@ -222,19 +238,36 @@ const SettingsPanel: React.FC = () => {
             </div>
           </section>
 
-          {/* Data Export */}
+          {/* Data Management */}
           <section>
             <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
-              Data Export
+              Data Management
             </h3>
-            <div className="bg-concrete rounded-sm p-4 border border-steel">
-              <p className="text-small text-slate mb-3">
-                Export all your entries as a CSV file for backup or analysis.
+            <div className="bg-concrete rounded-sm p-4 border border-steel space-y-4">
+              <div>
+                <p className="text-small text-slate mb-2">
+                  Export your entries for backup or analysis.
+                </p>
+                <Button variant="secondary" onClick={handleExport} className="w-full">
+                  Export Data as CSV
+                </Button>
+              </div>
+              <div className="border-t border-steel pt-4">
+                <p className="text-small text-slate mb-2">
+                  Import entries from local browser storage.
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={handleImport}
+                  disabled={migrating}
+                  className="w-full"
+                >
+                  {migrating ? 'Importing...' : 'Import from Local Storage'}
+                </Button>
+              </div>
+              <p className="text-tiny text-charcoal font-medium pt-2 border-t border-steel">
+                {entries.length} entries in your account
               </p>
-              <Button variant="secondary" onClick={handleExport}>
-                Export All Data as CSV
-              </Button>
-              <p className="text-tiny text-slate mt-2">{entries.length} entries available</p>
             </div>
           </section>
 
