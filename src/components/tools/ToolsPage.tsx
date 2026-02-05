@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DeepResearchAgent from '../research/DeepResearchAgent';
 import WebScraper from '../research/WebScraper';
 import VoiceInput from './VoiceInput';
@@ -6,7 +6,26 @@ import VoiceInput from './VoiceInput';
 type ToolTab = 'voice' | 'research' | 'scraper';
 
 const ToolsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ToolTab>('voice');
+  // Check if on mobile (for voice input - mobile only)
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Default to voice on mobile, research on desktop
+  const [activeTab, setActiveTab] = useState<ToolTab>('research');
+
+  useEffect(() => {
+    if (isMobile) {
+      setActiveTab('voice');
+    } else {
+      setActiveTab('research');
+    }
+  }, [isMobile]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
@@ -17,17 +36,20 @@ const ToolsPage: React.FC = () => {
 
       {/* Tool Tabs - Walt-tab brutalist style */}
       <div className="flex gap-1 mb-6 border-b-2 border-black overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('voice')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'voice'
-              ? 'bg-tab-orange/10 text-black border-tab-orange'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          <span>🎤</span>
-          <span>Voice Input</span>
-        </button>
+        {/* Voice Input - Mobile Only */}
+        {isMobile && (
+          <button
+            onClick={() => setActiveTab('voice')}
+            className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
+              activeTab === 'voice'
+                ? 'bg-tab-orange/10 text-black border-tab-orange'
+                : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
+            }`}
+          >
+            <span>🎤</span>
+            <span>Voice Input</span>
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('research')}
           className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
@@ -53,7 +75,8 @@ const ToolsPage: React.FC = () => {
       </div>
 
       {/* Tool Content */}
-      {activeTab === 'voice' && (
+      {/* Voice Input - Mobile Only */}
+      {activeTab === 'voice' && isMobile && (
         <div>
           <div className="mb-4 p-4 bg-tab-orange/5 rounded-sm border-2 border-tab-orange/20">
             <h3 className="font-semibold text-black mb-1">Voice Input</h3>

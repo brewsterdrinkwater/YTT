@@ -112,6 +112,9 @@ export interface HistoryItem {
   cachedResult?: ResearchResult;
 }
 
+// Store options for grocery items
+export type GroceryStore = 'whole-foods' | 'trader-joes' | 'corner-store' | 'kroger' | 'specialty' | '';
+
 // Grocery & Recipe Types
 export interface GroceryItem {
   id: string;
@@ -121,6 +124,7 @@ export interface GroceryItem {
   checked: boolean;
   isStaple: boolean; // Staple items persist and can be quickly re-added
   category?: 'produce' | 'dairy' | 'meat' | 'pantry' | 'frozen' | 'beverages' | 'other';
+  store?: GroceryStore; // Which store to buy from
   addedAt: string;
 }
 
