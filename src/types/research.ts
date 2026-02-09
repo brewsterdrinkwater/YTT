@@ -101,6 +101,7 @@ export interface PlacesListItem {
   name: string;
   location: string | null;
   reason: string;
+  visited: boolean;
   addedAt: string;
 }
 

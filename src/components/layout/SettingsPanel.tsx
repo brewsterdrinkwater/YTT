@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { exportToCSV } from '../../utils/exportCSV';
+import { sharingService } from '../../services/sharingService';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
+import { Input } from '../common/Input';
 
 /**
  * Walt-tab Settings Panel
@@ -19,6 +21,47 @@ const SettingsPanel: React.FC = () => {
   const { user, signOut } = useAuth();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [migrating, setMigrating] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneLoaded, setPhoneLoaded] = useState(false);
+
+  // Load user phone number on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user && isSettingsOpen && !phoneLoaded) {
+        const profile = await sharingService.getMyProfile();
+        if (profile?.phone_number) {
+          setPhone(formatPhoneDisplay(profile.phone_number));
+        }
+        setPhoneLoaded(true);
+      }
+    };
+    loadProfile();
+  }, [user, isSettingsOpen, phoneLoaded]);
+
+  const formatPhoneDisplay = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  };
+
+  const handleSavePhone = async () => {
+    if (!sharingService.isValidPhone(phone)) {
+      showToast('Please enter a valid 10-digit phone number', 'error');
+      return;
+    }
+
+    setSavingPhone(true);
+    const result = await sharingService.updateMyProfile({ phone_number: phone });
+    setSavingPhone(false);
+
+    if (result.success) {
+      showToast('Phone number saved! You can now receive shared lists.', 'success');
+    } else {
+      showToast(result.error || 'Failed to save phone number', 'error');
+    }
+  };
 
   const handleExport = () => {
     if (entries.length === 0) {
@@ -277,13 +320,43 @@ const SettingsPanel: React.FC = () => {
               <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
                 Account
               </h3>
-              <div className="bg-concrete rounded-sm p-4 border border-steel">
-                <p className="text-small text-charcoal mb-3">
+              <div className="bg-concrete rounded-sm p-4 border border-steel space-y-4">
+                <p className="text-small text-charcoal">
                   Signed in as <strong className="text-black">{user.email}</strong>
                 </p>
-                <Button variant="secondary" onClick={signOut}>
-                  Sign Out
-                </Button>
+
+                {/* Phone Number for List Sharing */}
+                <div className="border-t border-steel pt-4">
+                  <label className="block text-small font-semibold text-black mb-2">
+                    Phone Number (for list sharing)
+                  </label>
+                  <p className="text-tiny text-slate mb-2">
+                    Add your phone number so others can share lists with you.
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhoneDisplay(e.target.value))}
+                      className="flex-1 !mb-0"
+                      maxLength={14}
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={handleSavePhone}
+                      disabled={savingPhone || !phone}
+                    >
+                      {savingPhone ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="border-t border-steel pt-4">
+                  <Button variant="secondary" onClick={signOut}>
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             </section>
           )}

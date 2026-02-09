@@ -253,6 +253,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
       name: result.name,
       location: result.birthPlace,
       reason: placeReason || `Visit places associated with ${result.name}`,
+      visited: false,
       addedAt: new Date().toISOString(),
     });
     setPlaceReason('');

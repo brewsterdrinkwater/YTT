@@ -94,13 +94,22 @@ export const researchService = {
 
   addToPlacesList: (item: PlacesListItem): PlacesListItem[] => {
     const list = researchService.getPlacesList();
-    const newList = [item, ...list.filter((p) => p.name !== item.name)];
+    const newList = [{ ...item, visited: item.visited ?? false }, ...list.filter((p) => p.name !== item.name)];
     researchService.savePlacesList(newList);
     return newList;
   },
 
   removeFromPlacesList: (name: string): PlacesListItem[] => {
     const newList = researchService.getPlacesList().filter((p) => p.name !== name);
+    researchService.savePlacesList(newList);
+    return newList;
+  },
+
+  togglePlaceVisited: (name: string): PlacesListItem[] => {
+    const list = researchService.getPlacesList();
+    const newList = list.map((place) =>
+      place.name === name ? { ...place, visited: !place.visited } : place
+    );
     researchService.savePlacesList(newList);
     return newList;
   },

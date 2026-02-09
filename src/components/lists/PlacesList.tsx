@@ -34,6 +34,7 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
       name: newItem.name,
       location: newItem.location || null,
       reason: newItem.reason || 'Want to visit',
+      visited: false,
       addedAt: new Date().toISOString(),
     };
 
@@ -48,6 +49,13 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
     const updated = researchService.removeFromPlacesList(name);
     setPlacesList(updated);
     showToast(`Removed "${name}" from places list`, 'info');
+  };
+
+  const handleToggleVisited = (name: string) => {
+    const updated = researchService.togglePlaceVisited(name);
+    setPlacesList(updated);
+    const place = updated.find(p => p.name === name);
+    showToast(`Marked "${name}" as ${place?.visited ? 'visited' : 'to visit'}`, 'success');
   };
 
   const containerClass = isFullPage ? 'min-h-screen bg-white' : '';
@@ -102,16 +110,49 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
             {placesList.map((item, i) => (
               <li
                 key={i}
-                className="flex items-start gap-3 p-4 bg-tab-blue/5 border-2 border-tab-blue/20 rounded-sm hover:border-tab-blue/40 transition-all"
+                className={`flex items-start gap-3 p-4 border-2 rounded-sm transition-all ${
+                  item.visited
+                    ? 'bg-success/10 border-success/30 hover:border-success/50'
+                    : 'bg-tab-blue/5 border-tab-blue/20 hover:border-tab-blue/40'
+                }`}
               >
+                {/* Visited Toggle */}
+                <button
+                  onClick={() => handleToggleVisited(item.name)}
+                  className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-sm transition-all ${
+                    item.visited
+                      ? 'bg-success text-white'
+                      : 'bg-concrete text-slate hover:bg-tab-blue/20 hover:text-tab-blue'
+                  }`}
+                  title={item.visited ? 'Mark as not visited' : 'Mark as visited'}
+                >
+                  {item.visited ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+
                 {/* Item Details */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-base font-semibold text-black block">{item.name}</span>
+                  <span className={`text-base font-semibold block ${item.visited ? 'text-success line-through' : 'text-black'}`}>
+                    {item.name}
+                  </span>
                   {item.location && (
                     <span className="text-sm text-slate">{item.location}</span>
                   )}
                   {item.reason && (
-                    <p className="text-sm text-tab-blue mt-1">{item.reason}</p>
+                    <p className={`text-sm mt-1 ${item.visited ? 'text-success/70' : 'text-tab-blue'}`}>{item.reason}</p>
+                  )}
+                  {item.visited && (
+                    <span className="inline-block mt-1 text-xs bg-success/20 text-success px-2 py-0.5 rounded-full font-semibold">
+                      Visited
+                    </span>
                   )}
                 </div>
 
