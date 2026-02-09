@@ -13,10 +13,11 @@ interface MissingDay {
 }
 
 const MissingDaysPage: React.FC = () => {
-  const { entries, getOrCreateEntryForDate, updateEntry } = useEntries();
+  const { entries, createEntry, saveEntry } = useEntries();
   const { showToast } = useApp();
   const navigate = useNavigate();
   const [saving, setSaving] = useState<string | null>(null);
+  const [savedDays, setSavedDays] = useState<Set<string>>(new Set());
 
   const missingDays = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -33,13 +34,13 @@ const MissingDaysPage: React.FC = () => {
       }
     });
 
-    // Find missing days
+    // Find missing days (excluding ones we just saved)
     const missing: MissingDay[] = [];
     const current = new Date(yearStart);
 
     while (current <= today) {
       const dateKey = current.toISOString().split('T')[0];
-      if (!trackedDates.has(dateKey)) {
+      if (!trackedDates.has(dateKey) && !savedDays.has(dateKey)) {
         missing.push({
           date: new Date(current),
           dateKey,
@@ -55,24 +56,32 @@ const MissingDaysPage: React.FC = () => {
 
     // Return most recent first
     return missing.reverse();
-  }, [entries]);
+  }, [entries, savedDays]);
 
   const handleSetLocation = async (day: MissingDay, location: string) => {
     setSaving(day.dateKey);
 
     try {
-      // Create or get entry for this date
-      const entry = getOrCreateEntryForDate(day.date);
+      // Create a new entry for this date
+      const entry = createEntry(day.date);
 
-      // Update with location
-      updateEntry(entry.id, {
+      // Set the location and feeling, then save
+      const entryWithData = {
+        ...entry,
         location,
         feeling: 5, // Default feeling
-      });
+      };
 
-      showToast(`Set ${day.displayDate} to ${location}`, 'success');
+      // Save directly to Supabase
+      await saveEntry(entryWithData);
+
+      // Mark as saved locally so it disappears from list
+      setSavedDays((prev) => new Set([...prev, day.dateKey]));
+
+      showToast(`Saved ${day.displayDate} as ${location}`, 'success');
     } catch (error) {
-      showToast('Failed to save', 'error');
+      console.error('Failed to save:', error);
+      showToast('Failed to save - please try again', 'error');
     }
 
     setSaving(null);
