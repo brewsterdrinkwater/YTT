@@ -16,6 +16,7 @@ import Toast from './components/common/Toast';
 import VersionSelector from './components/onboarding/VersionSelector';
 import EntryForm from './components/entry/EntryForm';
 import Dashboard from './components/dashboard/Dashboard';
+import MissingDaysPage from './components/dashboard/MissingDaysPage';
 import Timeline from './components/timeline/Timeline';
 import ToolsPage from './components/tools/ToolsPage';
 import AuthPage from './components/auth/AuthPage';
@@ -93,6 +94,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<SmartHomePage />} />
           <Route path="/entry" element={<EntryForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/missing-days" element={<MissingDaysPage />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/lists" element={<ListPage />} />

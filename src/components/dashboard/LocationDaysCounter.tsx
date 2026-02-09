@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useEntries } from '../../contexts/EntriesContext';
 import Card from '../common/Card';
+import Button from '../common/Button';
 
 interface LocationCount {
   location: string;
@@ -11,11 +13,15 @@ interface LocationCount {
 
 const LocationDaysCounter: React.FC = () => {
   const { entries } = useEntries();
+  const navigate = useNavigate();
 
   const locationCounts = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const yearStart = new Date(currentYear, 0, 1);
     const today = new Date();
+
+    // Get all dates with entries this year
+    const trackedDates = new Set<string>();
 
     // Filter entries for current year
     const yearEntries = entries.filter((entry) => {
@@ -23,12 +29,13 @@ const LocationDaysCounter: React.FC = () => {
       return entryDate >= yearStart && entryDate <= today;
     });
 
-    // Count unique days per location
+    // Count unique days per location and track all dates
     const nashvilleDays = new Set<string>();
     const nycDays = new Set<string>();
 
     yearEntries.forEach((entry) => {
       const dateKey = entry.date.split('T')[0]; // Get YYYY-MM-DD
+      trackedDates.add(dateKey);
       const loc = entry.location.toLowerCase();
 
       if (loc === 'nashville') {
@@ -41,10 +48,15 @@ const LocationDaysCounter: React.FC = () => {
     // Calculate days elapsed in current year
     const daysElapsed = Math.floor((today.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+    // Calculate untracked days
+    const untrackedDays = daysElapsed - trackedDates.size;
+
     return {
       nashville: nashvilleDays.size,
       nyc: nycDays.size,
       daysElapsed,
+      trackedDays: trackedDates.size,
+      untrackedDays,
       year: currentYear,
     };
   }, [entries]);
@@ -113,14 +125,36 @@ const LocationDaysCounter: React.FC = () => {
         })}
       </div>
 
-      {/* Total check */}
-      {locationCounts.nashville + locationCounts.nyc > 0 && (
+      {/* Untracked Days */}
+      {locationCounts.untrackedDays > 0 && (
         <div className="mt-4 pt-4 border-t-2 border-steel">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate">Days tracked this year:</span>
-            <span className="font-bold text-black">
-              {locationCounts.nashville + locationCounts.nyc} days
-            </span>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-danger font-semibold">
+                {locationCounts.untrackedDays} days missing
+              </span>
+              <p className="text-xs text-slate">
+                {locationCounts.trackedDays} of {locationCounts.daysElapsed} days tracked
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/missing-days')}
+            >
+              Fill in →
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {locationCounts.untrackedDays === 0 && locationCounts.trackedDays > 0 && (
+        <div className="mt-4 pt-4 border-t-2 border-steel">
+          <div className="flex items-center gap-2 text-success font-semibold">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            All {locationCounts.trackedDays} days tracked!
           </div>
         </div>
       )}
