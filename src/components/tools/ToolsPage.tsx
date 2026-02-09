@@ -29,48 +29,48 @@ const ToolsPage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <h1 className="text-h2 font-bold text-black">Tools</h1>
         <p className="text-slate text-small mt-1">Voice input, research, and web scraping</p>
       </div>
 
       {/* Tool Tabs - Walt-tab brutalist style */}
-      <div className="flex gap-1 mb-6 border-b-2 border-black overflow-x-auto">
+      <div className="flex gap-0.5 md:gap-1 mb-4 md:mb-6 border-b-2 border-black overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
         {/* Voice Input - Mobile Only */}
         {isMobile && (
           <button
             onClick={() => setActiveTab('voice')}
-            className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
               activeTab === 'voice'
                 ? 'bg-tab-orange/10 text-black border-tab-orange'
                 : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
             }`}
           >
             <span>🎤</span>
-            <span>Voice Input</span>
+            <span>Voice</span>
           </button>
         )}
         <button
           onClick={() => setActiveTab('research')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
             activeTab === 'research'
               ? 'bg-tab-blue/10 text-black border-tab-blue'
               : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
           <span>🧠</span>
-          <span>Deep Research</span>
+          <span>Research</span>
         </button>
         <button
           onClick={() => setActiveTab('scraper')}
-          className={`flex items-center gap-2 px-4 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
+          className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
             activeTab === 'scraper'
               ? 'bg-success/10 text-black border-success'
               : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
           <span>🔗</span>
-          <span>Web Scraper</span>
+          <span>Scraper</span>
         </button>
       </div>
 
