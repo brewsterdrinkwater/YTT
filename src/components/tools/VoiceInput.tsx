@@ -223,6 +223,7 @@ const VoiceInput: React.FC = () => {
           name: item,
           location: null,
           reason: 'Added via voice',
+          visited: false,
           addedAt: new Date().toISOString(),
         });
         showToast(`Added "${item}" to Places to Visit`, 'success');
