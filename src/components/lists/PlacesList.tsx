@@ -162,9 +162,14 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
                     href={getGoogleMapsLink(item.name, item.location || '')}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-12 px-4 flex items-center justify-center bg-tab-blue/10 text-tab-blue font-semibold text-sm rounded-sm hover:bg-tab-blue/20 transition-colors"
+                    className="h-12 px-4 flex items-center justify-center bg-tab-blue/10 text-tab-blue font-semibold text-sm rounded-sm hover:bg-tab-blue/20 transition-colors gap-1"
+                    title="Open in Google Maps - tap Save to add to your Walt-tab list"
                   >
-                    Maps →
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Open in Maps
                   </a>
                   <button
                     onClick={() => handleRemove(item.name)}
@@ -230,6 +235,16 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
             <Button onClick={handleAddItem} variant="primary" size="lg" className="w-full min-h-[56px]">
               Add to Places List
             </Button>
+          </div>
+        )}
+
+        {/* Google Maps Tip */}
+        {placesList.length > 0 && (
+          <div className="mt-4 p-3 bg-tab-blue/5 border border-tab-blue/20 rounded-sm">
+            <p className="text-sm text-tab-blue">
+              <strong>Tip:</strong> To save places to Google Maps, tap "Open in Maps" then tap{' '}
+              <strong>Save</strong> → choose or create a list called <strong>"Walt-tab"</strong>.
+            </p>
           </div>
         )}
       </Card>
