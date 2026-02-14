@@ -47,6 +47,8 @@ export const API_CONFIG = {
   GMAIL_API_URL: 'https://gmail.googleapis.com/gmail/v1',
   // Note: Claude API requires a backend proxy due to CORS restrictions in browsers
   CLAUDE_API_URL: 'https://api.anthropic.com/v1/messages',
+  // Quick Share uses Railway backend with DeepSeek
+  QUICK_SHARE_API_URL: import.meta.env.VITE_QUICK_SHARE_API_URL || 'http://localhost:3001',
 } as const;
 
 export const NOTIFICATION_CONFIG = {
