@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import DeepResearchAgent from '../research/DeepResearchAgent';
-import WebScraper from '../research/WebScraper';
+import QuickShare from './QuickShare';
 import VoiceInput from './VoiceInput';
 
-type ToolTab = 'voice' | 'research' | 'scraper';
+type ToolTab = 'voice' | 'research' | 'share';
 
 const ToolsPage: React.FC = () => {
   // Check if on mobile (for voice input - mobile only)
@@ -31,7 +31,7 @@ const ToolsPage: React.FC = () => {
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
       <div className="mb-4 md:mb-6">
         <h1 className="text-h2 font-bold text-black">Tools</h1>
-        <p className="text-slate text-small mt-1">Voice input, research, and web scraping</p>
+        <p className="text-slate text-small mt-1">Voice input, research, and quick share</p>
       </div>
 
       {/* Tool Tabs - Walt-tab brutalist style */}
@@ -62,15 +62,15 @@ const ToolsPage: React.FC = () => {
           <span>Research</span>
         </button>
         <button
-          onClick={() => setActiveTab('scraper')}
+          onClick={() => setActiveTab('share')}
           className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'scraper'
+            activeTab === 'share'
               ? 'bg-success/10 text-black border-success'
               : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
           }`}
         >
-          <span>🔗</span>
-          <span>Scraper</span>
+          <span>📥</span>
+          <span>Share</span>
         </button>
       </div>
 
@@ -102,16 +102,16 @@ const ToolsPage: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'scraper' && (
+      {activeTab === 'share' && (
         <div>
           <div className="mb-4 p-4 bg-success/5 rounded-sm border-2 border-success/20">
-            <h3 className="font-semibold text-black mb-1">Web Scraper</h3>
+            <h3 className="font-semibold text-black mb-1">Quick Share</h3>
             <p className="text-small text-charcoal">
-              Paste a URL and automatically extract recipes (→ grocery list), restaurant
-              recommendations, book lists, or movie recommendations.
+              Paste URLs from Instagram, YouTube, websites, and more. Content is auto-categorized
+              and added to your lists. Use batch mode to save multiple links at once.
             </p>
           </div>
-          <WebScraper />
+          <QuickShare />
         </div>
       )}
     </div>

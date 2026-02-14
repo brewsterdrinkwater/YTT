@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   GROCERY_LIST: 'ytt-grocery-list',
   RECIPES_LIST: 'ytt-recipes-list',
   RESTAURANTS_LIST: 'ytt-restaurants-list',
+  // Quick Share / Saved Items
+  SAVED_ITEMS: 'ytt-saved-items',
 } as const;
 
 export const LOCATIONS = [
