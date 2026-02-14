@@ -1,0 +1,43 @@
+{
+  "name": "Walt-Tab",
+  "short_name": "Walt-Tab",
+  "description": "Own Your Story. Navigate Your Life.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "categories": ["lifestyle", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Quick Share",
+      "short_name": "Share",
+      "description": "Save content to your lists",
+      "url": "/share",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import { researchService } from '../../services/researchService';
 import Card from '../common/Card';
 import { Input } from '../common/Input';
 import LocationDaysCounter from './LocationDaysCounter';
+import RecentlySavedWidget from '../saved/RecentlySavedWidget';
 
 // Import new list components
 import {
@@ -531,6 +532,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <>
               <LocationDaysCounter />
+              <RecentlySavedWidget />
               <DashboardSection title="Recent Workouts" icon="🏋️" items={workouts} emptyMessage="" />
               <DashboardSection title="Ideas & Insights" icon="💡" items={ideas} emptyMessage="" />
             </>
