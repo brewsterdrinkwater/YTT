@@ -68,48 +68,6 @@ const detectSource = (url: string): string => {
   return 'website';
 };
 
-// Build the analysis prompt
-const buildAnalysisPrompt = (url: string, source: string): string => {
-  return `Analyze this ${source} URL and extract relevant information for a personal life-tracking app.
-
-URL: ${url}
-
-The app has these list categories:
-- grocery: Food items to buy
-- recipes: Recipes with ingredients
-- restaurants: Restaurants, cafes, bars to visit
-- places: Travel destinations, attractions, landmarks
-- watchlist: Movies, TV shows, documentaries
-- reading: Books, articles, blogs
-- music: Songs, albums, artists, playlists
-- uncategorized: If none of the above fit
-
-Please analyze the content and respond with JSON:
-{
-  "title": "Clear, concise title",
-  "description": "Brief description of what this is",
-  "sourceReason": "Why this might have been saved (e.g., 'Food recommendation from Instagram', 'Travel inspiration video')",
-  "suggestedCategory": "one of the categories above",
-  "confidence": "high/medium/low - how confident are you this is the right category?",
-  "extractedItems": [
-    {
-      "type": "category",
-      "name": "item name",
-      "details": "optional details",
-      "quantity": "for groceries",
-      "unit": "for groceries"
-    }
-  ]
-}
-
-For recipes, extract individual ingredients as grocery items.
-For restaurant/place videos, extract the specific venue.
-For watchlists, extract the movie/show name.
-For music, extract artist and song/album.
-
-If you can't determine the category with reasonable confidence, use "uncategorized" and set confidence to "low".`;
-};
-
 export const quickShareService = {
   // Get all saved items
   getSavedItems: (): SavedItem[] => {
@@ -121,72 +79,39 @@ export const quickShareService = {
     storageService.set(STORAGE_KEYS.SAVED_ITEMS, items);
   },
 
-  // Analyze a URL using LLM
-  analyzeUrl: async (url: string, apiKey: string): Promise<AnalysisResult> => {
+  // Analyze a URL using Railway backend (DeepSeek)
+  analyzeUrl: async (url: string): Promise<AnalysisResult> => {
     const source = detectSource(url);
 
-    const response = await fetch(API_CONFIG.CLAUDE_API_URL, {
+    const response = await fetch(`${API_CONFIG.QUICK_SHARE_API_URL}/api/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [
-          {
-            role: 'user',
-            content: buildAnalysisPrompt(url, source),
-          },
-        ],
-      }),
+      body: JSON.stringify({ url, source }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errorText}`);
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
 
     const data = await response.json();
 
-    // Extract text from response
-    let fullText = '';
-    if (data.content) {
-      for (const block of data.content) {
-        if (block.type === 'text') {
-          fullText += block.text;
-        }
-      }
-    }
-
-    // Parse JSON from response
-    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse analysis result');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
     return {
-      title: parsed.title || 'Untitled',
-      description: parsed.description || '',
-      source,
-      sourceReason: parsed.sourceReason || `Saved from ${source}`,
-      thumbnail: parsed.thumbnail,
-      suggestedCategory: parsed.suggestedCategory || 'uncategorized',
-      confidence: parsed.confidence || 'low',
-      extractedItems: parsed.extractedItems || [],
+      title: data.title || 'Untitled',
+      description: data.description || '',
+      source: data.source || source,
+      sourceReason: data.sourceReason || `Saved from ${source}`,
+      thumbnail: data.thumbnail,
+      suggestedCategory: data.suggestedCategory || 'uncategorized',
+      confidence: data.confidence || 'low',
+      extractedItems: data.extractedItems || [],
     };
   },
 
   // Quick save a URL (creates pending item, analyzes in background)
-  quickSave: async (
-    url: string,
-    apiKey: string
-  ): Promise<{ item: SavedItem; analysis: AnalysisResult }> => {
+  quickSave: async (url: string): Promise<{ item: SavedItem; analysis: AnalysisResult }> => {
     const source = detectSource(url);
 
     // Create initial saved item
@@ -208,8 +133,8 @@ export const quickShareService = {
     const items = quickShareService.getSavedItems();
     quickShareService.saveSavedItems([item, ...items]);
 
-    // Analyze
-    const analysis = await quickShareService.analyzeUrl(url, apiKey);
+    // Analyze via Railway backend
+    const analysis = await quickShareService.analyzeUrl(url);
 
     // Update item with analysis
     item.title = analysis.title;
@@ -393,14 +318,13 @@ export const quickShareService = {
   // Batch save multiple URLs
   batchSave: async (
     urls: string[],
-    apiKey: string,
     onProgress?: (completed: number, total: number) => void
   ): Promise<SavedItem[]> => {
     const results: SavedItem[] = [];
 
     for (let i = 0; i < urls.length; i++) {
       try {
-        const { item } = await quickShareService.quickSave(urls[i], apiKey);
+        const { item } = await quickShareService.quickSave(urls[i]);
         results.push(item);
       } catch (error) {
         // Create a failed item

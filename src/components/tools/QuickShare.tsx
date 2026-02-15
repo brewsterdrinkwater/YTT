@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { researchService } from '../../services/researchService';
 import {
   quickShareService,
   SavedItem,
@@ -27,7 +26,6 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
   const [url, setUrl] = useState(initialUrl || '');
   const [batchMode, setBatchMode] = useState(false);
   const [batchUrls, setBatchUrls] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentAnalysis, setCurrentAnalysis] = useState<{
@@ -40,28 +38,18 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
   );
 
   useEffect(() => {
-    const storedKey = researchService.getApiKey();
-    if (storedKey) setApiKey(storedKey);
     setRecentItems(quickShareService.getRecentItems(10));
   }, []);
 
-  const handleSaveApiKey = () => {
-    researchService.saveApiKey(apiKey);
-  };
-
   const handleAnalyze = async () => {
     if (!url.trim()) return;
-    if (!apiKey) {
-      setError('Please enter your API key first');
-      return;
-    }
 
     setLoading(true);
     setError(null);
     setCurrentAnalysis(null);
 
     try {
-      const result = await quickShareService.quickSave(url.trim(), apiKey);
+      const result = await quickShareService.quickSave(url.trim());
       setCurrentAnalysis(result);
       setRecentItems(quickShareService.getRecentItems(10));
       setUrl('');
@@ -79,17 +67,13 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
       .filter((u) => u.length > 0);
 
     if (urls.length === 0) return;
-    if (!apiKey) {
-      setError('Please enter your API key first');
-      return;
-    }
 
     setLoading(true);
     setError(null);
     setBatchProgress({ completed: 0, total: urls.length });
 
     try {
-      await quickShareService.batchSave(urls, apiKey, (completed, total) => {
+      await quickShareService.batchSave(urls, (completed, total) => {
         setBatchProgress({ completed, total });
       });
       setRecentItems(quickShareService.getRecentItems(10));
@@ -147,28 +131,6 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
 
   return (
     <div className="space-y-6">
-      {/* API Key Section */}
-      {!apiKey && (
-        <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-sm">
-          <label className="block text-sm font-semibold text-black mb-2">API Key Required</label>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Claude API key"
-              className="flex-1 px-3 py-2 border-2 border-black rounded-sm text-sm"
-            />
-            <button
-              onClick={handleSaveApiKey}
-              className="px-4 py-2 bg-black text-white font-semibold text-sm rounded-sm hover:bg-charcoal transition-colors"
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Mode Toggle */}
       <div className="flex gap-2">
         <button
