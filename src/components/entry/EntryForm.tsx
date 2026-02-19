@@ -127,17 +127,73 @@ const EntryForm: React.FC = () => {
     };
   }, [entry, hasChanges, saveEntry, showToast]);
 
-  // Save immediately before navigating away
+  // Save immediately before navigating away using sendBeacon (reliable during unload)
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (entry && hasChanges) {
-        saveEntry(entry);
+      if (!entry || !hasChanges) return;
+
+      // Cancel any pending auto-save
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Use sendBeacon for reliable delivery during page unload.
+      // Supabase REST API: POST with Prefer: resolution=merge-duplicates for upsert.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const authToken = localStorage.getItem('walt-tab-auth');
+      let accessToken = supabaseKey; // fallback to anon key
+      if (authToken) {
+        try {
+          const parsed = JSON.parse(authToken);
+          if (parsed?.access_token) accessToken = parsed.access_token;
+        } catch {
+          // use fallback
+        }
+      }
+
+      const dbFeeling = entry.feeling >= 1 && entry.feeling <= 10
+        ? entry.feeling : 5;
+
+      const dbEntry = {
+        id: entry.id,
+        date: entry.date.split('T')[0],
+        location: entry.location || '',
+        other_location_name: entry.otherLocationName || null,
+        trip_type: entry.tripType || null,
+        feeling: dbFeeling,
+        highlights: entry.highlights || null,
+        activities: entry.activities,
+        auto_detected: entry.autoDetected || null,
+      };
+
+      const url = `${supabaseUrl}/rest/v1/entries?on_conflict=user_id,date`;
+      const blob = new Blob([JSON.stringify(dbEntry)], { type: 'application/json' });
+
+      // sendBeacon doesn't support custom headers, so we use fetch with keepalive instead
+      // which is the modern equivalent and supports headers
+      try {
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${accessToken}`,
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify(dbEntry),
+          keepalive: true, // ensures request survives page unload
+        });
+      } catch {
+        // Last resort: try sendBeacon (no custom headers, may fail auth but worth trying)
+        navigator.sendBeacon?.(url, blob);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [entry, hasChanges, saveEntry]);
+  }, [entry, hasChanges]);
 
   const updateEntry = (updates: Partial<Entry>) => {
     if (entry) {
@@ -205,9 +261,23 @@ const EntryForm: React.FC = () => {
 
   const handleSave = () => {
     if (entry) {
-      saveEntry(entry);
-      setHasChanges(false);
-      showToast('Entry saved!', 'success');
+      // Cancel any pending auto-save to prevent duplicate saves
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      setSaveStatus('saving');
+      saveEntry(entry)
+        .then(() => {
+          setHasChanges(false);
+          setSaveStatus('saved');
+          showToast('Entry saved!', 'success');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        })
+        .catch(() => {
+          setSaveStatus('idle');
+          showToast('Failed to save. Please try again.', 'error');
+        });
     }
   };
 
