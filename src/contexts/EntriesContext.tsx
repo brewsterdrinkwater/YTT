@@ -16,7 +16,7 @@ interface EntriesContextType {
   createEntry: (date: Date) => Entry;
   updateEntry: (id: string, updates: Partial<Entry>) => void;
   deleteEntry: (id: string) => void;
-  saveEntry: (entry: Entry) => void;
+  saveEntry: (entry: Entry) => Promise<void>;
   searchEntries: (query: string) => Entry[];
   filterByLocation: (location: string) => Entry[];
   getOrCreateEntryForDate: (date: Date) => Entry;
@@ -123,6 +123,10 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
     [getEntryByDate, createEntry]
   );
 
+  // Track in-flight save to prevent race conditions
+  const savingRef = React.useRef(false);
+  const pendingEntryRef = React.useRef<Entry | null>(null);
+
   const saveEntry = useCallback(
     async (entry: Entry) => {
       if (!user) return;
@@ -133,7 +137,7 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
         updatedAt: now,
       };
 
-      // Update local state immediately
+      // Update local state immediately (optimistic update)
       setEntries((prev) => {
         const existingIndex = prev.findIndex((e) => e.id === entry.id);
         if (existingIndex >= 0) {
@@ -144,30 +148,73 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
         return [...prev, updatedEntry];
       });
 
-      // Sync to Supabase
-      try {
-        const dbEntry = {
-          id: entry.id,
-          user_id: user.id,
-          date: entry.date.split('T')[0], // Just the date part
-          location: entry.location,
-          other_location_name: entry.otherLocationName || null,
-          trip_type: entry.tripType || null,
-          feeling: entry.feeling,
-          highlights: entry.highlights || null,
-          activities: entry.activities,
-          auto_detected: entry.autoDetected || null,
-        };
+      // If a save is already in progress, queue this one
+      if (savingRef.current) {
+        pendingEntryRef.current = updatedEntry;
+        return;
+      }
 
-        const { error } = await supabase
-          .from('entries')
-          .upsert(dbEntry, { onConflict: 'user_id,date' });
+      savingRef.current = true;
 
-        if (error) {
-          console.error('Error saving entry:', error);
+      // Always sync to Supabase. DB requires feeling >= 1 AND <= 10,
+      // so coerce unset feeling (0) to 5 (neutral default) to prevent data loss.
+      const dbFeeling = entry.feeling >= 1 && entry.feeling <= 10
+        ? entry.feeling
+        : 5;
+
+      const maxRetries = 2;
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const dbEntry = {
+            id: entry.id,
+            user_id: user.id,
+            date: entry.date.split('T')[0],
+            location: entry.location || '',
+            other_location_name: entry.otherLocationName || null,
+            trip_type: entry.tripType || null,
+            feeling: dbFeeling,
+            highlights: entry.highlights || null,
+            activities: entry.activities,
+            auto_detected: entry.autoDetected || null,
+          };
+
+          const { error } = await supabase
+            .from('entries')
+            .upsert(dbEntry, { onConflict: 'user_id,date' });
+
+          if (error) {
+            lastError = new Error(`Supabase error: ${error.message}`);
+            if (attempt < maxRetries) {
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              continue;
+            }
+          } else {
+            lastError = null;
+            break;
+          }
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error('Unknown save error');
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            continue;
+          }
         }
-      } catch (err) {
-        console.error('Error saving entry:', err);
+      }
+
+      savingRef.current = false;
+
+      // If there's a queued save, process it
+      if (pendingEntryRef.current) {
+        const pending = pendingEntryRef.current;
+        pendingEntryRef.current = null;
+        saveEntry(pending);
+      }
+
+      if (lastError) {
+        console.error('Error saving entry after retries:', lastError);
+        throw lastError;
       }
     },
     [user]

@@ -104,14 +104,19 @@ const EntryForm: React.FC = () => {
     }
 
     // Set new timer for auto-save
-    autoSaveTimerRef.current = setTimeout(() => {
+    autoSaveTimerRef.current = setTimeout(async () => {
       setSaveStatus('saving');
-      saveEntry(entry);
-      setHasChanges(false);
-      setSaveStatus('saved');
-
-      // Reset status after a brief delay
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      try {
+        await saveEntry(entry);
+        setHasChanges(false);
+        setSaveStatus('saved');
+        // Reset status after a brief delay
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (error) {
+        setSaveStatus('idle');
+        showToast('Failed to save entry. Please try again.', 'error');
+        console.error('Auto-save failed:', error);
+      }
     }, AUTO_SAVE_DELAY);
 
     // Cleanup on unmount or when entry changes
@@ -120,19 +125,75 @@ const EntryForm: React.FC = () => {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [entry, hasChanges, saveEntry]);
+  }, [entry, hasChanges, saveEntry, showToast]);
 
-  // Save immediately before navigating away
+  // Save immediately before navigating away using sendBeacon (reliable during unload)
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (entry && hasChanges) {
-        saveEntry(entry);
+      if (!entry || !hasChanges) return;
+
+      // Cancel any pending auto-save
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Use sendBeacon for reliable delivery during page unload.
+      // Supabase REST API: POST with Prefer: resolution=merge-duplicates for upsert.
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const authToken = localStorage.getItem('walt-tab-auth');
+      let accessToken = supabaseKey; // fallback to anon key
+      if (authToken) {
+        try {
+          const parsed = JSON.parse(authToken);
+          if (parsed?.access_token) accessToken = parsed.access_token;
+        } catch {
+          // use fallback
+        }
+      }
+
+      const dbFeeling = entry.feeling >= 1 && entry.feeling <= 10
+        ? entry.feeling : 5;
+
+      const dbEntry = {
+        id: entry.id,
+        date: entry.date.split('T')[0],
+        location: entry.location || '',
+        other_location_name: entry.otherLocationName || null,
+        trip_type: entry.tripType || null,
+        feeling: dbFeeling,
+        highlights: entry.highlights || null,
+        activities: entry.activities,
+        auto_detected: entry.autoDetected || null,
+      };
+
+      const url = `${supabaseUrl}/rest/v1/entries?on_conflict=user_id,date`;
+      const blob = new Blob([JSON.stringify(dbEntry)], { type: 'application/json' });
+
+      // sendBeacon doesn't support custom headers, so we use fetch with keepalive instead
+      // which is the modern equivalent and supports headers
+      try {
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${accessToken}`,
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify(dbEntry),
+          keepalive: true, // ensures request survives page unload
+        });
+      } catch {
+        // Last resort: try sendBeacon (no custom headers, may fail auth but worth trying)
+        navigator.sendBeacon?.(url, blob);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [entry, hasChanges, saveEntry]);
+  }, [entry, hasChanges]);
 
   const updateEntry = (updates: Partial<Entry>) => {
     if (entry) {
@@ -155,14 +216,16 @@ const EntryForm: React.FC = () => {
   };
 
   const handleAutoLocationDetected = (location: AutoDetectedLocation) => {
-    // Map the detected location to our location values
+    // Match detected location against user's custom locations
     const locationName = location.name.toLowerCase();
+    const customLocations = settings.customLocations ?? [];
     let mappedLocation = 'other';
 
-    if (locationName.includes('nashville')) {
-      mappedLocation = 'nashville';
-    } else if (locationName.includes('nyc') || locationName.includes('new york')) {
-      mappedLocation = 'nyc';
+    for (const loc of customLocations) {
+      if (loc.id !== 'other' && locationName.includes(loc.name.toLowerCase())) {
+        mappedLocation = loc.id;
+        break;
+      }
     }
 
     updateEntry({
@@ -198,9 +261,23 @@ const EntryForm: React.FC = () => {
 
   const handleSave = () => {
     if (entry) {
-      saveEntry(entry);
-      setHasChanges(false);
-      showToast('Entry saved!', 'success');
+      // Cancel any pending auto-save to prevent duplicate saves
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      setSaveStatus('saving');
+      saveEntry(entry)
+        .then(() => {
+          setHasChanges(false);
+          setSaveStatus('saved');
+          showToast('Entry saved!', 'success');
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        })
+        .catch(() => {
+          setSaveStatus('idle');
+          showToast('Failed to save. Please try again.', 'error');
+        });
     }
   };
 
@@ -211,6 +288,9 @@ const EntryForm: React.FC = () => {
       </div>
     );
   }
+
+  // Enabled fields from settings (with fallback for existing users)
+  const entryFields = settings.entryFields ?? { location: true, feeling: true, activities: true, highlights: true };
 
   // Check completion status for collapsible sections
   const isLocationComplete = entry.location !== '';
@@ -230,70 +310,78 @@ const EntryForm: React.FC = () => {
       )}
 
       {/* Location Section - Collapsible */}
-      <CollapsibleSection
-        title="Where are you?"
-        icon="📍"
-        isComplete={isLocationComplete}
-        defaultOpen={!isLocationComplete}
-      >
-        {/* Auto Location Detection */}
-        {showAutoLocation && (
-          <div className="mb-4">
-            <AutoLocationDetector
-              onLocationDetected={handleAutoLocationDetected}
-              onSkip={() => setShowAutoLocation(false)}
-            />
-          </div>
-        )}
+      {entryFields.location && (
+        <CollapsibleSection
+          title="Where are you?"
+          icon="📍"
+          isComplete={isLocationComplete}
+          defaultOpen={!isLocationComplete}
+        >
+          {/* Auto Location Detection */}
+          {showAutoLocation && (
+            <div className="mb-4">
+              <AutoLocationDetector
+                onLocationDetected={handleAutoLocationDetected}
+                onSkip={() => setShowAutoLocation(false)}
+              />
+            </div>
+          )}
 
-        {/* Location Selector */}
-        {!showAutoLocation && (
-          <LocationSelector
-            value={entry.location}
-            otherLocationName={entry.otherLocationName}
-            tripType={entry.tripType}
-            onChange={handleLocationChange}
-          />
-        )}
-      </CollapsibleSection>
+          {/* Location Selector */}
+          {!showAutoLocation && (
+            <LocationSelector
+              value={entry.location}
+              otherLocationName={entry.otherLocationName}
+              tripType={entry.tripType}
+              onChange={handleLocationChange}
+            />
+          )}
+        </CollapsibleSection>
+      )}
 
       {/* Feeling Section - Collapsible */}
-      <CollapsibleSection
-        title="How are you feeling?"
-        icon="😊"
-        isComplete={isFeelingComplete}
-        defaultOpen={!isFeelingComplete}
-      >
-        <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
-      </CollapsibleSection>
+      {entryFields.feeling && (
+        <CollapsibleSection
+          title="How are you feeling?"
+          icon="😊"
+          isComplete={isFeelingComplete}
+          defaultOpen={!isFeelingComplete}
+        >
+          <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
+        </CollapsibleSection>
+      )}
 
       {/* Activities Section - Collapsible */}
-      <CollapsibleSection
-        title="What did you do today?"
-        icon="📝"
-        isComplete={hasAnyActivity}
-        defaultOpen={!hasAnyActivity}
-      >
-        <ActivityTiles
-          activities={entry.activities}
-          onActivityClick={(type) => setActiveActivity(type)}
-        />
-      </CollapsibleSection>
+      {entryFields.activities && (
+        <CollapsibleSection
+          title="What did you do today?"
+          icon="📝"
+          isComplete={hasAnyActivity}
+          defaultOpen={!hasAnyActivity}
+        >
+          <ActivityTiles
+            activities={entry.activities}
+            onActivityClick={(type) => setActiveActivity(type)}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Highlights Section - Collapsible */}
-      <CollapsibleSection
-        title="Highlights & Notes"
-        icon="✨"
-        isComplete={!!entry.highlights && entry.highlights.length > 0}
-        defaultOpen={!entry.highlights}
-      >
-        <TextArea
-          placeholder="What made today special? Any thoughts or reflections?"
-          value={entry.highlights || ''}
-          onChange={(e) => handleHighlightsChange(e.target.value)}
-          rows={4}
-        />
-      </CollapsibleSection>
+      {entryFields.highlights && (
+        <CollapsibleSection
+          title="Highlights & Notes"
+          icon="✨"
+          isComplete={!!entry.highlights && entry.highlights.length > 0}
+          defaultOpen={!entry.highlights}
+        >
+          <TextArea
+            placeholder="What made today special? Any thoughts or reflections?"
+            value={entry.highlights || ''}
+            onChange={(e) => handleHighlightsChange(e.target.value)}
+            rows={4}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Save Status Indicator */}
       <div className="sticky bottom-20 md:bottom-4 bg-gray-50/80 backdrop-blur-sm py-4 -mx-4 px-4">
