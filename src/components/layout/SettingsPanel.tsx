@@ -3,11 +3,21 @@ import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { EntryFieldType, CustomLocation } from '../../types';
 import { exportToCSV } from '../../utils/exportCSV';
 import { sharingService } from '../../services/sharingService';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import { Input } from '../common/Input';
+
+const LOCATION_ICONS = ['🏠', '🏢', '🌆', '🏖️', '🏔️', '🎸', '🗽', '🌍', '✈️', '🏡'];
+
+const ENTRY_FIELD_OPTIONS: { key: EntryFieldType; label: string; icon: string }[] = [
+  { key: 'location', label: 'Location', icon: '📍' },
+  { key: 'feeling', label: 'Mood', icon: '😊' },
+  { key: 'activities', label: 'Activities', icon: '📝' },
+  { key: 'highlights', label: 'Highlights', icon: '✨' },
+];
 
 /**
  * Walt-tab Settings Panel
@@ -24,6 +34,9 @@ const SettingsPanel: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
   const [phoneLoaded, setPhoneLoaded] = useState(false);
+  const [newLocName, setNewLocName] = useState('');
+  const [newLocIcon, setNewLocIcon] = useState('🏠');
+  const [showLocIconPicker, setShowLocIconPicker] = useState(false);
 
   // Load user phone number on mount
   useEffect(() => {
@@ -90,6 +103,36 @@ const SettingsPanel: React.FC = () => {
   const handleClearData = () => {
     localStorage.clear();
     window.location.reload();
+  };
+
+  const entryFields = settings.entryFields ?? { location: true, feeling: true, activities: true, highlights: true };
+  const customLocations = settings.customLocations ?? [];
+
+  const toggleEntryField = (field: EntryFieldType) => {
+    updateSettings({
+      entryFields: { ...entryFields, [field]: !entryFields[field] },
+    });
+  };
+
+  const handleAddLocation = () => {
+    if (!newLocName.trim()) return;
+    const id = newLocName.trim().toLowerCase().replace(/\s+/g, '-');
+    if (customLocations.some(loc => loc.id === id)) {
+      showToast('Location already exists', 'warning');
+      return;
+    }
+    updateSettings({
+      customLocations: [...customLocations, { id, name: newLocName.trim(), icon: newLocIcon }],
+    });
+    setNewLocName('');
+    setNewLocIcon('🏠');
+    setShowLocIconPicker(false);
+  };
+
+  const handleRemoveLocation = (id: string) => {
+    updateSettings({
+      customLocations: customLocations.filter((loc: CustomLocation) => loc.id !== id),
+    });
   };
 
   if (!isSettingsOpen) return null;
@@ -176,36 +219,130 @@ const SettingsPanel: React.FC = () => {
             </section>
           )}
 
-          {/* Location Input Style */}
+          {/* Entry Fields */}
           <section>
             <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
-              Location Input Style
+              Entry Fields
             </h3>
-            <div className="bg-concrete rounded-sm p-4 border border-steel">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => updateSettings({ locationStyle: 'buttons' })}
-                  className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
-                    settings.locationStyle === 'buttons'
-                      ? 'bg-black text-white'
-                      : 'bg-white text-charcoal border-2 border-steel hover:border-black'
-                  }`}
+            <div className="space-y-2">
+              {ENTRY_FIELD_OPTIONS.map((field) => (
+                <label
+                  key={field.key}
+                  className="flex items-center justify-between p-3 bg-concrete rounded-sm border border-steel cursor-pointer hover:border-charcoal transition-colors"
                 >
-                  Buttons
-                </button>
-                <button
-                  onClick={() => updateSettings({ locationStyle: 'dropdown' })}
-                  className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
-                    settings.locationStyle === 'dropdown'
-                      ? 'bg-black text-white'
-                      : 'bg-white text-charcoal border-2 border-steel hover:border-black'
-                  }`}
-                >
-                  Dropdown
-                </button>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <span>{field.icon}</span>
+                    <span className="font-semibold text-black">{field.label}</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={entryFields[field.key]}
+                    onChange={() => toggleEntryField(field.key)}
+                    className="w-5 h-5 text-black rounded-sm border-2 border-black focus:ring-black"
+                  />
+                </label>
+              ))}
             </div>
           </section>
+
+          {/* Custom Locations */}
+          {entryFields.location && (
+            <section>
+              <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
+                My Locations
+              </h3>
+              <div className="bg-concrete rounded-sm p-4 border border-steel space-y-3">
+                {customLocations.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {customLocations.map((loc: CustomLocation) => (
+                      <span
+                        key={loc.id}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-sm border border-steel text-sm"
+                      >
+                        <span>{loc.icon}</span>
+                        <span className="font-medium">{loc.name}</span>
+                        <button
+                          onClick={() => handleRemoveLocation(loc.id)}
+                          className="ml-1 text-slate hover:text-danger transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowLocIconPicker(!showLocIconPicker)}
+                    className="w-10 h-10 border-2 border-steel rounded-sm flex items-center justify-center text-lg hover:border-black transition-colors flex-shrink-0"
+                  >
+                    {newLocIcon}
+                  </button>
+                  <Input
+                    placeholder="Add location..."
+                    value={newLocName}
+                    onChange={(e) => setNewLocName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddLocation()}
+                    className="flex-1 !mb-0"
+                  />
+                  <Button onClick={handleAddLocation} disabled={!newLocName.trim()} size="sm">
+                    Add
+                  </Button>
+                </div>
+                {showLocIconPicker && (
+                  <div className="flex flex-wrap gap-1 p-2 bg-white rounded-sm border border-steel">
+                    {LOCATION_ICONS.map((icon) => (
+                      <button
+                        key={icon}
+                        onClick={() => { setNewLocIcon(icon); setShowLocIconPicker(false); }}
+                        className={`w-9 h-9 rounded-sm flex items-center justify-center text-lg hover:bg-steel transition-colors ${
+                          newLocIcon === icon ? 'bg-steel' : ''
+                        }`}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p className="text-tiny text-slate">"Other" is always available as a fallback option.</p>
+              </div>
+            </section>
+          )}
+
+          {/* Location Input Style */}
+          {entryFields.location && (
+            <section>
+              <h3 className="text-tiny font-semibold text-slate uppercase tracking-wider mb-3">
+                Location Input Style
+              </h3>
+              <div className="bg-concrete rounded-sm p-4 border border-steel">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateSettings({ locationStyle: 'buttons' })}
+                    className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
+                      settings.locationStyle === 'buttons'
+                        ? 'bg-black text-white'
+                        : 'bg-white text-charcoal border-2 border-steel hover:border-black'
+                    }`}
+                  >
+                    Buttons
+                  </button>
+                  <button
+                    onClick={() => updateSettings({ locationStyle: 'dropdown' })}
+                    className={`flex-1 py-2 px-4 rounded-sm font-semibold transition-colors ${
+                      settings.locationStyle === 'dropdown'
+                        ? 'bg-black text-white'
+                        : 'bg-white text-charcoal border-2 border-steel hover:border-black'
+                    }`}
+                  >
+                    Dropdown
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Data Sources (Trust Mode) */}
           {settings.version === 'trust' && (

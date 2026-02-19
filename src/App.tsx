@@ -27,13 +27,24 @@ import ShareTargetPage from './components/saved/ShareTargetPage';
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
 const SmartHomePage: React.FC = () => {
   const { currentEntry, loading } = useEntries();
+  const { settings } = useSettings();
 
-  // Check if today's entry is "complete" (has location and feeling set)
+  // Check if today's entry is "complete" based on all enabled fields
   const isTodayComplete = useMemo(() => {
     if (!currentEntry) return false;
-    // Entry is complete if it has a location set
-    return currentEntry.location !== '';
-  }, [currentEntry]);
+    const fields = settings.entryFields ?? { location: true, feeling: true, activities: true, highlights: true };
+
+    // Check each enabled field - ALL must be filled for entry to be "complete"
+    if (fields.location && !currentEntry.location) return false;
+    if (fields.feeling && currentEntry.feeling < 1) return false;
+    if (fields.activities && !Object.values(currentEntry.activities).some(a => a !== undefined)) return false;
+    if (fields.highlights && (!currentEntry.highlights || currentEntry.highlights.length === 0)) return false;
+
+    // If no fields are enabled, default to dashboard
+    if (!Object.values(fields).some(v => v)) return true;
+
+    return true;
+  }, [currentEntry, settings.entryFields]);
 
   // Show loading while checking entries
   if (loading) {

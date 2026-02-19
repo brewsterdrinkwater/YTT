@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
-import { LOCATIONS, TRIP_TYPES } from '../../constants/config';
+import { TRIP_TYPES } from '../../constants/config';
+import { CustomLocation } from '../../types';
 import { Input, Select } from '../common/Input';
 import Button from '../common/Button';
 
@@ -21,6 +22,15 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   const [showOtherInput, setShowOtherInput] = useState(value === 'other');
   const [localOtherName, setLocalOtherName] = useState(otherLocationName || '');
   const [localTripType, setLocalTripType] = useState<'business' | 'pleasure' | undefined>(tripType);
+
+  // Use custom locations from settings, with "Other" always available
+  const locations: CustomLocation[] = useMemo(() => {
+    const custom = settings.customLocations ?? [];
+    // Always include "Other" as a fallback
+    const hasOther = custom.some(loc => loc.id === 'other');
+    if (hasOther) return custom;
+    return [...custom, { id: 'other', name: 'Other', icon: '🌍' }];
+  }, [settings.customLocations]);
 
   const handleLocationSelect = (locationId: string) => {
     if (locationId === 'other') {
@@ -43,7 +53,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       <div className="space-y-3">
         <Select
           label="Location"
-          options={LOCATIONS.map((loc) => ({
+          options={locations.map((loc) => ({
             value: loc.id,
             label: `${loc.icon} ${loc.name}`,
           }))}
@@ -81,7 +91,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
     <div className="space-y-3">
       <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
       <div className="flex flex-wrap gap-2">
-        {LOCATIONS.map((location) => (
+        {locations.map((location) => (
           <button
             key={location.id}
             onClick={() => handleLocationSelect(location.id)}

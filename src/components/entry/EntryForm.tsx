@@ -160,14 +160,16 @@ const EntryForm: React.FC = () => {
   };
 
   const handleAutoLocationDetected = (location: AutoDetectedLocation) => {
-    // Map the detected location to our location values
+    // Match detected location against user's custom locations
     const locationName = location.name.toLowerCase();
+    const customLocations = settings.customLocations ?? [];
     let mappedLocation = 'other';
 
-    if (locationName.includes('nashville')) {
-      mappedLocation = 'nashville';
-    } else if (locationName.includes('nyc') || locationName.includes('new york')) {
-      mappedLocation = 'nyc';
+    for (const loc of customLocations) {
+      if (loc.id !== 'other' && locationName.includes(loc.name.toLowerCase())) {
+        mappedLocation = loc.id;
+        break;
+      }
     }
 
     updateEntry({
@@ -217,6 +219,9 @@ const EntryForm: React.FC = () => {
     );
   }
 
+  // Enabled fields from settings (with fallback for existing users)
+  const entryFields = settings.entryFields ?? { location: true, feeling: true, activities: true, highlights: true };
+
   // Check completion status for collapsible sections
   const isLocationComplete = entry.location !== '';
   const isFeelingComplete = entry.feeling > 0;
@@ -235,70 +240,78 @@ const EntryForm: React.FC = () => {
       )}
 
       {/* Location Section - Collapsible */}
-      <CollapsibleSection
-        title="Where are you?"
-        icon="📍"
-        isComplete={isLocationComplete}
-        defaultOpen={!isLocationComplete}
-      >
-        {/* Auto Location Detection */}
-        {showAutoLocation && (
-          <div className="mb-4">
-            <AutoLocationDetector
-              onLocationDetected={handleAutoLocationDetected}
-              onSkip={() => setShowAutoLocation(false)}
-            />
-          </div>
-        )}
+      {entryFields.location && (
+        <CollapsibleSection
+          title="Where are you?"
+          icon="📍"
+          isComplete={isLocationComplete}
+          defaultOpen={!isLocationComplete}
+        >
+          {/* Auto Location Detection */}
+          {showAutoLocation && (
+            <div className="mb-4">
+              <AutoLocationDetector
+                onLocationDetected={handleAutoLocationDetected}
+                onSkip={() => setShowAutoLocation(false)}
+              />
+            </div>
+          )}
 
-        {/* Location Selector */}
-        {!showAutoLocation && (
-          <LocationSelector
-            value={entry.location}
-            otherLocationName={entry.otherLocationName}
-            tripType={entry.tripType}
-            onChange={handleLocationChange}
-          />
-        )}
-      </CollapsibleSection>
+          {/* Location Selector */}
+          {!showAutoLocation && (
+            <LocationSelector
+              value={entry.location}
+              otherLocationName={entry.otherLocationName}
+              tripType={entry.tripType}
+              onChange={handleLocationChange}
+            />
+          )}
+        </CollapsibleSection>
+      )}
 
       {/* Feeling Section - Collapsible */}
-      <CollapsibleSection
-        title="How are you feeling?"
-        icon="😊"
-        isComplete={isFeelingComplete}
-        defaultOpen={!isFeelingComplete}
-      >
-        <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
-      </CollapsibleSection>
+      {entryFields.feeling && (
+        <CollapsibleSection
+          title="How are you feeling?"
+          icon="😊"
+          isComplete={isFeelingComplete}
+          defaultOpen={!isFeelingComplete}
+        >
+          <FeelingScale value={entry.feeling} onChange={handleFeelingChange} />
+        </CollapsibleSection>
+      )}
 
       {/* Activities Section - Collapsible */}
-      <CollapsibleSection
-        title="What did you do today?"
-        icon="📝"
-        isComplete={hasAnyActivity}
-        defaultOpen={!hasAnyActivity}
-      >
-        <ActivityTiles
-          activities={entry.activities}
-          onActivityClick={(type) => setActiveActivity(type)}
-        />
-      </CollapsibleSection>
+      {entryFields.activities && (
+        <CollapsibleSection
+          title="What did you do today?"
+          icon="📝"
+          isComplete={hasAnyActivity}
+          defaultOpen={!hasAnyActivity}
+        >
+          <ActivityTiles
+            activities={entry.activities}
+            onActivityClick={(type) => setActiveActivity(type)}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Highlights Section - Collapsible */}
-      <CollapsibleSection
-        title="Highlights & Notes"
-        icon="✨"
-        isComplete={!!entry.highlights && entry.highlights.length > 0}
-        defaultOpen={!entry.highlights}
-      >
-        <TextArea
-          placeholder="What made today special? Any thoughts or reflections?"
-          value={entry.highlights || ''}
-          onChange={(e) => handleHighlightsChange(e.target.value)}
-          rows={4}
-        />
-      </CollapsibleSection>
+      {entryFields.highlights && (
+        <CollapsibleSection
+          title="Highlights & Notes"
+          icon="✨"
+          isComplete={!!entry.highlights && entry.highlights.length > 0}
+          defaultOpen={!entry.highlights}
+        >
+          <TextArea
+            placeholder="What made today special? Any thoughts or reflections?"
+            value={entry.highlights || ''}
+            onChange={(e) => handleHighlightsChange(e.target.value)}
+            rows={4}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Save Status Indicator */}
       <div className="sticky bottom-20 md:bottom-4 bg-gray-50/80 backdrop-blur-sm py-4 -mx-4 px-4">

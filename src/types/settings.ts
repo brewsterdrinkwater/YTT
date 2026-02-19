@@ -3,6 +3,14 @@ import { ActivityType } from './activity';
 export type AppVersion = 'trust' | 'secure';
 export type UIStyle = 'modern' | 'retro' | 'structured';
 
+export interface CustomLocation {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export type EntryFieldType = 'location' | 'feeling' | 'activities' | 'highlights';
+
 export interface AppSettings {
   version: AppVersion;
   autoLocation: boolean;
@@ -20,6 +28,8 @@ export interface AppSettings {
   };
   activityOrder: ActivityType[];
   theme: 'light' | 'dark' | 'system';
+  customLocations: CustomLocation[];
+  entryFields: Record<EntryFieldType, boolean>;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -39,4 +49,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   activityOrder: ['workout', 'travel', 'work', 'social', 'wellness', 'creative', 'food', 'sleep'],
   theme: 'light',
+  customLocations: [],
+  entryFields: {
+    location: true,
+    feeling: true,
+    activities: true,
+    highlights: true,
+  },
 };
