@@ -104,14 +104,19 @@ const EntryForm: React.FC = () => {
     }
 
     // Set new timer for auto-save
-    autoSaveTimerRef.current = setTimeout(() => {
+    autoSaveTimerRef.current = setTimeout(async () => {
       setSaveStatus('saving');
-      saveEntry(entry);
-      setHasChanges(false);
-      setSaveStatus('saved');
-
-      // Reset status after a brief delay
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      try {
+        await saveEntry(entry);
+        setHasChanges(false);
+        setSaveStatus('saved');
+        // Reset status after a brief delay
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (error) {
+        setSaveStatus('idle');
+        showToast('Failed to save entry. Please try again.', 'error');
+        console.error('Auto-save failed:', error);
+      }
     }, AUTO_SAVE_DELAY);
 
     // Cleanup on unmount or when entry changes
@@ -120,7 +125,7 @@ const EntryForm: React.FC = () => {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [entry, hasChanges, saveEntry]);
+  }, [entry, hasChanges, saveEntry, showToast]);
 
   // Save immediately before navigating away
   useEffect(() => {

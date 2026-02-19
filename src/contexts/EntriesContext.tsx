@@ -144,6 +144,13 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
         return [...prev, updatedEntry];
       });
 
+      // Only sync to Supabase if entry is complete (has valid feeling 1-10)
+      // Entries with feeling=0 are incomplete and shouldn't be persisted to DB
+      if (entry.feeling < 1 || entry.feeling > 10) {
+        console.log('Entry incomplete (feeling not set), skipping database sync');
+        return;
+      }
+
       // Sync to Supabase
       try {
         const dbEntry = {
@@ -165,9 +172,13 @@ export const EntriesProvider: React.FC<EntriesProviderProps> = ({ children }) =>
 
         if (error) {
           console.error('Error saving entry:', error);
+          // Revert local state on error
+          setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+          throw new Error(`Failed to save entry: ${error.message}`);
         }
       } catch (err) {
         console.error('Error saving entry:', err);
+        throw err;
       }
     },
     [user]

@@ -23,10 +23,7 @@ import {
 } from '../lists';
 import { ListType } from '../lists/ListPage';
 
-// Dashboard tab type
-type DashboardTab = 'lists' | 'insights' | 'search';
-
-// Recipe List Component (kept from original)
+// Recipe List Component (compact version)
 const RecipeListSection: React.FC = () => {
   const { showToast } = useApp();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -46,57 +43,49 @@ const RecipeListSection: React.FC = () => {
     setRecipes(updated);
   };
 
-  if (recipes.length === 0) {
-    return null;
-  }
+  if (recipes.length === 0) return null;
 
   return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-        <span>🍳</span> Recipes
-        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-          {recipes.length}
+    <div className="border-2 border-steel rounded-sm overflow-hidden">
+      <div className="p-3 bg-white border-b border-steel">
+        <span className="flex items-center gap-2 font-bold text-black text-sm">
+          <span>🍳</span> Recipes
+          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+            {recipes.length}
+          </span>
         </span>
-      </h3>
-      <ul className="space-y-2">
-        {recipes.map((recipe) => (
-          <li key={recipe.id} className="bg-orange-50 rounded-lg overflow-hidden">
+      </div>
+      <ul className="divide-y divide-steel">
+        {recipes.slice(0, 3).map((recipe) => (
+          <li key={recipe.id} className="bg-white">
             <button
               onClick={() => setExpandedRecipe(expandedRecipe === recipe.id ? null : recipe.id)}
-              className="w-full p-3 flex items-center justify-between text-left"
+              className="w-full p-3 flex items-center justify-between text-left hover:bg-concrete transition-colors"
             >
               <span className="font-medium text-sm">{recipe.name}</span>
-              <span className="text-xs text-gray-500">
-                {recipe.ingredients.length} ingredients
-                <span className="ml-2">{expandedRecipe === recipe.id ? '▲' : '▼'}</span>
+              <span className="text-xs text-slate">
+                {recipe.ingredients.length} items
               </span>
             </button>
             {expandedRecipe === recipe.id && (
-              <div className="px-3 pb-3 border-t border-orange-100">
-                <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                  {recipe.ingredients.map((ing, i) => (
-                    <li key={i}>
+              <div className="px-3 pb-3 border-t border-concrete">
+                <ul className="text-sm text-charcoal mt-2 space-y-1">
+                  {recipe.ingredients.slice(0, 5).map((ing, i) => (
+                    <li key={i} className="text-xs">
                       • {ing.name} {ing.quantity > 0 && `(${ing.quantity} ${ing.unit})`}
                     </li>
                   ))}
+                  {recipe.ingredients.length > 5 && (
+                    <li className="text-xs text-slate">+{recipe.ingredients.length - 5} more</li>
+                  )}
                 </ul>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleAddToGrocery(recipe.id)}
                     className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
                   >
-                    🛒 Add to Grocery
+                    + Grocery
                   </button>
-                  {recipe.sourceUrl && (
-                    <a
-                      href={recipe.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline px-2 py-1"
-                    >
-                      View Source →
-                    </a>
-                  )}
                   <button
                     onClick={() => handleRemove(recipe.id)}
                     className="text-xs text-red-500 hover:text-red-700 px-2 py-1 ml-auto"
@@ -109,11 +98,11 @@ const RecipeListSection: React.FC = () => {
           </li>
         ))}
       </ul>
-    </Card>
+    </div>
   );
 };
 
-// Diary Search Component
+// Diary Search Component (compact)
 const DiarySearchSection: React.FC = () => {
   const { searchEntries } = useEntries();
   const { setCurrentDate } = useApp();
@@ -128,7 +117,7 @@ const DiarySearchSection: React.FC = () => {
         return;
       }
       const searchResults = searchEntries(searchQuery);
-      setResults(searchResults.slice(0, 5));
+      setResults(searchResults.slice(0, 3));
     },
     [searchEntries]
   );
@@ -146,73 +135,133 @@ const DiarySearchSection: React.FC = () => {
   };
 
   return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+    <div className="border-2 border-black rounded-sm p-4 bg-white">
+      <h3 className="font-bold text-black mb-3 flex items-center gap-2">
         <span>🔍</span> Search Diary
       </h3>
       <Input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search entries, locations, activities..."
-        className="mb-3 min-h-[52px] text-base"
+        placeholder="Search entries..."
+        className="mb-2 text-sm"
       />
       {results.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {results.map((entry) => (
             <li
               key={entry.id}
               onClick={() => handleEntryClick(entry)}
-              className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              className="p-2 bg-concrete rounded-sm cursor-pointer hover:bg-steel transition-colors text-xs"
             >
-              <p className="text-sm font-medium">{formatDisplayDate(entry.date)}</p>
-              <p className="text-xs text-gray-500 truncate">
-                {entry.location} • {entry.highlights || 'No highlights'}
-              </p>
+              <p className="font-medium">{formatDisplayDate(entry.date)}</p>
+              <p className="text-slate truncate">{entry.highlights || entry.location}</p>
             </li>
           ))}
         </ul>
       )}
-      {query && results.length === 0 && (
-        <p className="text-sm text-gray-400 italic">No entries found</p>
-      )}
-    </Card>
+    </div>
   );
 };
 
-// Dashboard Section for diary insights
-interface DashboardSectionProps {
+// Insight card for workouts/ideas
+interface InsightCardProps {
   title: string;
   icon: string;
   items: DashboardItem[];
-  emptyMessage: string;
 }
 
-const DashboardSection: React.FC<DashboardSectionProps> = ({
-  title,
-  icon,
-  items,
-}) => {
+const InsightCard: React.FC<InsightCardProps> = ({ title, icon, items }) => {
   if (items.length === 0) return null;
+
   return (
-    <Card className="mb-4">
-      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-        <span>{icon}</span>
-        {title}
+    <div className="border-2 border-black rounded-sm p-4 bg-white">
+      <h3 className="font-bold text-black mb-3 flex items-center gap-2">
+        <span>{icon}</span> {title}
       </h3>
       <ul className="space-y-2">
-        {items.slice(0, 5).map((item, index) => (
-          <li key={index} className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-900">{item.text}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {formatDisplayDate(item.date)} • {item.location}
+        {items.slice(0, 3).map((item, index) => (
+          <li key={index} className="p-2 bg-concrete rounded-sm">
+            <p className="text-sm text-black">{item.text}</p>
+            <p className="text-xs text-slate mt-1">
+              {formatDisplayDate(item.date)}
             </p>
           </li>
         ))}
       </ul>
-    </Card>
+    </div>
   );
 };
+
+// Collapsible list for the right column
+interface ListSectionProps {
+  title: string;
+  icon: string;
+  itemCount: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const ListSection: React.FC<ListSectionProps> = ({
+  title,
+  icon,
+  itemCount,
+  isExpanded,
+  onToggle,
+  children,
+}) => {
+  return (
+    <div className="border-2 border-steel rounded-sm overflow-hidden hover:border-charcoal transition-colors">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-3 bg-white hover:bg-concrete transition-colors"
+      >
+        <span className="flex items-center gap-2 font-bold text-black text-sm">
+          <span>{icon}</span>
+          {title}
+          {itemCount > 0 && (
+            <span className="text-xs bg-tab-orange/20 text-tab-orange px-2 py-0.5 rounded-full">
+              {itemCount}
+            </span>
+          )}
+        </span>
+        <svg
+          className={`w-4 h-4 text-charcoal transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isExpanded && (
+        <div className="border-t border-steel max-h-64 overflow-y-auto">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Mobile list grid item
+interface MobileListItemProps {
+  icon: string;
+  label: string;
+  count: number;
+  onClick: () => void;
+}
+
+const MobileListItem: React.FC<MobileListItemProps> = ({ icon, label, count, onClick }) => (
+  <button
+    onClick={onClick}
+    className="p-3 rounded-sm border-2 border-steel hover:border-black transition-all text-left bg-white"
+  >
+    <span className="text-2xl block mb-1">{icon}</span>
+    <span className="font-bold text-black text-sm block">{label}</span>
+    {count > 0 && <span className="text-xs text-slate">{count}</span>}
+  </button>
+);
 
 // Extract functions
 const extractWorkouts = (entries: Entry[]): DashboardItem[] => {
@@ -240,88 +289,14 @@ const extractIdeas = (entries: Entry[]): DashboardItem[] => {
     .slice(0, 5);
 };
 
-// Collapsible list section for desktop
-interface CollapsibleListProps {
-  title: string;
-  icon: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-  itemCount: number;
-  children: React.ReactNode;
-}
-
-const CollapsibleList: React.FC<CollapsibleListProps> = ({
-  title,
-  icon,
-  isExpanded,
-  onToggle,
-  itemCount,
-  children,
-}) => {
-  return (
-    <div className="mb-4 border-2 border-steel rounded-sm overflow-hidden hover:border-charcoal transition-colors">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 bg-white hover:bg-concrete transition-colors"
-      >
-        <span className="flex items-center gap-2 font-bold text-black">
-          <span className="text-xl">{icon}</span>
-          {title}
-          {itemCount > 0 && (
-            <span className="text-xs bg-tab-orange/20 text-tab-orange px-2 py-1 rounded-full font-semibold">
-              {itemCount}
-            </span>
-          )}
-        </span>
-        <svg
-          className={`w-5 h-5 text-charcoal transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {isExpanded && (
-        <div className="border-t-2 border-steel">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Mobile list grid item
-interface MobileListItemProps {
-  icon: string;
-  label: string;
-  count: number;
-  onClick: () => void;
-  color: string;
-}
-
-const MobileListItem: React.FC<MobileListItemProps> = ({ icon, label, count, onClick, color }) => (
-  <button
-    onClick={onClick}
-    className={`p-4 rounded-sm border-2 border-steel hover:border-black transition-all text-left ${color}`}
-  >
-    <span className="text-3xl block mb-2">{icon}</span>
-    <span className="font-bold text-black block">{label}</span>
-    {count > 0 && (
-      <span className="text-sm text-slate">{count} items</span>
-    )}
-  </button>
-);
-
 const Dashboard: React.FC = () => {
   const { entries } = useEntries();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('lists');
 
-  // Desktop: track which lists are expanded
+  // Track which lists are expanded (default: grocery)
   const [expandedLists, setExpandedLists] = useState<Set<ListType>>(new Set(['grocery']));
 
-  // List counts for display
+  // List counts
   const [listCounts, setListCounts] = useState({
     grocery: 0,
     watchlist: 0,
@@ -344,7 +319,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const toggleList = (list: ListType) => {
-    setExpandedLists(prev => {
+    setExpandedLists((prev) => {
       const next = new Set(prev);
       if (next.has(list)) {
         next.delete(list);
@@ -363,185 +338,147 @@ const Dashboard: React.FC = () => {
   const ideas = extractIdeas(entries);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
+    <div className="max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-6">
       <div className="mb-6">
         <h1 className="text-h2 font-bold text-black">Dashboard</h1>
-        <p className="text-small text-slate mt-1">Your lists, insights, and search</p>
+        <p className="text-small text-slate mt-1">Your insights and lists at a glance</p>
       </div>
 
-      {/* Tabs - Walt-tab brutalist style with color accents */}
-      <div className="flex gap-1 mb-6 border-b-2 border-black overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('lists')}
-          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'lists'
-              ? 'bg-tab-orange/10 text-black border-tab-orange'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          📋 Lists
-        </button>
-        <button
-          onClick={() => setActiveTab('insights')}
-          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'insights'
-              ? 'bg-tab-blue/10 text-black border-tab-blue'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          💡 Insights
-        </button>
-        <button
-          onClick={() => setActiveTab('search')}
-          className={`px-5 py-3 font-semibold text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'search'
-              ? 'bg-success/10 text-black border-success'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          🔍 Search
-        </button>
-      </div>
+      {/* Mobile: Stacked layout */}
+      <div className="md:hidden space-y-6">
+        {/* Insights section */}
+        <div className="space-y-4">
+          <h2 className="font-bold text-black border-b-2 border-black pb-2">Insights</h2>
+          <LocationDaysCounter />
+          <RecentlySavedWidget />
+          <DiarySearchSection />
+          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
+          <InsightCard title="Ideas" icon="💡" items={ideas} />
+        </div>
 
-      {/* Lists Tab */}
-      {activeTab === 'lists' && (
-        <>
-          {/* Mobile: Grid of list links */}
-          <div className="md:hidden grid grid-cols-2 gap-3 mb-6">
+        {/* Lists grid */}
+        <div>
+          <h2 className="font-bold text-black border-b-2 border-black pb-2 mb-4">Lists</h2>
+          <div className="grid grid-cols-3 gap-2">
             <MobileListItem
               icon="🛒"
-              label="Groceries"
+              label="Grocery"
               count={listCounts.grocery}
               onClick={() => navigateToList('grocery')}
-              color="bg-tab-orange/5"
             />
             <MobileListItem
               icon="🍽️"
-              label="Restaurants"
+              label="Food"
               count={listCounts.restaurants}
               onClick={() => navigateToList('restaurants')}
-              color="bg-pink-50"
             />
             <MobileListItem
               icon="🎬"
-              label="Watchlist"
+              label="Watch"
               count={listCounts.watchlist}
               onClick={() => navigateToList('watchlist')}
-              color="bg-tab-red/5"
             />
             <MobileListItem
               icon="📚"
-              label="Reading"
+              label="Read"
               count={listCounts.reading}
               onClick={() => navigateToList('reading')}
-              color="bg-tab-orange/5"
             />
             <MobileListItem
               icon="🎵"
               label="Music"
               count={listCounts.music}
               onClick={() => navigateToList('music')}
-              color="bg-success/5"
             />
             <MobileListItem
               icon="📍"
               label="Places"
               count={listCounts.places}
               onClick={() => navigateToList('places')}
-              color="bg-tab-blue/5"
             />
           </div>
+        </div>
+      </div>
 
-          {/* Desktop: Collapsible lists */}
-          <div className="hidden md:block">
-            <CollapsibleList
-              title="Grocery List"
-              icon="🛒"
-              isExpanded={expandedLists.has('grocery')}
-              onToggle={() => toggleList('grocery')}
-              itemCount={listCounts.grocery}
-            >
-              <GroceryList />
-            </CollapsibleList>
+      {/* Desktop: Two-column layout */}
+      <div className="hidden md:grid md:grid-cols-2 gap-6">
+        {/* Left column: Insights */}
+        <div className="space-y-4">
+          <h2 className="font-bold text-black border-b-2 border-black pb-2">Insights</h2>
+          <LocationDaysCounter />
+          <RecentlySavedWidget />
+          <DiarySearchSection />
+          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
+          <InsightCard title="Ideas" icon="💡" items={ideas} />
+        </div>
 
-            <CollapsibleList
-              title="Restaurants"
-              icon="🍽️"
-              isExpanded={expandedLists.has('restaurants')}
-              onToggle={() => toggleList('restaurants')}
-              itemCount={listCounts.restaurants}
-            >
-              <RestaurantList />
-            </CollapsibleList>
+        {/* Right column: Lists */}
+        <div className="space-y-3">
+          <h2 className="font-bold text-black border-b-2 border-black pb-2">Lists</h2>
 
-            <CollapsibleList
-              title="Watchlist"
-              icon="🎬"
-              isExpanded={expandedLists.has('watchlist')}
-              onToggle={() => toggleList('watchlist')}
-              itemCount={listCounts.watchlist}
-            >
-              <WatchlistList />
-            </CollapsibleList>
+          <ListSection
+            title="Grocery"
+            icon="🛒"
+            itemCount={listCounts.grocery}
+            isExpanded={expandedLists.has('grocery')}
+            onToggle={() => toggleList('grocery')}
+          >
+            <GroceryList />
+          </ListSection>
 
-            <CollapsibleList
-              title="Reading List"
-              icon="📚"
-              isExpanded={expandedLists.has('reading')}
-              onToggle={() => toggleList('reading')}
-              itemCount={listCounts.reading}
-            >
-              <ReadingList />
-            </CollapsibleList>
+          <ListSection
+            title="Restaurants"
+            icon="🍽️"
+            itemCount={listCounts.restaurants}
+            isExpanded={expandedLists.has('restaurants')}
+            onToggle={() => toggleList('restaurants')}
+          >
+            <RestaurantList />
+          </ListSection>
 
-            <CollapsibleList
-              title="Listen List"
-              icon="🎵"
-              isExpanded={expandedLists.has('music')}
-              onToggle={() => toggleList('music')}
-              itemCount={listCounts.music}
-            >
-              <MusicList />
-            </CollapsibleList>
+          <ListSection
+            title="Watchlist"
+            icon="🎬"
+            itemCount={listCounts.watchlist}
+            isExpanded={expandedLists.has('watchlist')}
+            onToggle={() => toggleList('watchlist')}
+          >
+            <WatchlistList />
+          </ListSection>
 
-            <CollapsibleList
-              title="Places to Visit"
-              icon="📍"
-              isExpanded={expandedLists.has('places')}
-              onToggle={() => toggleList('places')}
-              itemCount={listCounts.places}
-            >
-              <PlacesList />
-            </CollapsibleList>
+          <ListSection
+            title="Reading"
+            icon="📚"
+            itemCount={listCounts.reading}
+            isExpanded={expandedLists.has('reading')}
+            onToggle={() => toggleList('reading')}
+          >
+            <ReadingList />
+          </ListSection>
 
-            {/* Recipes Section */}
-            <RecipeListSection />
-          </div>
-        </>
-      )}
+          <ListSection
+            title="Music"
+            icon="🎵"
+            itemCount={listCounts.music}
+            isExpanded={expandedLists.has('music')}
+            onToggle={() => toggleList('music')}
+          >
+            <MusicList />
+          </ListSection>
 
-      {/* Insights Tab */}
-      {activeTab === 'insights' && (
-        <>
-          {entries.length === 0 ? (
-            <Card className="text-center py-12">
-              <span className="text-4xl mb-4 block">📊</span>
-              <h2 className="text-xl font-semibold mb-2">No Data Yet</h2>
-              <p className="text-gray-500">Start adding entries to see insights.</p>
-            </Card>
-          ) : (
-            <>
-              <LocationDaysCounter />
-              <RecentlySavedWidget />
-              <DashboardSection title="Recent Workouts" icon="🏋️" items={workouts} emptyMessage="" />
-              <DashboardSection title="Ideas & Insights" icon="💡" items={ideas} emptyMessage="" />
-            </>
-          )}
-        </>
-      )}
+          <ListSection
+            title="Places"
+            icon="📍"
+            itemCount={listCounts.places}
+            isExpanded={expandedLists.has('places')}
+            onToggle={() => toggleList('places')}
+          >
+            <PlacesList />
+          </ListSection>
 
-      {/* Search Tab */}
-      {activeTab === 'search' && <DiarySearchSection />}
+          <RecipeListSection />
+        </div>
+      </div>
     </div>
   );
 };
