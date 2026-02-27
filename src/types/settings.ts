@@ -30,6 +30,7 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   customLocations: CustomLocation[];
   entryFields: Record<EntryFieldType, boolean>;
+  onboardingComplete: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -56,4 +57,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
     activities: true,
     highlights: true,
   },
+  onboardingComplete: false,
 };
