@@ -15,6 +15,23 @@ interface NavItem {
 }
 
 const Navigation: React.FC = () => {
+  // Desktop-only nav items (Tools is accessible from Share page on mobile)
+  const desktopOnlyItems: NavItem[] = [
+    {
+      to: '/tools',
+      label: 'Tools',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21.75 6.75a4.5 4.5 0 01-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 11-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 016.336-4.486l-3.276 3.276a2 2 0 002.5 2.5l3.276-3.276c.256.565.398 1.192.398 1.852z"
+          />
+        </svg>
+      ),
+    },
+  ];
+
   const navItems: NavItem[] = [
     {
       to: '/entry',
@@ -56,27 +73,16 @@ const Navigation: React.FC = () => {
       ),
     },
     {
-      to: '/tools',
-      label: 'Tools',
+      to: '/share',
+      label: 'Share',
       icon: (
-        <div className="relative w-5 h-5">
-          {/* Wrench - positioned bottom-left */}
-          <svg className="absolute bottom-0 left-0 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21.75 6.75a4.5 4.5 0 01-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 11-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 016.336-4.486l-3.276 3.276a2 2 0 002.5 2.5l3.276-3.276c.256.565.398 1.192.398 1.852z"
-            />
-          </svg>
-          {/* Magnifying glass - positioned top-right */}
-          <svg className="absolute top-0 right-0 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-            />
-          </svg>
-        </div>
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+          />
+        </svg>
       ),
     },
     {
@@ -128,7 +134,7 @@ const Navigation: React.FC = () => {
       <nav className="hidden md:block bg-white border-b border-steel">
         <div className="max-w-content mx-auto px-md">
           <div className="flex">
-            {navItems.map((item) => (
+            {[...navItems, ...desktopOnlyItems].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

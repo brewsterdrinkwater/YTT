@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useLocation as useLocationContext } from '../../contexts/LocationContext';
 import { Entry, Activities, ActivityType, AutoDetectedLocation } from '../../types';
+import { LOCATIONS } from '../../constants/config';
 import DateNavigator from './DateNavigator';
 import FeelingScale from './FeelingScale';
 import ActivityTiles from './ActivityTiles';
@@ -74,6 +76,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 
 const EntryForm: React.FC = () => {
   const { currentDate, showToast } = useApp();
+  const { user } = useAuth();
   const { getOrCreateEntryForDate, saveEntry } = useEntries();
   const { settings } = useSettings();
   const { autoDetectedLocation } = useLocationContext();
@@ -85,14 +88,22 @@ const EntryForm: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load entry for current date
+  // Ref to hold the latest getOrCreateEntryForDate without causing re-renders
+  const getOrCreateRef = useRef(getOrCreateEntryForDate);
   useEffect(() => {
-    const existingEntry = getOrCreateEntryForDate(currentDate);
+    getOrCreateRef.current = getOrCreateEntryForDate;
+  }, [getOrCreateEntryForDate]);
+
+  // Load entry for current date - only re-run when the date or key settings change,
+  // NOT when entries change (which would reset hasChanges on every save)
+  useEffect(() => {
+    const existingEntry = getOrCreateRef.current(currentDate);
     setEntry(existingEntry);
     setHasChanges(false);
     setSaveStatus('idle');
     setShowAutoLocation(settings.version === 'trust' && settings.autoLocation);
-  }, [currentDate, getOrCreateEntryForDate, settings.version, settings.autoLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, settings.version, settings.autoLocation]);
 
   // Auto-save effect - saves after delay when entry changes
   useEffect(() => {
@@ -130,7 +141,7 @@ const EntryForm: React.FC = () => {
   // Save immediately before navigating away using sendBeacon (reliable during unload)
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (!entry || !hasChanges) return;
+      if (!entry || !hasChanges || !user) return;
 
       // Cancel any pending auto-save
       if (autoSaveTimerRef.current) {
@@ -158,6 +169,7 @@ const EntryForm: React.FC = () => {
 
       const dbEntry = {
         id: entry.id,
+        user_id: user.id,
         date: entry.date.split('T')[0],
         location: entry.location || '',
         other_location_name: entry.otherLocationName || null,
@@ -193,7 +205,7 @@ const EntryForm: React.FC = () => {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [entry, hasChanges]);
+  }, [entry, hasChanges, user]);
 
   const updateEntry = (updates: Partial<Entry>) => {
     if (entry) {
@@ -216,12 +228,15 @@ const EntryForm: React.FC = () => {
   };
 
   const handleAutoLocationDetected = (location: AutoDetectedLocation) => {
-    // Match detected location against user's custom locations
+    // Match detected location against user's custom locations (or default LOCATIONS)
     const locationName = location.name.toLowerCase();
     const customLocations = settings.customLocations ?? [];
+    const locationsToMatch = customLocations.length > 0
+      ? customLocations
+      : LOCATIONS.map(loc => ({ id: loc.id, name: loc.name, icon: loc.icon }));
     let mappedLocation = 'other';
 
-    for (const loc of customLocations) {
+    for (const loc of locationsToMatch) {
       if (loc.id !== 'other' && locationName.includes(loc.name.toLowerCase())) {
         mappedLocation = loc.id;
         break;
