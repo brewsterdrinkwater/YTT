@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
-import { TRIP_TYPES } from '../../constants/config';
+import { LOCATIONS, TRIP_TYPES } from '../../constants/config';
 import { CustomLocation } from '../../types';
 import { Input, Select } from '../common/Input';
 import Button from '../common/Button';
@@ -23,13 +23,16 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   const [localOtherName, setLocalOtherName] = useState(otherLocationName || '');
   const [localTripType, setLocalTripType] = useState<'business' | 'pleasure' | undefined>(tripType);
 
-  // Use custom locations from settings, with "Other" always available
+  // Use custom locations from settings, falling back to default LOCATIONS
+  // when no custom locations have been configured
   const locations: CustomLocation[] = useMemo(() => {
     const custom = settings.customLocations ?? [];
+    // If no custom locations configured, use the default LOCATIONS from config
+    const base = custom.length > 0 ? custom : LOCATIONS.map(loc => ({ id: loc.id, name: loc.name, icon: loc.icon }));
     // Always include "Other" as a fallback
-    const hasOther = custom.some(loc => loc.id === 'other');
-    if (hasOther) return custom;
-    return [...custom, { id: 'other', name: 'Other', icon: '🌍' }];
+    const hasOther = base.some(loc => loc.id === 'other');
+    if (hasOther) return base;
+    return [...base, { id: 'other', name: 'Other', icon: '🌍' }];
   }, [settings.customLocations]);
 
   const handleLocationSelect = (locationId: string) => {
