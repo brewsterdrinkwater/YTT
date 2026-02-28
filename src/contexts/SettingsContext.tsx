@@ -60,12 +60,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     // Check the legacy onboarding flag for users upgrading from the old system
     const legacyOnboardingDone = localStorage.getItem('ytt-onboarding-complete') === 'true';
 
-    supabase
-      .from('user_settings')
-      .select('settings')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('settings')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
         if (error) {
           console.error('[Settings] Error loading from Supabase:', error);
           // Fall back to localStorage, but still apply legacy migration
@@ -103,11 +105,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         }
 
         setSettingsLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('[Settings] Unexpected error:', err);
         setSettingsLoading(false);
-      });
+      }
+    })();
     // We only want to re-run this when the logged-in user actually changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, authLoading]);
