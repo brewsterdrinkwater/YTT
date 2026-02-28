@@ -5,6 +5,7 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { EntriesProvider, useEntries } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ListsProvider } from './contexts/ListsContext';
 
 // Layout components
 import Header from './components/layout/Header';
@@ -132,9 +133,11 @@ const App: React.FC = () => {
         <AppProvider>
           <SettingsProvider>
             <EntriesProvider>
-              <LocationProvider>
-                <AppContent />
-              </LocationProvider>
+              <ListsProvider>
+                <LocationProvider>
+                  <AppContent />
+                </LocationProvider>
+              </ListsProvider>
             </EntriesProvider>
           </SettingsProvider>
         </AppProvider>

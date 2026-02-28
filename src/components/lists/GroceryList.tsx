@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { GroceryItem, GroceryStore } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import Card from '../common/Card';
@@ -45,41 +45,42 @@ interface GroceryListProps {
 const GroceryList: React.FC<GroceryListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
   const { user } = useAuth();
-  const [groceryList, setGroceryList] = useState<GroceryItem[]>([]);
+  const {
+    groceryList,
+    addGroceryItem,
+    updateGroceryItem,
+    removeGroceryItem,
+    toggleGroceryItem,
+    saveGroceryList,
+    clearCheckedGroceryItems,
+  } = useLists();
   const [atTheStore, setAtTheStore] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', quantity: 1, unit: '', store: '' as GroceryStore });
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterStore, setFilterStore] = useState<GroceryStore | 'all'>('all');
   const [showShareModal, setShowShareModal] = useState(false);
 
-  useEffect(() => {
-    setGroceryList(researchService.getGroceryList());
-  }, []);
-
   const handleAddItem = () => {
     if (!newItem.name.trim()) return;
-    const updated = researchService.addGroceryItem({
+    addGroceryItem({
       name: newItem.name,
       quantity: newItem.quantity,
       unit: newItem.unit,
       isStaple: false,
       store: newItem.store,
     });
-    setGroceryList(updated);
     setNewItem({ name: '', quantity: 1, unit: '', store: '' });
     setShowAddForm(false);
     showToast(`Added "${newItem.name}" to grocery list`, 'success');
   };
 
   const handleToggle = (id: string) => {
-    const updated = researchService.toggleGroceryItem(id);
-    setGroceryList(updated);
+    toggleGroceryItem(id);
   };
 
   const handleRemove = (id: string) => {
     const item = groceryList.find(g => g.id === id);
-    const updated = researchService.removeGroceryItem(id);
-    setGroceryList(updated);
+    removeGroceryItem(id);
     if (item) {
       showToast(`Removed "${item.name}"`, 'info');
     }
@@ -88,33 +89,26 @@ const GroceryList: React.FC<GroceryListProps> = ({ isFullPage = false, onBack })
   const handleToggleStaple = (id: string) => {
     const item = groceryList.find((g) => g.id === id);
     if (item) {
-      const updated = researchService.updateGroceryItem(id, { isStaple: !item.isStaple });
-      setGroceryList(updated);
+      updateGroceryItem(id, { isStaple: !item.isStaple });
       showToast(item.isStaple ? `"${item.name}" removed from staples` : `"${item.name}" marked as staple`, 'success');
     }
   };
 
   const handleSetStore = (id: string, store: GroceryStore) => {
-    const updated = researchService.updateGroceryItem(id, { store });
-    setGroceryList(updated);
+    updateGroceryItem(id, { store });
   };
 
   const handleStartShopping = () => {
-    // Add all staple items if not already present and reset their checked status
-    const staples = groceryList.filter(item => item.isStaple);
-    let updated = groceryList.map(item =>
+    const updated = groceryList.map(item =>
       item.isStaple ? { ...item, checked: false } : item
     );
-    researchService.saveGroceryList(updated);
-    setGroceryList(updated);
+    saveGroceryList(updated);
     setAtTheStore(true);
     showToast('Shopping mode activated! Staple items are ready.', 'success');
   };
 
   const handleStoreRunComplete = () => {
-    // Remove all checked non-staple items, reset staple items to unchecked
-    const updated = researchService.clearCheckedGroceryItems();
-    setGroceryList(updated);
+    clearCheckedGroceryItems();
     setAtTheStore(false);
     showToast('Store run complete! List cleared for next time.', 'success');
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -27,6 +27,7 @@ const speechSupported = !!SpeechRecognition;
 
 const VoiceInput: React.FC = () => {
   const { showToast } = useApp();
+  const { addGroceryItem, addToWatchlist, addToReadingList, addToSpotifyList, addToPlacesList, addRestaurant } = useLists();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [parsedCommand, setParsedCommand] = useState<ParsedCommand | null>(null);
@@ -180,7 +181,7 @@ const VoiceInput: React.FC = () => {
 
     switch (listType) {
       case 'grocery':
-        researchService.addGroceryItem({
+        addGroceryItem({
           name: item,
           quantity: quantity,
           unit: unit || '',
@@ -190,7 +191,7 @@ const VoiceInput: React.FC = () => {
         break;
 
       case 'watchlist':
-        researchService.addToWatchlist({
+        addToWatchlist({
           name: item,
           works: [],
           imdbUrl: null,
@@ -200,7 +201,7 @@ const VoiceInput: React.FC = () => {
         break;
 
       case 'reading':
-        researchService.addToReadingList({
+        addToReadingList({
           name: item,
           works: [],
           kindleUrl: null,
@@ -210,7 +211,7 @@ const VoiceInput: React.FC = () => {
         break;
 
       case 'music':
-        researchService.addToSpotifyList({
+        addToSpotifyList({
           name: item,
           spotifyUrl: null,
           addedAt: new Date().toISOString(),
@@ -219,7 +220,7 @@ const VoiceInput: React.FC = () => {
         break;
 
       case 'places':
-        researchService.addToPlacesList({
+        addToPlacesList({
           name: item,
           location: null,
           reason: 'Added via voice',
@@ -230,7 +231,7 @@ const VoiceInput: React.FC = () => {
         break;
 
       case 'restaurants':
-        researchService.addRestaurant({
+        addRestaurant({
           name: item,
           cuisine: '',
           location: '',

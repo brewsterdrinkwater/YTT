@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   quickShareService,
   SavedItem,
   ListCategory,
   AnalysisResult,
 } from '../../services/quickShareService';
+import { useLists } from '../../contexts/ListsContext';
 
 const CATEGORY_CONFIG: Record<ListCategory, { label: string; icon: string; color: string }> = {
   grocery: { label: 'Grocery', icon: '🛒', color: 'bg-green-100 border-green-500' },
@@ -32,14 +33,23 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
     item: SavedItem;
     analysis: AnalysisResult;
   } | null>(null);
-  const [recentItems, setRecentItems] = useState<SavedItem[]>([]);
   const [batchProgress, setBatchProgress] = useState<{ completed: number; total: number } | null>(
     null
   );
 
-  useEffect(() => {
-    setRecentItems(quickShareService.getRecentItems(10));
-  }, []);
+  const {
+    savedItems,
+    setSavedItems,
+    removeSavedItem,
+    addSavedItemToList,
+    addGroceryItem,
+    addRestaurant,
+    addToPlacesList,
+    addToWatchlist,
+    addToReadingList,
+    addToSpotifyList,
+  } = useLists();
+  const recentItems = savedItems.slice(0, 10);
 
   const handleAnalyze = async () => {
     if (!url.trim()) return;
@@ -51,7 +61,7 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
     try {
       const result = await quickShareService.quickSave(url.trim());
       setCurrentAnalysis(result);
-      setRecentItems(quickShareService.getRecentItems(10));
+      setSavedItems(quickShareService.getSavedItems());
       setUrl('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze URL');
@@ -76,7 +86,7 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
       await quickShareService.batchSave(urls, (completed, total) => {
         setBatchProgress({ completed, total });
       });
-      setRecentItems(quickShareService.getRecentItems(10));
+      setSavedItems(quickShareService.getSavedItems());
       setBatchUrls('');
       setBatchMode(false);
     } catch (err) {
@@ -89,18 +99,39 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
 
   const handleAddToList = (category: ListCategory) => {
     if (!currentAnalysis) return;
-    quickShareService.addToList(currentAnalysis.item.id, category);
+    addSavedItemToList(currentAnalysis.item.id, category);
 
     // Also add extracted items if they match this category
     const matchingItems = currentAnalysis.analysis.extractedItems.filter(
       (item) => item.type === category
     );
     if (matchingItems.length > 0) {
-      quickShareService.addExtractedItems(matchingItems);
+      const now = new Date().toISOString();
+      matchingItems.forEach((extracted) => {
+        switch (extracted.type) {
+          case 'grocery':
+            addGroceryItem({ name: extracted.name, quantity: parseInt(extracted.quantity || '1', 10) || 1, unit: extracted.unit || '', isStaple: false });
+            break;
+          case 'restaurants':
+            addRestaurant({ name: extracted.name, cuisine: extracted.details || '', location: '', notes: '' });
+            break;
+          case 'places':
+            addToPlacesList({ name: extracted.name, location: extracted.details || null, reason: '', visited: false, addedAt: now });
+            break;
+          case 'watchlist':
+            addToWatchlist({ name: extracted.name, works: extracted.details ? [extracted.details] : [], imdbUrl: null, addedAt: now });
+            break;
+          case 'reading':
+            addToReadingList({ name: extracted.name, works: extracted.details ? [extracted.details] : [], kindleUrl: null, addedAt: now });
+            break;
+          case 'music':
+            addToSpotifyList({ name: extracted.name, spotifyUrl: null, addedAt: now });
+            break;
+        }
+      });
     }
 
     setCurrentAnalysis(null);
-    setRecentItems(quickShareService.getRecentItems(10));
     onComplete?.();
   };
 
@@ -110,8 +141,7 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
   };
 
   const handleRemoveItem = (itemId: string) => {
-    quickShareService.removeSavedItem(itemId);
-    setRecentItems(quickShareService.getRecentItems(10));
+    removeSavedItem(itemId);
   };
 
   const formatDate = (dateString: string) => {

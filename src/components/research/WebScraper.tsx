@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { ScrapedContentType } from '../../types/research';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -64,6 +65,7 @@ const WebScraper: React.FC = () => {
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
 
   const apiKey = researchService.getApiKey();
+  const { addGroceryItem, addRecipe, addRestaurant, addToReadingList, addToWatchlist } = useLists();
 
   const doScrape = async () => {
     if (!url.trim()) return;
@@ -149,7 +151,7 @@ const WebScraper: React.FC = () => {
       case 'recipe':
         // Add ingredients to grocery list
         result.items.forEach((item) => {
-          researchService.addGroceryItem({
+          addGroceryItem({
             name: item.name,
             quantity: item.quantity || 1,
             unit: item.unit || '',
@@ -157,7 +159,7 @@ const WebScraper: React.FC = () => {
           });
         });
         // Also save as a recipe
-        researchService.addRecipe({
+        addRecipe({
           name: result.title,
           ingredients: result.items.map((item) => ({
             name: item.name,
@@ -171,7 +173,7 @@ const WebScraper: React.FC = () => {
 
       case 'restaurant':
         result.items.forEach((item) => {
-          researchService.addRestaurant({
+          addRestaurant({
             name: item.name,
             location: item.notes,
             url: item.url,
@@ -183,7 +185,7 @@ const WebScraper: React.FC = () => {
 
       case 'book':
         result.items.forEach((item) => {
-          researchService.addToReadingList({
+          addToReadingList({
             name: item.name,
             works: [],
             kindleUrl: item.url || null,
@@ -195,7 +197,7 @@ const WebScraper: React.FC = () => {
 
       case 'movie':
         result.items.forEach((item) => {
-          researchService.addToWatchlist({
+          addToWatchlist({
             name: item.name,
             works: item.notes ? [item.notes] : [],
             imdbUrl: item.url || null,

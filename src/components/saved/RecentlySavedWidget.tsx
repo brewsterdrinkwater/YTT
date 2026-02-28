@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { quickShareService, SavedItem, ListCategory } from '../../services/quickShareService';
+import { ListCategory } from '../../services/quickShareService';
+import { useLists } from '../../contexts/ListsContext';
 
 const CATEGORY_ICONS: Record<ListCategory, string> = {
   grocery: '🛒',
@@ -15,11 +16,8 @@ const CATEGORY_ICONS: Record<ListCategory, string> = {
 
 const RecentlySavedWidget: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<SavedItem[]>([]);
-
-  useEffect(() => {
-    setItems(quickShareService.getRecentItems(3));
-  }, []);
+  const { savedItems } = useLists();
+  const items = savedItems.slice(0, 3);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -35,7 +33,7 @@ const RecentlySavedWidget: React.FC = () => {
     return `${diffDays}d ago`;
   };
 
-  const needsReviewCount = quickShareService.getItemsNeedingInput().length;
+  const needsReviewCount = savedItems.filter((i) => i.needsUserInput).length;
 
   if (items.length === 0) {
     return null;

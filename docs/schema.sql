@@ -32,12 +32,20 @@ CREATE TABLE user_settings (
 CREATE TABLE research_lists (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  list_type TEXT NOT NULL CHECK (list_type IN ('spotify', 'reading', 'watchlist', 'places')),
+  list_type TEXT NOT NULL CHECK (list_type IN (
+    'spotify', 'reading', 'watchlist', 'places',
+    'grocery', 'recipes', 'restaurants', 'saved_items'
+  )),
   items JSONB DEFAULT '[]',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, list_type)
 );
+
+-- Migration for existing databases: extend the list_type constraint
+-- ALTER TABLE research_lists DROP CONSTRAINT research_lists_list_type_check;
+-- ALTER TABLE research_lists ADD CONSTRAINT research_lists_list_type_check
+--   CHECK (list_type IN ('spotify', 'reading', 'watchlist', 'places', 'grocery', 'recipes', 'restaurants', 'saved_items'));
 
 CREATE TABLE research_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
