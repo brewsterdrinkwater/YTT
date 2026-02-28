@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { STORAGE_KEYS } from '../constants/config';
 
 interface Toast {
   id: string;
@@ -9,8 +7,6 @@ interface Toast {
 }
 
 interface AppContextType {
-  isOnboardingComplete: boolean;
-  setOnboardingComplete: (complete: boolean) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   toasts: Toast[];
@@ -29,10 +25,6 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const [isOnboardingComplete, setOnboardingComplete] = useLocalStorage<boolean>(
-    STORAGE_KEYS.ONBOARDING_COMPLETE,
-    false
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -57,8 +49,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
-        isOnboardingComplete,
-        setOnboardingComplete,
         isLoading,
         setIsLoading,
         toasts,

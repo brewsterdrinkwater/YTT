@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { WatchlistItem } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -21,14 +21,10 @@ interface WatchlistListProps {
 
 const WatchlistList: React.FC<WatchlistListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const { watchlist, addToWatchlist, removeFromWatchlist } = useLists();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', type: '', notes: '' });
   const [isEnriching, setIsEnriching] = useState<string | null>(null);
-
-  useEffect(() => {
-    setWatchlist(researchService.getWatchlist());
-  }, []);
 
   // Auto-enrich: Find IMDB link for the movie/show
   const enrichWithIMDB = async (name: string): Promise<string | null> => {
@@ -56,8 +52,7 @@ const WatchlistList: React.FC<WatchlistListProps> = ({ isFullPage = false, onBac
       addedAt: new Date().toISOString(),
     };
 
-    const updated = researchService.addToWatchlist(item);
-    setWatchlist(updated);
+    addToWatchlist(item);
     setNewItem({ name: '', type: '', notes: '' });
     setShowAddForm(false);
     setIsEnriching(null);
@@ -65,8 +60,7 @@ const WatchlistList: React.FC<WatchlistListProps> = ({ isFullPage = false, onBac
   };
 
   const handleRemove = (name: string) => {
-    const updated = researchService.removeFromWatchlist(name);
-    setWatchlist(updated);
+    removeFromWatchlist(name);
     showToast(`Removed "${name}" from watchlist`, 'info');
   };
 

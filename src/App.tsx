@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider, useApp } from './contexts/AppContext';
+import { AppProvider } from './contexts/AppContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { EntriesProvider, useEntries } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ListsProvider } from './contexts/ListsContext';
 
 // Layout components
 import Header from './components/layout/Header';
@@ -66,8 +67,7 @@ const SmartHomePage: React.FC = () => {
 
 // Main app content with routing
 const AppContent: React.FC = () => {
-  const { isOnboardingComplete } = useApp();
-  const { settings } = useSettings();
+  const { settings, settingsLoading } = useSettings();
   const { user, loading } = useAuth();
 
   // Apply UI style to document
@@ -75,8 +75,8 @@ const AppContent: React.FC = () => {
     document.documentElement.setAttribute('data-ui-style', settings.uiStyle);
   }, [settings.uiStyle]);
 
-  // Show loading while checking auth
-  if (loading) {
+  // Show loading while checking auth or loading settings from Supabase
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -92,8 +92,8 @@ const AppContent: React.FC = () => {
     return <AuthPage />;
   }
 
-  // Show onboarding if not complete
-  if (!isOnboardingComplete) {
+  // Show onboarding if not complete (stored in Supabase-backed settings)
+  if (!settings.onboardingComplete) {
     return <VersionSelector />;
   }
 
@@ -133,9 +133,11 @@ const App: React.FC = () => {
         <AppProvider>
           <SettingsProvider>
             <EntriesProvider>
-              <LocationProvider>
-                <AppContent />
-              </LocationProvider>
+              <ListsProvider>
+                <LocationProvider>
+                  <AppContent />
+                </LocationProvider>
+              </ListsProvider>
             </EntriesProvider>
           </SettingsProvider>
         </AppProvider>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import {
   ResearchResult,
   HistoryItem,
@@ -96,15 +97,20 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
 
-  // History state
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-
   // Place input state
   const [placeReason, setPlaceReason] = useState('');
 
-  // Load history and API key from storage on mount
+  const {
+    researchHistory: history,
+    addToHistory,
+    addToSpotifyList,
+    addToReadingList,
+    addToWatchlist,
+    addToPlacesList,
+  } = useLists();
+
+  // Load API key from storage on mount
   useEffect(() => {
-    setHistory(researchService.getHistory());
     setApiKey(researchService.getApiKey());
   }, []);
 
@@ -173,8 +179,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
         setResult(parsed);
 
         // Add to history with cached result
-        const newHistory = researchService.addToHistory(parsed);
-        setHistory(newHistory);
+        addToHistory(parsed);
       } else {
         throw new Error('Could not parse research results');
       }
@@ -212,7 +217,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
 
   const addToSpotify = () => {
     if (!result) return;
-    researchService.addToSpotifyList({
+    addToSpotifyList({
       name: result.name,
       spotifyUrl: result.actionLinks?.spotify || null,
       addedAt: new Date().toISOString(),
@@ -224,7 +229,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     if (!result) return;
     const works =
       result.timeline?.filter((t) => t.type === 'book' || t.type === 'novel').map((t) => t.title) || [];
-    researchService.addToReadingList({
+    addToReadingList({
       name: result.name,
       works,
       kindleUrl: result.actionLinks?.kindle || null,
@@ -233,12 +238,12 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     showAddedFeedback('Added to Reading List! View in Dashboard.');
   };
 
-  const addToWatchlist = () => {
+  const addToWatchlistHandler = () => {
     if (!result) return;
     const works =
       result.timeline?.filter((t) => t.type === 'film' || t.type === 'role' || t.type === 'tv').map((t) => t.title) ||
       [];
-    researchService.addToWatchlist({
+    addToWatchlist({
       name: result.name,
       works,
       imdbUrl: result.actionLinks?.imdb || null,
@@ -249,7 +254,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
 
   const addToPlaces = () => {
     if (!result) return;
-    researchService.addToPlacesList({
+    addToPlacesList({
       name: result.name,
       location: result.birthPlace,
       reason: placeReason || `Visit places associated with ${result.name}`,
@@ -373,7 +378,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                   </button>
                 )}
                 {result.category === 'actor' && (
-                  <button onClick={addToWatchlist} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
+                  <button onClick={addToWatchlistHandler} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">
                     + Watch
                   </button>
                 )}
@@ -476,7 +481,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                         <Button variant="secondary" onClick={addToReading}>📖 Add to Reading List</Button>
                       )}
                       {result.category === 'actor' && (
-                        <Button variant="secondary" onClick={addToWatchlist}>🎬 Add to Watchlist</Button>
+                        <Button variant="secondary" onClick={addToWatchlistHandler}>🎬 Add to Watchlist</Button>
                       )}
                       {result.actionLinks?.wikipedia && (
                         <a href={result.actionLinks.wikipedia} target="_blank" rel="noopener noreferrer"
@@ -867,7 +872,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                 )}
 
                 {result.category === 'actor' && (
-                  <Button variant="secondary" onClick={addToWatchlist}>
+                  <Button variant="secondary" onClick={addToWatchlistHandler}>
                     🎬 Add to Watchlist
                   </Button>
                 )}

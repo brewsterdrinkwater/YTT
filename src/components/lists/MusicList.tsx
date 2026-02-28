@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SpotifyListItem } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -13,14 +13,10 @@ interface MusicListProps {
 
 const MusicList: React.FC<MusicListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
-  const [musicList, setMusicList] = useState<SpotifyListItem[]>([]);
+  const { spotifyList: musicList, addToSpotifyList, removeFromSpotifyList } = useLists();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', notes: '' });
   const [isEnriching, setIsEnriching] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMusicList(researchService.getSpotifyList());
-  }, []);
 
   // Auto-enrich: Generate Spotify search link
   const enrichWithSpotify = async (name: string): Promise<string | null> => {
@@ -46,8 +42,7 @@ const MusicList: React.FC<MusicListProps> = ({ isFullPage = false, onBack }) => 
       addedAt: new Date().toISOString(),
     };
 
-    const updated = researchService.addToSpotifyList(item);
-    setMusicList(updated);
+    addToSpotifyList(item);
     setNewItem({ name: '', notes: '' });
     setShowAddForm(false);
     setIsEnriching(null);
@@ -55,8 +50,7 @@ const MusicList: React.FC<MusicListProps> = ({ isFullPage = false, onBack }) => 
   };
 
   const handleRemove = (name: string) => {
-    const updated = researchService.removeFromSpotifyList(name);
-    setMusicList(updated);
+    removeFromSpotifyList(name);
     showToast(`Removed "${name}" from listen list`, 'info');
   };
 

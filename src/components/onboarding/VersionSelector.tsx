@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { EntryFieldType, CustomLocation } from '../../types';
 import Card from '../common/Card';
@@ -25,7 +24,6 @@ const CheckIcon: React.FC = () => (
 type OnboardingStep = 'version' | 'customize';
 
 const VersionSelector: React.FC = () => {
-  const { setOnboardingComplete } = useApp();
   const { setVersion, updateSettings } = useSettings();
 
   const [step, setStep] = useState<OnboardingStep>('version');
@@ -68,8 +66,8 @@ const VersionSelector: React.FC = () => {
     updateSettings({
       entryFields,
       customLocations: locations,
+      onboardingComplete: true,
     });
-    setOnboardingComplete(true);
   };
 
   // Step 1: Version Selection

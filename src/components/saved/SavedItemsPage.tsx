@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  quickShareService,
-  SavedItem,
-  ListCategory,
-} from '../../services/quickShareService';
+import { SavedItem, ListCategory } from '../../services/quickShareService';
+import { useLists } from '../../contexts/ListsContext';
 
 const CATEGORY_CONFIG: Record<ListCategory, { label: string; icon: string; color: string }> = {
   grocery: { label: 'Grocery', icon: '🛒', color: 'bg-green-100 border-green-500 text-green-700' },
@@ -19,13 +16,9 @@ const CATEGORY_CONFIG: Record<ListCategory, { label: string; icon: string; color
 
 const SavedItemsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<SavedItem[]>([]);
+  const { savedItems: items, removeSavedItem, addSavedItemToList } = useLists();
   const [filter, setFilter] = useState<ListCategory | 'all' | 'needs-review'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    setItems(quickShareService.getSavedItems());
-  }, []);
 
   const filteredItems = items.filter((item) => {
     // Filter by category
@@ -49,13 +42,11 @@ const SavedItemsPage: React.FC = () => {
   });
 
   const handleRemove = (itemId: string) => {
-    quickShareService.removeSavedItem(itemId);
-    setItems(quickShareService.getSavedItems());
+    removeSavedItem(itemId);
   };
 
   const handleAddToList = (itemId: string, category: ListCategory) => {
-    quickShareService.addToList(itemId, category);
-    setItems(quickShareService.getSavedItems());
+    addSavedItemToList(itemId, category);
   };
 
   const formatDate = (dateString: string) => {

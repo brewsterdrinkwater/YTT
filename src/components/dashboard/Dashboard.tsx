@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useApp } from '../../contexts/AppContext';
 import { Entry, DashboardItem } from '../../types';
-import { Recipe } from '../../types/research';
 import { DASHBOARD_KEYWORDS } from '../../constants/config';
 import { formatDisplayDate, parseISO } from '../../utils/dateUtils';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import Card from '../common/Card';
 import { Input } from '../common/Input';
 import LocationDaysCounter from './LocationDaysCounter';
@@ -26,21 +25,16 @@ import { ListType } from '../lists/ListPage';
 // Recipe List Component (compact version)
 const RecipeListSection: React.FC = () => {
   const { showToast } = useApp();
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const { recipesList: recipes, addRecipeIngredientsToGrocery, removeRecipe } = useLists();
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
 
-  useEffect(() => {
-    setRecipes(researchService.getRecipes());
-  }, []);
-
   const handleAddToGrocery = (recipeId: string) => {
-    researchService.addRecipeIngredientsToGrocery(recipeId);
+    addRecipeIngredientsToGrocery(recipeId);
     showToast('Recipe ingredients added to grocery list!', 'success');
   };
 
   const handleRemove = (id: string) => {
-    const updated = researchService.removeRecipe(id);
-    setRecipes(updated);
+    removeRecipe(id);
   };
 
   if (recipes.length === 0) return null;
@@ -292,31 +286,20 @@ const extractIdeas = (entries: Entry[]): DashboardItem[] => {
 const Dashboard: React.FC = () => {
   const { entries } = useEntries();
   const navigate = useNavigate();
+  const { groceryList, watchlist: watchlistItems, readingList, spotifyList, placesList, restaurantsList } = useLists();
 
   // Track which lists are expanded (default: grocery)
   const [expandedLists, setExpandedLists] = useState<Set<ListType>>(new Set(['grocery']));
 
-  // List counts
-  const [listCounts, setListCounts] = useState({
-    grocery: 0,
-    watchlist: 0,
-    reading: 0,
-    music: 0,
-    places: 0,
-    restaurants: 0,
-  });
-
-  useEffect(() => {
-    const counts = researchService.getAllListsCounts();
-    setListCounts({
-      grocery: counts.grocery,
-      watchlist: counts.watchlist,
-      reading: counts.reading,
-      music: counts.spotify,
-      places: counts.places,
-      restaurants: counts.restaurants,
-    });
-  }, []);
+  // List counts (derived from context — reactive)
+  const listCounts = {
+    grocery: groceryList.length,
+    watchlist: watchlistItems.length,
+    reading: readingList.length,
+    music: spotifyList.length,
+    places: placesList.length,
+    restaurants: restaurantsList.length,
+  };
 
   const toggleList = (list: ListType) => {
     setExpandedLists((prev) => {

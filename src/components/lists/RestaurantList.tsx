@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { RestaurantItem } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -13,13 +13,9 @@ interface RestaurantListProps {
 
 const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
+  const { restaurantsList: restaurants, addRestaurant, toggleRestaurantVisited, removeRestaurant } = useLists();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '' });
-
-  useEffect(() => {
-    setRestaurants(researchService.getRestaurants());
-  }, []);
 
   // Generate Google Maps link for restaurant
   const getGoogleMapsLink = (name: string, location?: string): string => {
@@ -29,12 +25,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
 
   const handleAddItem = () => {
     if (!newItem.name.trim()) return;
-
-    const updated = researchService.addRestaurant({
+    addRestaurant({
       name: newItem.name,
       url: getGoogleMapsLink(newItem.name),
     });
-    setRestaurants(updated);
     setNewItem({ name: '' });
     setShowAddForm(false);
     showToast(`Added "${newItem.name}" to restaurants`, 'success');
@@ -42,8 +36,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
 
   const handleToggleVisited = (id: string) => {
     const restaurant = restaurants.find(r => r.id === id);
-    const updated = researchService.toggleRestaurantVisited(id);
-    setRestaurants(updated);
+    toggleRestaurantVisited(id);
     if (restaurant) {
       showToast(restaurant.visited ? `"${restaurant.name}" marked as not visited` : `"${restaurant.name}" marked as visited!`, 'success');
     }
@@ -51,8 +44,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
 
   const handleRemove = (id: string) => {
     const restaurant = restaurants.find(r => r.id === id);
-    const updated = researchService.removeRestaurant(id);
-    setRestaurants(updated);
+    removeRestaurant(id);
     if (restaurant) {
       showToast(`Removed "${restaurant.name}"`, 'info');
     }

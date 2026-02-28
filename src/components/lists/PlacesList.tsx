@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PlacesListItem } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -13,13 +13,9 @@ interface PlacesListProps {
 
 const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
-  const [placesList, setPlacesList] = useState<PlacesListItem[]>([]);
+  const { placesList, addToPlacesList, removeFromPlacesList, togglePlaceVisited } = useLists();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', location: '', reason: '' });
-
-  useEffect(() => {
-    setPlacesList(researchService.getPlacesList());
-  }, []);
 
   // Generate Google Maps link
   const getGoogleMapsLink = (name: string, location: string): string => {
@@ -38,24 +34,21 @@ const PlacesList: React.FC<PlacesListProps> = ({ isFullPage = false, onBack }) =
       addedAt: new Date().toISOString(),
     };
 
-    const updated = researchService.addToPlacesList(item);
-    setPlacesList(updated);
+    addToPlacesList(item);
     setNewItem({ name: '', location: '', reason: '' });
     setShowAddForm(false);
     showToast(`Added "${newItem.name}" to places list`, 'success');
   };
 
   const handleRemove = (name: string) => {
-    const updated = researchService.removeFromPlacesList(name);
-    setPlacesList(updated);
+    removeFromPlacesList(name);
     showToast(`Removed "${name}" from places list`, 'info');
   };
 
   const handleToggleVisited = (name: string) => {
-    const updated = researchService.togglePlaceVisited(name);
-    setPlacesList(updated);
-    const place = updated.find(p => p.name === name);
-    showToast(`Marked "${name}" as ${place?.visited ? 'visited' : 'to visit'}`, 'success');
+    const wasVisited = placesList.find(p => p.name === name)?.visited ?? false;
+    togglePlaceVisited(name);
+    showToast(`Marked "${name}" as ${wasVisited ? 'to visit' : 'visited'}`, 'success');
   };
 
   const containerClass = isFullPage ? 'min-h-screen bg-white' : '';

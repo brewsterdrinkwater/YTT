@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ReadingListItem } from '../../types/research';
-import { researchService } from '../../services/researchService';
+import { useLists } from '../../contexts/ListsContext';
 import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -13,14 +13,10 @@ interface ReadingListProps {
 
 const ReadingList: React.FC<ReadingListProps> = ({ isFullPage = false, onBack }) => {
   const { showToast } = useApp();
-  const [readingList, setReadingList] = useState<ReadingListItem[]>([]);
+  const { readingList, addToReadingList, removeFromReadingList } = useLists();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', author: '' });
   const [isEnriching, setIsEnriching] = useState<string | null>(null);
-
-  useEffect(() => {
-    setReadingList(researchService.getReadingList());
-  }, []);
 
   // Auto-enrich: Generate Kindle/Amazon search link
   const enrichWithKindle = async (name: string, author: string): Promise<string | null> => {
@@ -48,8 +44,7 @@ const ReadingList: React.FC<ReadingListProps> = ({ isFullPage = false, onBack })
       addedAt: new Date().toISOString(),
     };
 
-    const updated = researchService.addToReadingList(item);
-    setReadingList(updated);
+    addToReadingList(item);
     setNewItem({ name: '', author: '' });
     setShowAddForm(false);
     setIsEnriching(null);
@@ -57,8 +52,7 @@ const ReadingList: React.FC<ReadingListProps> = ({ isFullPage = false, onBack })
   };
 
   const handleRemove = (name: string) => {
-    const updated = researchService.removeFromReadingList(name);
-    setReadingList(updated);
+    removeFromReadingList(name);
     showToast(`Removed "${name}" from reading list`, 'info');
   };
 

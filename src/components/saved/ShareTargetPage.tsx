@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import QuickShare from '../tools/QuickShare';
-import { quickShareService } from '../../services/quickShareService';
+import { useLists } from '../../contexts/ListsContext';
 
 // This page handles PWA share target AND serves as the primary share hub
 const ShareTargetPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [sharedUrl, setSharedUrl] = useState<string | null>(null);
-  const [needsReviewCount, setNeedsReviewCount] = useState(0);
+  const { savedItems } = useLists();
+  const needsReviewCount = savedItems.filter((i) => i.needsUserInput).length;
 
   useEffect(() => {
     // Get shared content from URL params (set by PWA share target)
@@ -30,14 +30,6 @@ const ShareTargetPage: React.FC = () => {
       setSharedUrl(extractedUrl);
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    setNeedsReviewCount(quickShareService.getItemsNeedingInput().length);
-  }, []);
-
-  const handleComplete = () => {
-    setNeedsReviewCount(quickShareService.getItemsNeedingInput().length);
-  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
@@ -75,7 +67,7 @@ const ShareTargetPage: React.FC = () => {
         </Link>
       </div>
 
-      <QuickShare initialUrl={sharedUrl || undefined} onComplete={handleComplete} />
+      <QuickShare initialUrl={sharedUrl || undefined} />
     </div>
   );
 };
