@@ -1,6 +1,6 @@
 import { storageService } from './storageService';
 import { researchService } from './researchService';
-import { STORAGE_KEYS, API_CONFIG } from '../constants/config';
+import { STORAGE_KEYS } from '../constants/config';
 
 // List types that content can be categorized into
 export type ListCategory =
@@ -83,7 +83,7 @@ export const quickShareService = {
   analyzeUrl: async (url: string): Promise<AnalysisResult> => {
     const source = detectSource(url);
 
-    const response = await fetch(`${API_CONFIG.QUICK_SHARE_API_URL}/api/analyze`, {
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
