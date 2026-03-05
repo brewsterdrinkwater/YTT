@@ -50,6 +50,9 @@ const MapsWidget: React.FC = () => {
   }, [settings.apis.mapsTimeline, session, loadPlaces]);
 
   const handleConnect = async () => {
+    // Re-authenticate with Google to establish the connection
+    // Google Maps Timeline data uses the base Google profile scope
+    // which is already granted when signing in with Google OAuth
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -62,7 +65,7 @@ const MapsWidget: React.FC = () => {
       },
     });
     if (error) {
-      showToast('Failed to connect Maps', 'error');
+      showToast('Failed to connect Google account', 'error');
     }
   };
 

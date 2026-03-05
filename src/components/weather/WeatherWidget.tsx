@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CityWeather, CityKey, fetchAllWeather } from '../../services/weatherService';
 
-const WEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || '';
-
 const WeatherWidget: React.FC = () => {
   const [weather, setWeather] = useState<Record<CityKey, CityWeather> | null>(null);
   const [activeCity, setActiveCity] = useState<CityKey>('nashville');
@@ -11,13 +9,7 @@ const WeatherWidget: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!WEATHER_API_KEY) {
-      setError('No API key');
-      setLoading(false);
-      return;
-    }
-
-    fetchAllWeather(WEATHER_API_KEY)
+    fetchAllWeather()
       .then((data) => {
         setWeather(data);
         setLoading(false);
@@ -51,9 +43,7 @@ const WeatherWidget: React.FC = () => {
           <span className="font-bold text-sm">Weather</span>
         </div>
         <p className="text-white/70 text-xs">
-          {!WEATHER_API_KEY
-            ? 'Add VITE_OPENWEATHER_API_KEY to .env'
-            : error}
+          {error || 'Weather unavailable'}
         </p>
       </div>
     );

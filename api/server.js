@@ -32,6 +32,45 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Weather proxy endpoint - keeps OpenWeatherMap API key server-side
+app.get('/api/weather/:city', async (req, res) => {
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Weather API key not configured' });
+  }
+
+  const cities = {
+    nyc: { lat: 40.7128, lon: -74.006 },
+    nashville: { lat: 36.1627, lon: -86.7816 },
+  };
+
+  const city = cities[req.params.city];
+  if (!city) {
+    return res.status(400).json({ error: 'Invalid city. Use "nyc" or "nashville".' });
+  }
+
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}&units=imperial`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenWeatherMap API error:', response.status, errorText);
+      return res.status(response.status).json({ error: 'Weather API error' });
+    }
+
+    const data = await response.json();
+
+    // Set cache headers - weather data doesn't change fast
+    res.set('Cache-Control', 'public, max-age=1800'); // 30 min
+    res.json(data);
+  } catch (error) {
+    console.error('Weather fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+});
+
 // DeepSeek proxy endpoint for Quick Share
 app.post('/api/analyze', async (req, res) => {
   const apiKey = process.env.DEEPSEEK_API_KEY;

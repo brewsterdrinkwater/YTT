@@ -12,7 +12,7 @@ import ActivityTiles from './ActivityTiles';
 import ActivityModal from './ActivityModal';
 import LocationSelector from '../location/LocationSelector';
 import AutoLocationDetector from '../location/AutoLocationDetector';
-import CalendarQuickView from '../calendar/CalendarQuickView';
+import CalendarWidget from '../calendar/CalendarWidget';
 import { TextArea } from '../common/Input';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -320,7 +320,7 @@ const EntryForm: React.FC = () => {
       {/* Calendar Quick View - Hidden on mobile */}
       {settings.apis.calendar && (
         <div className="hidden md:block">
-          <CalendarQuickView date={currentDate} />
+          <CalendarWidget />
         </div>
       )}
 

@@ -1,12 +1,12 @@
-// OpenWeatherMap free API integration
-// Free tier: 1000 calls/day, 5-day/3-hour forecast
+// OpenWeatherMap weather integration via backend proxy
+// API key is kept server-side for security
 
-const OPENWEATHER_BASE = 'https://api.openweathermap.org/data/2.5';
+import { API_CONFIG } from '../constants/config';
 
-// City coordinates for NYC and Nashville
+// City metadata
 const CITIES = {
-  nyc: { lat: 40.7128, lon: -74.006, name: 'New York City', icon: '🗽' },
-  nashville: { lat: 36.1627, lon: -86.7816, name: 'Nashville', icon: '🎸' },
+  nyc: { name: 'New York City', icon: '🗽' },
+  nashville: { name: 'Nashville', icon: '🎸' },
 } as const;
 
 export type CityKey = keyof typeof CITIES;
@@ -18,7 +18,7 @@ export interface WeatherData {
   description: string;
   icon: string;
   windSpeed: number;
-  dt: number; // unix timestamp
+  dt: number;
 }
 
 export interface HourlyForecast {
@@ -26,7 +26,7 @@ export interface HourlyForecast {
   temp: number;
   description: string;
   icon: string;
-  pop: number; // probability of precipitation
+  pop: number;
 }
 
 export interface DailyForecast {
@@ -43,8 +43,8 @@ export interface CityWeather {
   cityName: string;
   cityIcon: string;
   current: WeatherData;
-  hourly: HourlyForecast[]; // next 4 hours
-  daily: DailyForecast[]; // next 5 days
+  hourly: HourlyForecast[];
+  daily: DailyForecast[];
 }
 
 // Map OWM icon codes to emoji
@@ -91,28 +91,19 @@ const setCachedWeather = (data: Record<CityKey, CityWeather>): void => {
   localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
 };
 
-export const fetchWeatherForCity = async (
-  cityKey: CityKey,
-  apiKey: string
-): Promise<CityWeather> => {
-  const city = CITIES[cityKey];
-
-  // Fetch 5-day/3-hour forecast (includes current-ish data)
-  const forecastUrl = `${OPENWEATHER_BASE}/forecast?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}&units=imperial`;
-
-  const response = await fetch(forecastUrl);
-  if (!response.ok) {
-    throw new Error(`Weather API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const list = data.list as Array<{
+// Parse OWM forecast response into our typed format
+const parseWeatherResponse = (
+  data: { list: Array<{
     dt: number;
     main: { temp: number; feels_like: number; humidity: number; temp_min: number; temp_max: number };
     weather: Array<{ description: string; icon: string }>;
     wind: { speed: number };
     pop: number;
-  }>;
+  }> },
+  cityKey: CityKey
+): CityWeather => {
+  const cityInfo = CITIES[cityKey];
+  const list = data.list;
 
   // Current weather (first entry)
   const current = list[0];
@@ -126,7 +117,7 @@ export const fetchWeatherForCity = async (
     dt: current.dt,
   };
 
-  // Next 4 hours (entries are 3-hour intervals, so take first 2 and interpolate display)
+  // Next 4 forecast periods
   const hourly: HourlyForecast[] = list.slice(0, 4).map((item) => ({
     dt: item.dt,
     temp: Math.round(item.main.temp),
@@ -135,20 +126,24 @@ export const fetchWeatherForCity = async (
     pop: Math.round(item.pop * 100),
   }));
 
-  // 5-day forecast: group by day and take min/max
-  const dayMap = new Map<string, { temps: number[]; minTemps: number[]; maxTemps: number[]; weather: { description: string; icon: string }; pop: number[]; dt: number }>();
+  // 5-day forecast: group by day
+  const dayMap = new Map<string, {
+    minTemps: number[];
+    maxTemps: number[];
+    weather: { description: string; icon: string };
+    pop: number[];
+    dt: number;
+  }>();
 
   for (const item of list) {
     const dayKey = new Date(item.dt * 1000).toDateString();
     const existing = dayMap.get(dayKey);
     if (existing) {
-      existing.temps.push(item.main.temp);
       existing.minTemps.push(item.main.temp_min);
       existing.maxTemps.push(item.main.temp_max);
       existing.pop.push(item.pop);
     } else {
       dayMap.set(dayKey, {
-        temps: [item.main.temp],
         minTemps: [item.main.temp_min],
         maxTemps: [item.main.temp_max],
         weather: { description: item.weather[0].description, icon: item.weather[0].icon },
@@ -171,22 +166,34 @@ export const fetchWeatherForCity = async (
 
   return {
     city: cityKey,
-    cityName: city.name,
-    cityIcon: city.icon,
+    cityName: cityInfo.name,
+    cityIcon: cityInfo.icon,
     current: currentWeather,
     hourly,
     daily,
   };
 };
 
-export const fetchAllWeather = async (apiKey: string): Promise<Record<CityKey, CityWeather>> => {
+export const fetchWeatherForCity = async (cityKey: CityKey): Promise<CityWeather> => {
+  const baseUrl = API_CONFIG.QUICK_SHARE_API_URL; // Same backend server
+  const response = await fetch(`${baseUrl}/api/weather/${cityKey}`);
+
+  if (!response.ok) {
+    throw new Error(`Weather API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return parseWeatherResponse(data, cityKey);
+};
+
+export const fetchAllWeather = async (): Promise<Record<CityKey, CityWeather>> => {
   // Check cache first
   const cached = getCachedWeather();
   if (cached) return cached;
 
   const [nyc, nashville] = await Promise.all([
-    fetchWeatherForCity('nyc', apiKey),
-    fetchWeatherForCity('nashville', apiKey),
+    fetchWeatherForCity('nyc'),
+    fetchWeatherForCity('nashville'),
   ]);
 
   const result = { nyc, nashville };
