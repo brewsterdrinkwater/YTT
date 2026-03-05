@@ -199,6 +199,135 @@ Important: Based on the URL structure and domain, infer what type of content thi
 - tripadvisor.com - places/restaurants`;
 }
 
+// DeepSeek proxy endpoint for Deep Research Agent
+app.post('/api/research', async (req, res) => {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'API key not configured' });
+  }
+
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const prompt = buildResearchPrompt(name);
+
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a meticulous research assistant. Always respond with valid JSON only - no markdown, no backticks, no explanation.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DeepSeek API error:', response.status, errorText);
+      return res.status(response.status).json({
+        error: `DeepSeek API error: ${response.status}`,
+        details: errorText
+      });
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    // Parse JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(500).json({ error: 'Could not parse research result' });
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    res.json(parsed);
+
+  } catch (error) {
+    console.error('Research error:', error);
+    res.status(500).json({ error: 'Failed to research', details: error.message });
+  }
+});
+
+function buildResearchPrompt(name) {
+  return `Research "${name}" and return ONLY valid JSON (no markdown, no backticks, no explanation).
+
+CRITICAL RULES:
+- Return ONLY the JSON object, nothing else
+- Use null for unknown values, not "Unknown"
+- For controversies, ONLY include if documented in credible sources with specific evidence
+- Prioritize primary sources (interviews, speeches, official records) and reputable secondary sources (NYT, WaPo, Guardian, peer-reviewed work)
+- NO AI-generated content, listicles, or fluff pieces
+- Verify facts from multiple sources before including
+
+Return this exact JSON structure:
+{
+  "name": "Full Official Name",
+  "category": "artist|author|actor|leader|scientist|athlete|other",
+  "birthYear": 1950,
+  "deathYear": null,
+  "birthPlace": "City, State/Country",
+  "summary": "One paragraph bio focusing on significance",
+
+  "leaderInfo": {
+    "include": true,
+    "highSchool": "School Name, Location",
+    "college": "University Name, Degree, Year",
+    "fraternity": "Fraternity name or null",
+    "positions": ["List of major positions held"]
+  },
+
+  "famousFor": ["Top 3-5 most notable accomplishments"],
+
+  "controversies": {
+    "sexualMisconduct": [{"allegation": "description", "year": 2020, "source": "credible source", "outcome": "resolved/ongoing/etc"}],
+    "domesticViolence": [],
+    "racism": []
+  },
+
+  "timeline": [
+    {"year": 1970, "title": "Work Title", "type": "album|book|film|role|achievement", "significance": "Why it matters", "link": "official or reputable URL"}
+  ],
+
+  "deepCuts": [
+    {"title": "Underrated Work", "year": 1975, "why": "Why this deserves more attention", "link": "URL"}
+  ],
+
+  "sources": [
+    {"title": "Source Title", "type": "primary|secondary", "url": "URL", "description": "What this source provides"}
+  ],
+
+  "actionLinks": {
+    "spotify": "https://open.spotify.com/artist/... or null",
+    "kindle": "https://www.amazon.com/kindle-dbs/... or null",
+    "imdb": "https://www.imdb.com/name/... or null",
+    "wikipedia": "https://en.wikipedia.org/wiki/..."
+  }
+}
+
+If the person is not a leader/CEO/president, set leaderInfo.include to false and leave other leaderInfo fields null.
+For timeline, include 8-15 significant works/events in chronological order.
+For deepCuts, include 3-5 underrated or overlooked works.
+For sources, include 5-8 high-quality primary and secondary sources only.`;
+}
+
 app.listen(PORT, () => {
   console.log(`Walt-Tab API server running on port ${PORT}`);
 });
