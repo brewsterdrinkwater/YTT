@@ -1,76 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { researchService } from '../../services/researchService';
+import React, { useState, useCallback } from 'react';
 import { useLists } from '../../contexts/ListsContext';
 import {
   ResearchResult,
   HistoryItem,
 } from '../../types/research';
+import { API_CONFIG } from '../../constants/config';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { Input } from '../common/Input';
 
-// Research prompt template
-const buildResearchPrompt = (name: string): string => `You are a meticulous research assistant. Research "${name}" and return ONLY valid JSON (no markdown, no backticks, no explanation).
-
-CRITICAL RULES:
-- Return ONLY the JSON object, nothing else
-- Use null for unknown values, not "Unknown"
-- For controversies, ONLY include if documented in credible sources with specific evidence
-- Prioritize primary sources (interviews, speeches, official records) and reputable secondary sources (NYT, WaPo, Guardian, peer-reviewed work)
-- NO AI-generated content, listicles, or fluff pieces
-- Verify facts from multiple sources before including
-
-Return this exact JSON structure:
-{
-  "name": "Full Official Name",
-  "category": "artist|author|actor|leader|scientist|athlete|other",
-  "birthYear": 1950,
-  "deathYear": null,
-  "birthPlace": "City, State/Country",
-  "summary": "One paragraph bio focusing on significance",
-
-  "leaderInfo": {
-    "include": true,
-    "highSchool": "School Name, Location",
-    "college": "University Name, Degree, Year",
-    "fraternity": "Fraternity name or null",
-    "positions": ["List of major positions held"]
-  },
-
-  "famousFor": ["Top 3-5 most notable accomplishments"],
-
-  "controversies": {
-    "sexualMisconduct": [{"allegation": "description", "year": 2020, "source": "credible source", "outcome": "resolved/ongoing/etc"}],
-    "domesticViolence": [],
-    "racism": []
-  },
-
-  "timeline": [
-    {"year": 1970, "title": "Work Title", "type": "album|book|film|role|achievement", "significance": "Why it matters", "link": "official or reputable URL"}
-  ],
-
-  "deepCuts": [
-    {"title": "Underrated Work", "year": 1975, "why": "Why this deserves more attention", "link": "URL"}
-  ],
-
-  "sources": [
-    {"title": "Source Title", "type": "primary|secondary", "url": "URL", "description": "What this source provides"}
-  ],
-
-  "actionLinks": {
-    "spotify": "https://open.spotify.com/artist/... or null",
-    "kindle": "https://www.amazon.com/kindle-dbs/... or null",
-    "imdb": "https://www.imdb.com/name/... or null",
-    "wikipedia": "https://en.wikipedia.org/wiki/..."
-  }
-}
-
-If the person is not a leader/CEO/president, set leaderInfo.include to false and leave other leaderInfo fields null.
-For timeline, include 8-15 significant works/events in chronological order.
-For deepCuts, include 3-5 underrated or overlooked works.
-For sources, include 5-8 high-quality primary and secondary sources only.`;
-
-type TabType = 'search' | 'history' | 'settings';
+type TabType = 'search' | 'history';
 
 interface DeepResearchAgentProps {
   defaultExpanded?: boolean;
@@ -93,10 +32,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>(showHistoryOnly ? 'history' : 'search');
 
-  // API Key state
-  const [apiKey, setApiKey] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-
   // Place input state
   const [placeReason, setPlaceReason] = useState('');
 
@@ -109,23 +44,8 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     addToPlacesList,
   } = useLists();
 
-  // Load API key from storage on mount
-  useEffect(() => {
-    setApiKey(researchService.getApiKey());
-  }, []);
-
-  const saveApiKey = () => {
-    researchService.saveApiKey(apiKey);
-  };
-
   const doResearch = useCallback(async () => {
     if (!searchName.trim()) return;
-
-    if (!apiKey) {
-      setError('Please add your Claude API key in the Settings tab first.');
-      setActiveTab('settings');
-      return;
-    }
 
     setIsLoading(true);
     setError(null);
@@ -135,54 +55,26 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
     try {
       setLoadingStatus('Searching primary sources...');
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(`${API_CONFIG.QUICK_SHARE_API_URL}/api/research`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
         },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{ role: 'user', content: buildResearchPrompt(searchName) }],
-        }),
+        body: JSON.stringify({ name: searchName }),
       });
 
       setLoadingStatus('Analyzing and verifying sources...');
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+        throw new Error(errorData.error || `API Error: ${response.status}`);
       }
 
-      const data = await response.json();
-
-      // Extract text from response
-      let fullText = '';
-      if (data.content) {
-        for (const block of data.content) {
-          if (block.type === 'text') {
-            fullText += block.text;
-          }
-        }
-      }
+      const parsed = await response.json() as ResearchResult;
 
       setLoadingStatus('Formatting results...');
-
-      // Parse JSON from response
-      const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]) as ResearchResult;
-        setResult(parsed);
-
-        // Add to history with cached result
-        addToHistory(parsed);
-      } else {
-        throw new Error('Could not parse research results');
-      }
+      setResult(parsed);
+      addToHistory(parsed);
     } catch (e) {
       console.error('Research failed:', e);
       setError(e instanceof Error ? e.message : 'Research failed. Please try again.');
@@ -190,7 +82,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
       setIsLoading(false);
       setLoadingStatus('');
     }
-  }, [searchName, apiKey]);
+  }, [searchName]);
 
   const loadFromHistory = (item: HistoryItem) => {
     if (item.cachedResult) {
@@ -422,7 +314,7 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                  {(['search', 'history', 'settings'] as TabType[]).map((tab) => (
+                  {(['search', 'history'] as TabType[]).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -434,7 +326,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                     >
                       {tab === 'search' && '🔍 Research'}
                       {tab === 'history' && `🕐 History (${history.length})`}
-                      {tab === 'settings' && '⚙️ Settings'}
                     </button>
                   ))}
                 </div>
@@ -517,32 +408,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
                   </div>
                 )}
 
-                {activeTab === 'settings' && (
-                  <div className="space-y-4">
-                    <div>
-                      <h5 className="font-semibold text-sm text-gray-700 mb-2">🔑 Claude API Key</h5>
-                      <p className="text-xs text-gray-500 mb-2">
-                        Required for research. Get your API key from{' '}
-                        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                          console.anthropic.com
-                        </a>
-                      </p>
-                      <div className="flex gap-2">
-                        <Input
-                          type={showApiKey ? 'text' : 'password'}
-                          placeholder="sk-ant-api..."
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                          className="flex-1 font-mono text-sm"
-                        />
-                        <button onClick={() => setShowApiKey(!showApiKey)} className="px-3 py-2 text-sm bg-gray-100 rounded-lg">
-                          {showApiKey ? '🙈' : '👁️'}
-                        </button>
-                      </div>
-                      <Button onClick={saveApiKey} className="mt-2" variant="secondary">Save API Key</Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -952,53 +817,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
         </div>
       )}
 
-      {/* Settings Tab */}
-      {activeTab === 'settings' && (
-        <div className="space-y-4">
-          <div>
-            <h5 className="font-semibold text-sm text-gray-700 mb-2">🔑 Claude API Key</h5>
-            <p className="text-xs text-gray-500 mb-2">
-              Required for research. Get your API key from{' '}
-              <a
-                href="https://console.anthropic.com/settings/keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                console.anthropic.com
-              </a>
-            </p>
-            <div className="flex gap-2">
-              <Input
-                type={showApiKey ? 'text' : 'password'}
-                placeholder="sk-ant-api..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                className="flex-1 font-mono text-sm"
-              />
-              <button
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="px-3 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                {showApiKey ? '🙈' : '👁️'}
-              </button>
-            </div>
-            <Button onClick={saveApiKey} className="mt-2" variant="secondary">
-              Save API Key
-            </Button>
-          </div>
-
-          <div className="border-t pt-4">
-            <h5 className="font-semibold text-sm text-gray-700 mb-2">⚠️ Important Notes</h5>
-            <ul className="text-xs text-gray-500 space-y-1">
-              <li>• API key is stored locally in your browser</li>
-              <li>• Research uses Claude with web search for accurate results</li>
-              <li>• Each search may take 15-30 seconds</li>
-              <li>• CORS: You may need a browser extension or backend proxy</li>
-            </ul>
-          </div>
-        </div>
-      )}
     </Card>
   );
 };
