@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import GroceryList from './GroceryList';
 import WatchlistList from './WatchlistList';
 import ReadingList from './ReadingList';
@@ -13,34 +14,31 @@ export type ListType = 'grocery' | 'watchlist' | 'reading' | 'music' | 'places' 
 interface ListOption {
   value: ListType;
   label: string;
+  shortLabel: string;
   icon: string;
 }
 
 export const LIST_OPTIONS: ListOption[] = [
-  { value: 'grocery', label: 'Grocery List', icon: '🛒' },
-  { value: 'restaurants', label: 'Restaurants', icon: '🍽️' },
-  { value: 'watchlist', label: 'Watchlist', icon: '🎬' },
-  { value: 'reading', label: 'Reading List', icon: '📚' },
-  { value: 'music', label: 'Listen List', icon: '🎵' },
-  { value: 'places', label: 'Places to Visit', icon: '📍' },
+  { value: 'grocery', label: 'Grocery List', shortLabel: 'Grocery', icon: '🛒' },
+  { value: 'restaurants', label: 'Restaurants', shortLabel: 'Food', icon: '🍽️' },
+  { value: 'watchlist', label: 'Watchlist', shortLabel: 'Watch', icon: '🎬' },
+  { value: 'reading', label: 'Reading List', shortLabel: 'Read', icon: '📚' },
+  { value: 'music', label: 'Listen List', shortLabel: 'Music', icon: '🎵' },
+  { value: 'places', label: 'Places to Visit', shortLabel: 'Places', icon: '📍' },
 ];
 
 interface ListPageProps {
   defaultList?: ListType;
 }
 
-/**
- * Mobile-optimized list page with dropdown navigation
- * Each list is a full page on mobile
- */
 const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showDropdown, setShowDropdown] = useState(false);
 
   // Get list from URL params or default
   const listParam = searchParams.get('list') as ListType | null;
   const [activeList, setActiveList] = useState<ListType>(listParam || defaultList);
+  const [direction, setDirection] = useState(0);
 
   // Update URL when list changes
   useEffect(() => {
@@ -61,89 +59,105 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
   };
 
   const handleListChange = (list: ListType) => {
+    const oldIndex = LIST_OPTIONS.findIndex(o => o.value === activeList);
+    const newIndex = LIST_OPTIONS.findIndex(o => o.value === list);
+    setDirection(newIndex > oldIndex ? 1 : -1);
     setActiveList(list);
-    setShowDropdown(false);
   };
 
   const currentList = LIST_OPTIONS.find(o => o.value === activeList);
+  const currentIndex = LIST_OPTIONS.findIndex(o => o.value === activeList);
+
+  const renderListContent = () => {
+    switch (activeList) {
+      case 'grocery': return <GroceryList />;
+      case 'watchlist': return <WatchlistList />;
+      case 'reading': return <ReadingList />;
+      case 'music': return <MusicList />;
+      case 'places': return <PlacesList />;
+      case 'restaurants': return <RestaurantList />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header with dropdown selector */}
+      {/* Header with scrollable tab bar */}
       <div className="sticky top-0 bg-white border-b-2 border-black z-20">
-        <div className="px-4 py-3 flex items-center gap-3">
+        <div className="flex items-center gap-2 px-3 py-2">
           {/* Back button */}
           <button
             onClick={handleBack}
-            className="p-2 -ml-2 hover:bg-concrete rounded-sm"
+            className="p-2 -ml-1 hover:bg-concrete rounded-lg flex-shrink-0"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          {/* Dropdown selector */}
-          <div className="relative flex-1">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-concrete rounded-sm hover:bg-steel transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-xl">{currentList?.icon}</span>
-                <span className="font-bold text-black">{currentList?.label}</span>
-              </span>
-              <svg
-                className={`w-5 h-5 text-charcoal transition-transform ${showDropdown ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown menu */}
-            {showDropdown && (
-              <>
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowDropdown(false)}
-                />
-                {/* Menu */}
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-sm shadow-lg z-20 overflow-hidden">
-                  {LIST_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleListChange(option.value)}
-                      className={`w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-concrete transition-colors ${
-                        activeList === option.value ? 'bg-concrete font-semibold' : ''
-                      }`}
-                    >
-                      <span className="text-xl">{option.icon}</span>
-                      <span className="text-black">{option.label}</span>
-                      {activeList === option.value && (
-                        <svg className="w-5 h-5 ml-auto text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+          {/* Scrollable tab bar */}
+          <div className="flex-1 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-1 min-w-max">
+              {LIST_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleListChange(option.value)}
+                  className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    activeList === option.value
+                      ? 'bg-black text-white shadow-md'
+                      : 'text-charcoal hover:bg-concrete'
+                  }`}
+                >
+                  <span className="text-base">{option.icon}</span>
+                  <span className="hidden sm:inline">{option.shortLabel}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* List content */}
-      <div className="px-4 py-4 pb-24">
-        {activeList === 'grocery' && <GroceryList />}
-        {activeList === 'watchlist' && <WatchlistList />}
-        {activeList === 'reading' && <ReadingList />}
-        {activeList === 'music' && <MusicList />}
-        {activeList === 'places' && <PlacesList />}
-        {activeList === 'restaurants' && <RestaurantList />}
+      {/* List content with animation */}
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={activeList}
+          custom={direction}
+          initial={{ opacity: 0, x: direction * 200 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: direction * -200 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="px-4 py-4 pb-24 max-w-3xl mx-auto"
+        >
+          {/* List title */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">{currentList?.icon}</span>
+            <h1 className="text-xl font-bold text-black">{currentList?.label}</h1>
+          </div>
+
+          {renderListContent()}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Swipe hint on mobile */}
+      <div className="fixed bottom-20 left-0 right-0 flex justify-center md:hidden pointer-events-none">
+        <div className="flex items-center gap-4 text-slate text-xs">
+          {currentIndex > 0 && (
+            <span className="flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              {LIST_OPTIONS[currentIndex - 1].shortLabel}
+            </span>
+          )}
+          <span className="w-1 h-1 bg-steel rounded-full" />
+          {currentIndex < LIST_OPTIONS.length - 1 && (
+            <span className="flex items-center gap-1">
+              {LIST_OPTIONS[currentIndex + 1].shortLabel}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -81,6 +81,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
     return { error };

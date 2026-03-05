@@ -102,7 +102,7 @@ const AppContent: React.FC = () => {
       <Header />
       <Navigation />
 
-      <main className="flex-1 pb-24 md:pb-6">
+      <main className="flex-1 pb-24 md:pb-6 w-full">
         <Routes>
           <Route path="/" element={<SmartHomePage />} />
           <Route path="/entry" element={<EntryForm />} />

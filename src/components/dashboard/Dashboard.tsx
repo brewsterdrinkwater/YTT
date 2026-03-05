@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEntries } from '../../contexts/EntriesContext';
 import { useApp } from '../../contexts/AppContext';
 import { Entry, DashboardItem } from '../../types';
 import { DASHBOARD_KEYWORDS } from '../../constants/config';
 import { formatDisplayDate, parseISO } from '../../utils/dateUtils';
 import { useLists } from '../../contexts/ListsContext';
-import Card from '../common/Card';
 import { Input } from '../common/Input';
 import LocationDaysCounter from './LocationDaysCounter';
 import RecentlySavedWidget from '../saved/RecentlySavedWidget';
+import WeatherWidget from '../weather/WeatherWidget';
+import CalendarWidget from '../calendar/CalendarWidget';
+import MapsWidget from '../maps/MapsWidget';
+import SwipeableCards from '../common/SwipeableCards';
 
-// Import new list components
+// Import list components
 import {
   GroceryList,
   WatchlistList,
@@ -33,14 +37,10 @@ const RecipeListSection: React.FC = () => {
     showToast('Recipe ingredients added to grocery list!', 'success');
   };
 
-  const handleRemove = (id: string) => {
-    removeRecipe(id);
-  };
-
   if (recipes.length === 0) return null;
 
   return (
-    <div className="border-2 border-steel rounded-sm overflow-hidden">
+    <div className="border-2 border-steel rounded-lg overflow-hidden">
       <div className="p-3 bg-white border-b border-steel">
         <span className="flex items-center gap-2 font-bold text-black text-sm">
           <span>🍳</span> Recipes
@@ -57,9 +57,7 @@ const RecipeListSection: React.FC = () => {
               className="w-full p-3 flex items-center justify-between text-left hover:bg-concrete transition-colors"
             >
               <span className="font-medium text-sm">{recipe.name}</span>
-              <span className="text-xs text-slate">
-                {recipe.ingredients.length} items
-              </span>
+              <span className="text-xs text-slate">{recipe.ingredients.length} items</span>
             </button>
             {expandedRecipe === recipe.id && (
               <div className="px-3 pb-3 border-t border-concrete">
@@ -81,7 +79,7 @@ const RecipeListSection: React.FC = () => {
                     + Grocery
                   </button>
                   <button
-                    onClick={() => handleRemove(recipe.id)}
+                    onClick={() => removeRecipe(recipe.id)}
                     className="text-xs text-red-500 hover:text-red-700 px-2 py-1 ml-auto"
                   >
                     Remove
@@ -96,7 +94,7 @@ const RecipeListSection: React.FC = () => {
   );
 };
 
-// Diary Search Component (compact)
+// Diary Search Component
 const DiarySearchSection: React.FC = () => {
   const { searchEntries } = useEntries();
   const { setCurrentDate } = useApp();
@@ -129,7 +127,11 @@ const DiarySearchSection: React.FC = () => {
   };
 
   return (
-    <div className="border-2 border-black rounded-sm p-4 bg-white">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-lg border-2 border-black p-4"
+    >
       <h3 className="font-bold text-black mb-3 flex items-center gap-2">
         <span>🔍</span> Search Diary
       </h3>
@@ -146,7 +148,7 @@ const DiarySearchSection: React.FC = () => {
             <li
               key={entry.id}
               onClick={() => handleEntryClick(entry)}
-              className="p-2 bg-concrete rounded-sm cursor-pointer hover:bg-steel transition-colors text-xs"
+              className="p-2 bg-concrete rounded-md cursor-pointer hover:bg-steel transition-colors text-xs"
             >
               <p className="font-medium">{formatDisplayDate(entry.date)}</p>
               <p className="text-slate truncate">{entry.highlights || entry.location}</p>
@@ -154,11 +156,11 @@ const DiarySearchSection: React.FC = () => {
           ))}
         </ul>
       )}
-    </div>
+    </motion.div>
   );
 };
 
-// Insight card for workouts/ideas
+// Insight card with animation
 interface InsightCardProps {
   title: string;
   icon: string;
@@ -169,92 +171,122 @@ const InsightCard: React.FC<InsightCardProps> = ({ title, icon, items }) => {
   if (items.length === 0) return null;
 
   return (
-    <div className="border-2 border-black rounded-sm p-4 bg-white">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-lg border-2 border-black p-4"
+    >
       <h3 className="font-bold text-black mb-3 flex items-center gap-2">
         <span>{icon}</span> {title}
       </h3>
       <ul className="space-y-2">
         {items.slice(0, 3).map((item, index) => (
-          <li key={index} className="p-2 bg-concrete rounded-sm">
+          <motion.li
+            key={index}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="p-2 bg-concrete rounded-md"
+          >
             <p className="text-sm text-black">{item.text}</p>
-            <p className="text-xs text-slate mt-1">
-              {formatDisplayDate(item.date)}
-            </p>
-          </li>
+            <p className="text-xs text-slate mt-1">{formatDisplayDate(item.date)}</p>
+          </motion.li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   );
 };
 
-// Collapsible list for the right column
-interface ListSectionProps {
+// Expandable list card for desktop
+interface ListCardProps {
   title: string;
   icon: string;
-  itemCount: number;
+  count: number;
   isExpanded: boolean;
   onToggle: () => void;
+  onNavigate: () => void;
   children: React.ReactNode;
 }
 
-const ListSection: React.FC<ListSectionProps> = ({
+const ListCard: React.FC<ListCardProps> = ({
   title,
   icon,
-  itemCount,
+  count,
   isExpanded,
   onToggle,
+  onNavigate,
   children,
 }) => {
   return (
-    <div className="border-2 border-steel rounded-sm overflow-hidden hover:border-charcoal transition-colors">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-3 bg-white hover:bg-concrete transition-colors"
-      >
-        <span className="flex items-center gap-2 font-bold text-black text-sm">
-          <span>{icon}</span>
-          {title}
-          {itemCount > 0 && (
-            <span className="text-xs bg-tab-orange/20 text-tab-orange px-2 py-0.5 rounded-full">
-              {itemCount}
+    <motion.div
+      layout
+      className="bg-white rounded-lg border-2 border-steel overflow-hidden hover:border-charcoal transition-colors"
+    >
+      <div className="flex items-center">
+        <button
+          onClick={onToggle}
+          className="flex-1 flex items-center gap-2 p-3 hover:bg-concrete transition-colors"
+        >
+          <span className="text-lg">{icon}</span>
+          <span className="font-bold text-sm text-black">{title}</span>
+          {count > 0 && (
+            <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full">
+              {count}
             </span>
           )}
-        </span>
-        <svg
-          className={`w-4 h-4 text-charcoal transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+        </button>
+        <button
+          onClick={onNavigate}
+          className="px-3 py-2 text-xs text-slate hover:text-black transition-colors"
+          title="Open full list"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {isExpanded && (
-        <div className="border-t border-steel max-h-64 overflow-y-auto">
-          {children}
-        </div>
-      )}
-    </div>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </button>
+      </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: 'auto' }}
+            exit={{ height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-steel overflow-hidden"
+          >
+            <div className="max-h-72 overflow-y-auto">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
-// Mobile list grid item
-interface MobileListItemProps {
+// Mobile list card
+interface MobileListCardProps {
   icon: string;
   label: string;
   count: number;
+  color: string;
   onClick: () => void;
 }
 
-const MobileListItem: React.FC<MobileListItemProps> = ({ icon, label, count, onClick }) => (
-  <button
+const MobileListCard: React.FC<MobileListCardProps> = ({ icon, label, count, color, onClick }) => (
+  <motion.button
+    whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className="p-3 rounded-sm border-2 border-steel hover:border-black transition-all text-left bg-white"
+    className="p-4 rounded-xl border-2 border-steel hover:border-black transition-all text-left bg-white shadow-sm hover:shadow-md"
   >
-    <span className="text-2xl block mb-1">{icon}</span>
+    <span className="text-3xl block mb-2">{icon}</span>
     <span className="font-bold text-black text-sm block">{label}</span>
-    {count > 0 && <span className="text-xs text-slate">{count}</span>}
-  </button>
+    {count > 0 && (
+      <span className={`text-xs font-medium ${color} mt-1 inline-block`}>
+        {count} item{count !== 1 ? 's' : ''}
+      </span>
+    )}
+  </motion.button>
 );
 
 // Extract functions
@@ -288,10 +320,9 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { groceryList, watchlist: watchlistItems, readingList, spotifyList, placesList, restaurantsList } = useLists();
 
-  // Track which lists are expanded (default: grocery)
+  // Track which lists are expanded
   const [expandedLists, setExpandedLists] = useState<Set<ListType>>(new Set(['grocery']));
 
-  // List counts (derived from context — reactive)
   const listCounts = {
     grocery: groceryList.length,
     watchlist: watchlistItems.length,
@@ -304,11 +335,8 @@ const Dashboard: React.FC = () => {
   const toggleList = (list: ListType) => {
     setExpandedLists((prev) => {
       const next = new Set(prev);
-      if (next.has(list)) {
-        next.delete(list);
-      } else {
-        next.add(list);
-      }
+      if (next.has(list)) next.delete(list);
+      else next.add(list);
       return next;
     });
   };
@@ -320,144 +348,128 @@ const Dashboard: React.FC = () => {
   const workouts = extractWorkouts(entries);
   const ideas = extractIdeas(entries);
 
+  const listColors = {
+    grocery: 'text-green-600',
+    restaurants: 'text-orange-600',
+    watchlist: 'text-purple-600',
+    reading: 'text-blue-600',
+    music: 'text-pink-600',
+    places: 'text-teal-600',
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <div className="mb-6">
+    <div className="w-full px-4 py-6 pb-24 md:pb-6">
+      {/* Page header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 max-w-7xl mx-auto"
+      >
         <h1 className="text-h2 font-bold text-black">Dashboard</h1>
         <p className="text-small text-slate mt-1">Your insights and lists at a glance</p>
-      </div>
+      </motion.div>
 
-      {/* Mobile: Stacked layout */}
+      {/* ═══════════ MOBILE LAYOUT ═══════════ */}
       <div className="md:hidden space-y-6">
-        {/* Insights section */}
-        <div className="space-y-4">
-          <h2 className="font-bold text-black border-b-2 border-black pb-2">Insights</h2>
-          <LocationDaysCounter />
-          <RecentlySavedWidget />
-          <DiarySearchSection />
-          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
-          <InsightCard title="Ideas" icon="💡" items={ideas} />
+        {/* Swipeable insight cards */}
+        <SwipeableCards>
+          <div className="px-1">
+            <WeatherWidget />
+          </div>
+          <div className="px-1">
+            <LocationDaysCounter />
+          </div>
+          {workouts.length > 0 && (
+            <div className="px-1">
+              <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
+            </div>
+          )}
+          {ideas.length > 0 && (
+            <div className="px-1">
+              <InsightCard title="Ideas" icon="💡" items={ideas} />
+            </div>
+          )}
+        </SwipeableCards>
+
+        {/* Calendar & Maps */}
+        <div className="space-y-3">
+          <CalendarWidget />
+          <MapsWidget />
         </div>
+
+        {/* Recently saved */}
+        <RecentlySavedWidget />
+
+        {/* Search */}
+        <DiarySearchSection />
 
         {/* Lists grid */}
         <div>
-          <h2 className="font-bold text-black border-b-2 border-black pb-2 mb-4">Lists</h2>
+          <h2 className="font-bold text-black text-lg mb-3">Your Lists</h2>
           <div className="grid grid-cols-3 gap-2">
-            <MobileListItem
-              icon="🛒"
-              label="Grocery"
-              count={listCounts.grocery}
-              onClick={() => navigateToList('grocery')}
-            />
-            <MobileListItem
-              icon="🍽️"
-              label="Food"
-              count={listCounts.restaurants}
-              onClick={() => navigateToList('restaurants')}
-            />
-            <MobileListItem
-              icon="🎬"
-              label="Watch"
-              count={listCounts.watchlist}
-              onClick={() => navigateToList('watchlist')}
-            />
-            <MobileListItem
-              icon="📚"
-              label="Read"
-              count={listCounts.reading}
-              onClick={() => navigateToList('reading')}
-            />
-            <MobileListItem
-              icon="🎵"
-              label="Music"
-              count={listCounts.music}
-              onClick={() => navigateToList('music')}
-            />
-            <MobileListItem
-              icon="📍"
-              label="Places"
-              count={listCounts.places}
-              onClick={() => navigateToList('places')}
-            />
+            <MobileListCard icon="🛒" label="Grocery" count={listCounts.grocery} color={listColors.grocery} onClick={() => navigateToList('grocery')} />
+            <MobileListCard icon="🍽️" label="Food" count={listCounts.restaurants} color={listColors.restaurants} onClick={() => navigateToList('restaurants')} />
+            <MobileListCard icon="🎬" label="Watch" count={listCounts.watchlist} color={listColors.watchlist} onClick={() => navigateToList('watchlist')} />
+            <MobileListCard icon="📚" label="Read" count={listCounts.reading} color={listColors.reading} onClick={() => navigateToList('reading')} />
+            <MobileListCard icon="🎵" label="Music" count={listCounts.music} color={listColors.music} onClick={() => navigateToList('music')} />
+            <MobileListCard icon="📍" label="Places" count={listCounts.places} color={listColors.places} onClick={() => navigateToList('places')} />
           </div>
         </div>
       </div>
 
-      {/* Desktop: Two-column layout */}
-      <div className="hidden md:grid md:grid-cols-2 gap-6">
-        {/* Left column: Insights */}
+      {/* ═══════════ DESKTOP LAYOUT: 3-column ═══════════ */}
+      <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {/* LEFT COLUMN: Weather + Calendar + Maps + Insights */}
         <div className="space-y-4">
-          <h2 className="font-bold text-black border-b-2 border-black pb-2">Insights</h2>
+          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+            Today
+          </h2>
+          <WeatherWidget />
+          <CalendarWidget />
+          <MapsWidget />
           <LocationDaysCounter />
           <RecentlySavedWidget />
+        </div>
+
+        {/* CENTER COLUMN: Insights + Search */}
+        <div className="space-y-4">
+          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+            Insights
+          </h2>
           <DiarySearchSection />
           <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
           <InsightCard title="Ideas" icon="💡" items={ideas} />
         </div>
 
-        {/* Right column: Lists */}
+        {/* RIGHT COLUMN: All Lists */}
         <div className="space-y-3">
-          <h2 className="font-bold text-black border-b-2 border-black pb-2">Lists</h2>
+          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+            Lists
+          </h2>
 
-          <ListSection
-            title="Grocery"
-            icon="🛒"
-            itemCount={listCounts.grocery}
-            isExpanded={expandedLists.has('grocery')}
-            onToggle={() => toggleList('grocery')}
-          >
+          <ListCard title="Grocery" icon="🛒" count={listCounts.grocery} isExpanded={expandedLists.has('grocery')} onToggle={() => toggleList('grocery')} onNavigate={() => navigateToList('grocery')}>
             <GroceryList />
-          </ListSection>
+          </ListCard>
 
-          <ListSection
-            title="Restaurants"
-            icon="🍽️"
-            itemCount={listCounts.restaurants}
-            isExpanded={expandedLists.has('restaurants')}
-            onToggle={() => toggleList('restaurants')}
-          >
+          <ListCard title="Restaurants" icon="🍽️" count={listCounts.restaurants} isExpanded={expandedLists.has('restaurants')} onToggle={() => toggleList('restaurants')} onNavigate={() => navigateToList('restaurants')}>
             <RestaurantList />
-          </ListSection>
+          </ListCard>
 
-          <ListSection
-            title="Watchlist"
-            icon="🎬"
-            itemCount={listCounts.watchlist}
-            isExpanded={expandedLists.has('watchlist')}
-            onToggle={() => toggleList('watchlist')}
-          >
+          <ListCard title="Watchlist" icon="🎬" count={listCounts.watchlist} isExpanded={expandedLists.has('watchlist')} onToggle={() => toggleList('watchlist')} onNavigate={() => navigateToList('watchlist')}>
             <WatchlistList />
-          </ListSection>
+          </ListCard>
 
-          <ListSection
-            title="Reading"
-            icon="📚"
-            itemCount={listCounts.reading}
-            isExpanded={expandedLists.has('reading')}
-            onToggle={() => toggleList('reading')}
-          >
+          <ListCard title="Reading" icon="📚" count={listCounts.reading} isExpanded={expandedLists.has('reading')} onToggle={() => toggleList('reading')} onNavigate={() => navigateToList('reading')}>
             <ReadingList />
-          </ListSection>
+          </ListCard>
 
-          <ListSection
-            title="Music"
-            icon="🎵"
-            itemCount={listCounts.music}
-            isExpanded={expandedLists.has('music')}
-            onToggle={() => toggleList('music')}
-          >
+          <ListCard title="Music" icon="🎵" count={listCounts.music} isExpanded={expandedLists.has('music')} onToggle={() => toggleList('music')} onNavigate={() => navigateToList('music')}>
             <MusicList />
-          </ListSection>
+          </ListCard>
 
-          <ListSection
-            title="Places"
-            icon="📍"
-            itemCount={listCounts.places}
-            isExpanded={expandedLists.has('places')}
-            onToggle={() => toggleList('places')}
-          >
+          <ListCard title="Places" icon="📍" count={listCounts.places} isExpanded={expandedLists.has('places')} onToggle={() => toggleList('places')} onNavigate={() => navigateToList('places')}>
             <PlacesList />
-          </ListSection>
+          </ListCard>
 
           <RecipeListSection />
         </div>
