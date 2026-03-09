@@ -4,7 +4,138 @@ import cors from 'cors';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS configuration - allow your frontend domains
+// ---------------------------------------------------------------------------
+// Rate Limiter — in-memory, per-IP, sliding window
+// Designed for 5-10 concurrent users sharing the same API keys.
+// ---------------------------------------------------------------------------
+
+class RateLimiter {
+  constructor(windowMs, maxRequests) {
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+    this.hits = new Map(); // key -> [timestamps]
+    setInterval(() => this._cleanup(), 5 * 60 * 1000);
+  }
+
+  _cleanup() {
+    const cutoff = Date.now() - this.windowMs;
+    for (const [key, timestamps] of this.hits) {
+      const valid = timestamps.filter(t => t > cutoff);
+      if (valid.length === 0) this.hits.delete(key);
+      else this.hits.set(key, valid);
+    }
+  }
+
+  check(key) {
+    const now = Date.now();
+    const cutoff = now - this.windowMs;
+    const timestamps = (this.hits.get(key) || []).filter(t => t > cutoff);
+    if (timestamps.length >= this.maxRequests) {
+      return { allowed: false, remaining: 0, retryAfterMs: timestamps[0] + this.windowMs - now };
+    }
+    timestamps.push(now);
+    this.hits.set(key, timestamps);
+    return { allowed: true, remaining: this.maxRequests - timestamps.length };
+  }
+}
+
+// Per-IP rate limits (sliding window)
+const weatherLimiter = new RateLimiter(60 * 60 * 1000, 30);   // 30 req/hr/IP
+const analyzeLimiter = new RateLimiter(60 * 60 * 1000, 20);   // 20 req/hr/IP
+const researchLimiter = new RateLimiter(60 * 60 * 1000, 15);  // 15 req/hr/IP
+
+function rateLimitMiddleware(limiter) {
+  return (req, res, next) => {
+    const key = req.ip || req.connection.remoteAddress || 'unknown';
+    const result = limiter.check(key);
+    res.set('X-RateLimit-Remaining', String(result.remaining));
+    if (!result.allowed) {
+      res.set('Retry-After', String(Math.ceil(result.retryAfterMs / 1000)));
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        retryAfterSeconds: Math.ceil(result.retryAfterMs / 1000),
+      });
+    }
+    next();
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Request Queue — serializes DeepSeek API calls to avoid overwhelming the API
+// ---------------------------------------------------------------------------
+
+class RequestQueue {
+  constructor(concurrency = 2) {
+    this.concurrency = concurrency;
+    this.running = 0;
+    this.queue = [];
+  }
+
+  enqueue(fn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ fn, resolve, reject });
+      this._drain();
+    });
+  }
+
+  _drain() {
+    while (this.running < this.concurrency && this.queue.length > 0) {
+      const { fn, resolve, reject } = this.queue.shift();
+      this.running++;
+      fn()
+        .then(resolve)
+        .catch(reject)
+        .finally(() => {
+          this.running--;
+          this._drain();
+        });
+    }
+  }
+
+  get pending() { return this.queue.length; }
+}
+
+// 2 concurrent DeepSeek calls max (prevents API abuse with shared key)
+const deepseekQueue = new RequestQueue(2);
+
+// ---------------------------------------------------------------------------
+// Response Cache — avoids duplicate API calls for the same content
+// ---------------------------------------------------------------------------
+
+class ResponseCache {
+  constructor(ttlMs) {
+    this.ttlMs = ttlMs;
+    this.cache = new Map();
+    setInterval(() => this._cleanup(), 10 * 60 * 1000);
+  }
+
+  _cleanup() {
+    const now = Date.now();
+    for (const [key, { expiresAt }] of this.cache) {
+      if (now > expiresAt) this.cache.delete(key);
+    }
+  }
+
+  get(key) {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) { this.cache.delete(key); return null; }
+    return entry.data;
+  }
+
+  set(key, data) {
+    this.cache.set(key, { data, expiresAt: Date.now() + this.ttlMs });
+  }
+}
+
+const researchCache = new ResponseCache(24 * 60 * 60 * 1000); // 24 hours
+const weatherCache = new ResponseCache(30 * 60 * 1000);        // 30 minutes
+const analyzeCache = new ResponseCache(60 * 60 * 1000);        // 1 hour
+
+// ---------------------------------------------------------------------------
+// CORS configuration
+// ---------------------------------------------------------------------------
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -15,7 +146,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     if (allowedOrigins.some(allowed => origin.startsWith(allowed) || allowed === '*')) {
       return callback(null, true);
@@ -27,13 +157,26 @@ app.use(cors({
 
 app.use(express.json());
 
+// Trust proxy for accurate req.ip behind Railway/Vercel
+app.set('trust proxy', 1);
+
+// ---------------------------------------------------------------------------
 // Health check
+// ---------------------------------------------------------------------------
+
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    queue: { pending: deepseekQueue.pending, running: deepseekQueue.running },
+  });
 });
 
-// Weather proxy endpoint - keeps OpenWeatherMap API key server-side
-app.get('/api/weather/:city', async (req, res) => {
+// ---------------------------------------------------------------------------
+// Weather proxy — with rate limiting + server-side caching
+// ---------------------------------------------------------------------------
+
+app.get('/api/weather/:city', rateLimitMiddleware(weatherLimiter), async (req, res) => {
   const apiKey = process.env.OPENWEATHER_API_KEY;
 
   if (!apiKey) {
@@ -50,6 +193,15 @@ app.get('/api/weather/:city', async (req, res) => {
     return res.status(400).json({ error: 'Invalid city. Use "nyc" or "nashville".' });
   }
 
+  // Check cache first
+  const cacheKey = `weather-${req.params.city}`;
+  const cached = weatherCache.get(cacheKey);
+  if (cached) {
+    res.set('X-Cache', 'HIT');
+    res.set('Cache-Control', 'public, max-age=1800');
+    return res.json(cached);
+  }
+
   try {
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}&units=imperial`;
     const response = await fetch(url);
@@ -61,9 +213,10 @@ app.get('/api/weather/:city', async (req, res) => {
     }
 
     const data = await response.json();
+    weatherCache.set(cacheKey, data);
 
-    // Set cache headers - weather data doesn't change fast
-    res.set('Cache-Control', 'public, max-age=1800'); // 30 min
+    res.set('X-Cache', 'MISS');
+    res.set('Cache-Control', 'public, max-age=1800');
     res.json(data);
   } catch (error) {
     console.error('Weather fetch error:', error);
@@ -71,8 +224,11 @@ app.get('/api/weather/:city', async (req, res) => {
   }
 });
 
-// DeepSeek proxy endpoint for Quick Share
-app.post('/api/analyze', async (req, res) => {
+// ---------------------------------------------------------------------------
+// Quick Share analysis — rate limited + queued + cached
+// ---------------------------------------------------------------------------
+
+app.post('/api/analyze', rateLimitMiddleware(analyzeLimiter), async (req, res) => {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
@@ -86,54 +242,55 @@ app.post('/api/analyze', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    const prompt = buildAnalysisPrompt(url, source || 'website');
-
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that analyzes URLs and extracts relevant information for a personal life-tracking app. Always respond with valid JSON.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.3,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('DeepSeek API error:', response.status, errorText);
-      return res.status(response.status).json({
-        error: `DeepSeek API error: ${response.status}`,
-        details: errorText
-      });
+    // Check cache
+    const cacheKey = `analyze-${url}`;
+    const cached = analyzeCache.get(cacheKey);
+    if (cached) {
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
     }
 
-    const data = await response.json();
+    const prompt = buildAnalysisPrompt(url, source || 'website');
 
-    // Extract the content from DeepSeek response
+    // Queue the DeepSeek call
+    const data = await deepseekQueue.enqueue(async () => {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant that analyzes URLs and extracts relevant information for a personal life-tracking app. Always respond with valid JSON.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepSeek API error:', response.status, errorText);
+        throw new Error(`DeepSeek API error: ${response.status}`);
+      }
+
+      return response.json();
+    });
+
     const content = data.choices?.[0]?.message?.content || '';
-
-    // Parse JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return res.status(500).json({ error: 'Could not parse analysis result' });
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-
-    res.json({
+    const result = {
       title: parsed.title || 'Untitled',
       description: parsed.description || '',
       source: source || 'website',
@@ -142,7 +299,11 @@ app.post('/api/analyze', async (req, res) => {
       suggestedCategory: parsed.suggestedCategory || 'uncategorized',
       confidence: parsed.confidence || 'low',
       extractedItems: parsed.extractedItems || [],
-    });
+    };
+
+    analyzeCache.set(cacheKey, result);
+    res.set('X-Cache', 'MISS');
+    res.json(result);
 
   } catch (error) {
     console.error('Analysis error:', error);
@@ -199,8 +360,11 @@ Important: Based on the URL structure and domain, infer what type of content thi
 - tripadvisor.com - places/restaurants`;
 }
 
-// DeepSeek proxy endpoint for Deep Research Agent
-app.post('/api/research', async (req, res) => {
+// ---------------------------------------------------------------------------
+// Deep Research Agent — rate limited + queued + cached
+// ---------------------------------------------------------------------------
+
+app.post('/api/research', rateLimitMiddleware(researchLimiter), async (req, res) => {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
@@ -214,50 +378,56 @@ app.post('/api/research', async (req, res) => {
       return res.status(400).json({ error: 'Name is required' });
     }
 
-    const prompt = buildResearchPrompt(name);
-
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a meticulous research assistant. Always respond with valid JSON only - no markdown, no backticks, no explanation.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0.3,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('DeepSeek API error:', response.status, errorText);
-      return res.status(response.status).json({
-        error: `DeepSeek API error: ${response.status}`,
-        details: errorText
-      });
+    // Check cache
+    const cacheKey = `research-${name.toLowerCase().trim()}`;
+    const cached = researchCache.get(cacheKey);
+    if (cached) {
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
+    const prompt = buildResearchPrompt(name);
 
-    // Parse JSON from response
+    // Queue the DeepSeek call
+    const data = await deepseekQueue.enqueue(async () => {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a meticulous research assistant. Always respond with valid JSON only - no markdown, no backticks, no explanation.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 4000,
+          temperature: 0.3,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepSeek API error:', response.status, errorText);
+        throw new Error(`DeepSeek API error: ${response.status}`);
+      }
+
+      return response.json();
+    });
+
+    const content = data.choices?.[0]?.message?.content || '';
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return res.status(500).json({ error: 'Could not parse research result' });
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+    researchCache.set(cacheKey, parsed);
+    res.set('X-Cache', 'MISS');
     res.json(parsed);
 
   } catch (error) {
@@ -330,4 +500,6 @@ For sources, include 5-8 high-quality primary and secondary sources only.`;
 
 app.listen(PORT, () => {
   console.log(`Walt-Tab API server running on port ${PORT}`);
+  console.log(`Rate limits: Weather 30/hr, Analyze 20/hr, Research 15/hr per IP`);
+  console.log(`DeepSeek queue concurrency: ${deepseekQueue.concurrency}`);
 });

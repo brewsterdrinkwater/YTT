@@ -20,6 +20,11 @@ export const STORAGE_KEYS = {
   RESTAURANTS_LIST: 'ytt-restaurants-list',
   // Quick Share / Saved Items
   SAVED_ITEMS: 'ytt-saved-items',
+  // Custom Lists
+  CUSTOM_LISTS: 'ytt-custom-lists',
+  // Events & Reminders
+  EVENTS: 'ytt-events',
+  REMINDERS: 'ytt-reminders',
 } as const;
 
 export const LOCATIONS = [
