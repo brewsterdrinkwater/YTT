@@ -41,9 +41,8 @@ class NotificationService {
       await reg.showNotification(title, {
         icon: '/icon-192.png',
         badge: '/icon-192.png',
-        vibrate: [200, 100, 200],
         ...options,
-      });
+      } as NotificationOptions);
       return;
     }
 

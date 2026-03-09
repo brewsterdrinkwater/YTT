@@ -54,7 +54,10 @@ type SupabaseListType =
   | 'grocery'
   | 'recipes'
   | 'restaurants'
-  | 'saved_items';
+  | 'saved_items'
+  | 'custom_lists'
+  | 'events'
+  | 'reminders';
 
 interface ListsContextType {
   // Data

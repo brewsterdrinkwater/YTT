@@ -478,7 +478,6 @@ const DeepResearchAgent: React.FC<DeepResearchAgentProps> = ({
           >
             {tab === 'search' && '🔍 Research'}
             {tab === 'history' && `🕐 History (${history.length})`}
-            {tab === 'settings' && '⚙️ Settings'}
           </button>
         ))}
       </div>
