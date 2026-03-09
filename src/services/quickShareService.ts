@@ -52,6 +52,47 @@ export interface ExtractedItem {
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+// Retry-aware fetch with timeout and exponential backoff
+async function fetchWithRetry(
+  input: RequestInfo,
+  init?: RequestInit,
+  retries = 2,
+  timeoutMs = 30000,
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const response = await fetch(input, { ...init, signal: controller.signal });
+      clearTimeout(timer);
+      return response;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+
+      // Don't retry on abort (user cancelled) or non-network errors
+      if (lastError.name === 'AbortError') {
+        throw new Error('Request timed out. The backend server may be unavailable.');
+      }
+
+      if (attempt < retries) {
+        // Exponential backoff: 1s, 2s
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+  }
+
+  // All retries exhausted — provide a helpful error
+  const apiUrl = API_CONFIG.QUICK_SHARE_API_URL;
+  const isLocalhost = apiUrl.includes('localhost');
+  const hint = isLocalhost
+    ? 'The Quick Share backend is not running locally. Start it with `cd api && npm start`, or set VITE_QUICK_SHARE_API_URL to your Railway deployment.'
+    : `Could not connect to the Quick Share backend at ${apiUrl}. The server may be down or unreachable.`;
+
+  throw new Error(`Fetch failed: ${hint}`);
+}
+
 // Detect source from URL
 const detectSource = (url: string): string => {
   const hostname = new URL(url).hostname.toLowerCase();
@@ -83,7 +124,7 @@ export const quickShareService = {
   analyzeUrl: async (url: string): Promise<AnalysisResult> => {
     const source = detectSource(url);
 
-    const response = await fetch(`${API_CONFIG.QUICK_SHARE_API_URL}/api/analyze`, {
+    const response = await fetchWithRetry(`${API_CONFIG.QUICK_SHARE_API_URL}/api/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

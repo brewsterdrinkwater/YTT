@@ -1,7 +1,7 @@
 // Walt-Tab Service Worker
-// Enables PWA installation and share target support
+// Enables PWA installation, share target support, and push notifications
 
-const CACHE_NAME = 'walt-tab-v1';
+const CACHE_NAME = 'walt-tab-v2';
 
 // Install event - cache the app shell
 self.addEventListener('install', (event) => {
@@ -56,5 +56,51 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+// Push notification event - display notification from server push
+self.addEventListener('push', (event) => {
+  const defaultOptions = {
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    vibrate: [200, 100, 200],
+  };
+
+  let title = 'Walt-Tab';
+  let options = defaultOptions;
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title || title;
+      options = { ...defaultOptions, ...data };
+    } catch {
+      // If not JSON, treat as plain text
+      options = { ...defaultOptions, body: event.data.text() };
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Notification click - open the app or focus existing tab
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  // Try to find and focus an existing Walt-Tab tab
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      // Focus existing window if available
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      return self.clients.openWindow('/');
+    })
   );
 });

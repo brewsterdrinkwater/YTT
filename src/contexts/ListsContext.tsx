@@ -36,6 +36,8 @@ import {
   Recipe,
   RestaurantItem,
 } from '../types/research';
+import { CustomList, CustomListItem, CustomFieldDefinition, ListTemplate, LIST_TEMPLATES } from '../types/customList';
+import { SharedEvent, Reminder, createEventReminders } from '../types/events';
 import { SavedItem, ListCategory } from '../services/quickShareService';
 
 // ---------------------------------------------------------------------------
@@ -52,7 +54,10 @@ type SupabaseListType =
   | 'grocery'
   | 'recipes'
   | 'restaurants'
-  | 'saved_items';
+  | 'saved_items'
+  | 'custom_lists'
+  | 'events'
+  | 'reminders';
 
 interface ListsContextType {
   // Data
@@ -112,6 +117,28 @@ interface ListsContextType {
   addToHistory: (result: ResearchResult) => void;
   clearHistory: () => void;
   getHistoryItem: (name: string) => HistoryItem | undefined;
+
+  // Custom Lists
+  customLists: CustomList[];
+  createCustomList: (name: string, icon: string, color: string, template: ListTemplate | null, extraFields?: Omit<CustomFieldDefinition, 'id'>[]) => CustomList;
+  deleteCustomList: (listId: string) => void;
+  updateCustomList: (listId: string, updates: Partial<Omit<CustomList, 'id' | 'items'>>) => void;
+  addCustomListItem: (listId: string, name: string, fields?: Record<string, string | number | boolean>) => void;
+  updateCustomListItem: (listId: string, itemId: string, updates: Partial<CustomListItem>) => void;
+  removeCustomListItem: (listId: string, itemId: string) => void;
+  toggleCustomListItem: (listId: string, itemId: string) => void;
+
+  // Events
+  events: SharedEvent[];
+  createEvent: (event: Omit<SharedEvent, 'id' | 'reminders' | 'createdAt' | 'updatedAt'>) => SharedEvent;
+  updateEvent: (eventId: string, updates: Partial<SharedEvent>) => void;
+  deleteEvent: (eventId: string) => void;
+
+  // Reminders
+  reminders: Reminder[];
+  createReminder: (reminder: Omit<Reminder, 'id' | 'sent' | 'sentAt' | 'createdAt'>) => void;
+  deleteReminder: (reminderId: string) => void;
+  markReminderSent: (reminderId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +193,15 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
   const [researchHistory, setResearchHistory] = useState<HistoryItem[]>(() =>
     loadLocal(STORAGE_KEYS.RESEARCH_HISTORY)
+  );
+  const [customLists, setCustomLists] = useState<CustomList[]>(() =>
+    loadLocal(STORAGE_KEYS.CUSTOM_LISTS)
+  );
+  const [events, setEvents] = useState<SharedEvent[]>(() =>
+    loadLocal(STORAGE_KEYS.EVENTS)
+  );
+  const [reminders, setReminders] = useState<Reminder[]>(() =>
+    loadLocal(STORAGE_KEYS.REMINDERS)
   );
 
   // ---- Supabase helpers ----
@@ -234,6 +270,18 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               setSavedItemsState(serverItems as SavedItem[]);
               saveLocal(STORAGE_KEYS.SAVED_ITEMS, serverItems);
               break;
+            case 'custom_lists':
+              setCustomLists(serverItems as unknown as CustomList[]);
+              saveLocal(STORAGE_KEYS.CUSTOM_LISTS, serverItems);
+              break;
+            case 'events':
+              setEvents(serverItems as unknown as SharedEvent[]);
+              saveLocal(STORAGE_KEYS.EVENTS, serverItems);
+              break;
+            case 'reminders':
+              setReminders(serverItems as unknown as Reminder[]);
+              saveLocal(STORAGE_KEYS.REMINDERS, serverItems);
+              break;
           }
         });
 
@@ -248,6 +296,9 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           { type: 'recipes', local: loadLocal(STORAGE_KEYS.RECIPES_LIST) },
           { type: 'restaurants', local: loadLocal(STORAGE_KEYS.RESTAURANTS_LIST) },
           { type: 'saved_items', local: loadLocal(STORAGE_KEYS.SAVED_ITEMS) },
+          { type: 'custom_lists' as SupabaseListType, local: loadLocal(STORAGE_KEYS.CUSTOM_LISTS) },
+          { type: 'events' as SupabaseListType, local: loadLocal(STORAGE_KEYS.EVENTS) },
+          { type: 'reminders' as SupabaseListType, local: loadLocal(STORAGE_KEYS.REMINDERS) },
         ];
         allTypes
           .filter(({ type }) => !existingTypes.has(type))
@@ -311,6 +362,34 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Research history is high-frequency and large — skip Supabase sync
     },
     []
+  );
+
+  // Custom lists persist to localStorage + Supabase (stored as a single list_type)
+  const persistCustomLists = useCallback(
+    (newLists: CustomList[]) => {
+      setCustomLists(newLists);
+      saveLocal(STORAGE_KEYS.CUSTOM_LISTS, newLists);
+      if (user) saveListToSupabase('custom_lists' as SupabaseListType, newLists, user.id);
+    },
+    [user, saveListToSupabase]
+  );
+
+  const persistEvents = useCallback(
+    (newEvents: SharedEvent[]) => {
+      setEvents(newEvents);
+      saveLocal(STORAGE_KEYS.EVENTS, newEvents);
+      if (user) saveListToSupabase('events' as SupabaseListType, newEvents, user.id);
+    },
+    [user, saveListToSupabase]
+  );
+
+  const persistReminders = useCallback(
+    (newReminders: Reminder[]) => {
+      setReminders(newReminders);
+      saveLocal(STORAGE_KEYS.REMINDERS, newReminders);
+      if (user) saveListToSupabase('reminders' as SupabaseListType, newReminders, user.id);
+    },
+    [user, saveListToSupabase]
   );
 
   // ---------------------------------------------------------------------------
@@ -678,6 +757,193 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
 
   // ---------------------------------------------------------------------------
+  // Custom Lists
+  // ---------------------------------------------------------------------------
+
+  const createCustomList = useCallback(
+    (name: string, icon: string, color: string, template: ListTemplate | null, extraFields?: Omit<CustomFieldDefinition, 'id'>[]): CustomList => {
+      const now = new Date().toISOString();
+      const baseFields = template ? template.fields : [];
+      const allFields = [...baseFields, ...(extraFields || [])];
+      const newList: CustomList = {
+        id: generateId(),
+        name,
+        icon,
+        color,
+        template: template?.id || null,
+        fields: allFields.map((f, i) => ({ ...f, id: `field-${Date.now()}-${i}` })),
+        items: [],
+        createdAt: now,
+        updatedAt: now,
+      };
+      persistCustomLists([...customLists, newList]);
+      return newList;
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const deleteCustomList = useCallback(
+    (listId: string) => {
+      persistCustomLists(customLists.filter((l) => l.id !== listId));
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const updateCustomList = useCallback(
+    (listId: string, updates: Partial<Omit<CustomList, 'id' | 'items'>>) => {
+      persistCustomLists(
+        customLists.map((l) =>
+          l.id === listId ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l
+        )
+      );
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const addCustomListItem = useCallback(
+    (listId: string, name: string, fields?: Record<string, string | number | boolean>) => {
+      const newItem: CustomListItem = {
+        id: generateId(),
+        name,
+        checked: false,
+        fields: fields || {},
+        addedAt: new Date().toISOString(),
+      };
+      persistCustomLists(
+        customLists.map((l) =>
+          l.id === listId
+            ? { ...l, items: [newItem, ...l.items], updatedAt: new Date().toISOString() }
+            : l
+        )
+      );
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const updateCustomListItem = useCallback(
+    (listId: string, itemId: string, updates: Partial<CustomListItem>) => {
+      persistCustomLists(
+        customLists.map((l) =>
+          l.id === listId
+            ? {
+                ...l,
+                items: l.items.map((item) => (item.id === itemId ? { ...item, ...updates } : item)),
+                updatedAt: new Date().toISOString(),
+              }
+            : l
+        )
+      );
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const removeCustomListItem = useCallback(
+    (listId: string, itemId: string) => {
+      persistCustomLists(
+        customLists.map((l) =>
+          l.id === listId
+            ? { ...l, items: l.items.filter((item) => item.id !== itemId), updatedAt: new Date().toISOString() }
+            : l
+        )
+      );
+    },
+    [customLists, persistCustomLists]
+  );
+
+  const toggleCustomListItem = useCallback(
+    (listId: string, itemId: string) => {
+      persistCustomLists(
+        customLists.map((l) =>
+          l.id === listId
+            ? {
+                ...l,
+                items: l.items.map((item) =>
+                  item.id === itemId ? { ...item, checked: !item.checked } : item
+                ),
+                updatedAt: new Date().toISOString(),
+              }
+            : l
+        )
+      );
+    },
+    [customLists, persistCustomLists]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Events
+  // ---------------------------------------------------------------------------
+
+  const createEvent = useCallback(
+    (eventData: Omit<SharedEvent, 'id' | 'reminders' | 'createdAt' | 'updatedAt'>): SharedEvent => {
+      const now = new Date().toISOString();
+      const newEvent: SharedEvent = {
+        ...eventData,
+        id: generateId(),
+        reminders: createEventReminders(eventData),
+        createdAt: now,
+        updatedAt: now,
+      };
+      persistEvents([newEvent, ...events]);
+      return newEvent;
+    },
+    [events, persistEvents]
+  );
+
+  const updateEvent = useCallback(
+    (eventId: string, updates: Partial<SharedEvent>) => {
+      persistEvents(
+        events.map((e) =>
+          e.id === eventId ? { ...e, ...updates, updatedAt: new Date().toISOString() } : e
+        )
+      );
+    },
+    [events, persistEvents]
+  );
+
+  const deleteEvent = useCallback(
+    (eventId: string) => {
+      persistEvents(events.filter((e) => e.id !== eventId));
+    },
+    [events, persistEvents]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Reminders
+  // ---------------------------------------------------------------------------
+
+  const createReminder = useCallback(
+    (reminderData: Omit<Reminder, 'id' | 'sent' | 'sentAt' | 'createdAt'>) => {
+      const newReminder: Reminder = {
+        ...reminderData,
+        id: generateId(),
+        sent: false,
+        sentAt: null,
+        createdAt: new Date().toISOString(),
+      };
+      persistReminders([newReminder, ...reminders]);
+    },
+    [reminders, persistReminders]
+  );
+
+  const deleteReminder = useCallback(
+    (reminderId: string) => {
+      persistReminders(reminders.filter((r) => r.id !== reminderId));
+    },
+    [reminders, persistReminders]
+  );
+
+  const markReminderSent = useCallback(
+    (reminderId: string) => {
+      persistReminders(
+        reminders.map((r) =>
+          r.id === reminderId ? { ...r, sent: true, sentAt: new Date().toISOString() } : r
+        )
+      );
+    },
+    [reminders, persistReminders]
+  );
+
+  // ---------------------------------------------------------------------------
   // Context value
   // ---------------------------------------------------------------------------
 
@@ -722,6 +988,22 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addToHistory,
         clearHistory,
         getHistoryItem,
+        customLists,
+        createCustomList,
+        deleteCustomList,
+        updateCustomList,
+        addCustomListItem,
+        updateCustomListItem,
+        removeCustomListItem,
+        toggleCustomListItem,
+        events,
+        createEvent,
+        updateEvent,
+        deleteEvent,
+        reminders,
+        createReminder,
+        deleteReminder,
+        markReminderSent,
       }}
     >
       {children}

@@ -5,7 +5,8 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { EntriesProvider, useEntries } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ListsProvider } from './contexts/ListsContext';
+import { ListsProvider, useLists } from './contexts/ListsContext';
+import { notificationService } from './services/notificationService';
 
 // Layout components
 import Header from './components/layout/Header';
@@ -24,6 +25,8 @@ import AuthPage from './components/auth/AuthPage';
 import ListPage from './components/lists/ListPage';
 import SavedItemsPage from './components/saved/SavedItemsPage';
 import ShareTargetPage from './components/saved/ShareTargetPage';
+import SettingsPage from './components/settings/SettingsPage';
+import EventsPage from './components/events/EventsPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
 const SmartHomePage: React.FC = () => {
@@ -63,6 +66,43 @@ const SmartHomePage: React.FC = () => {
 
   // Otherwise show entry form
   return <EntryForm />;
+};
+
+// Notification initializer — runs inside ListsProvider
+const NotificationInit: React.FC = () => {
+  const { settings } = useSettings();
+  const { reminders, events, markReminderSent, updateEvent } = useLists();
+
+  useEffect(() => {
+    if (!settings.notifications.enabled) {
+      notificationService.stopChecking();
+      return;
+    }
+
+    // Request permission on first enable
+    notificationService.requestPermission();
+
+    notificationService.startChecking(
+      () => reminders,
+      () => events,
+      (reminderId) => markReminderSent(reminderId),
+      (eventId, reminderId) => {
+        // Mark the specific event reminder as sent
+        const event = events.find((e) => e.id === eventId);
+        if (event) {
+          updateEvent(eventId, {
+            reminders: event.reminders.map((r) =>
+              r.id === reminderId ? { ...r, sent: true, sentAt: new Date().toISOString() } : r
+            ),
+          });
+        }
+      },
+    );
+
+    return () => notificationService.stopChecking();
+  }, [settings.notifications.enabled, reminders, events, markReminderSent, updateEvent]);
+
+  return null;
 };
 
 // Main app content with routing
@@ -113,12 +153,15 @@ const AppContent: React.FC = () => {
           <Route path="/lists" element={<ListPage />} />
           <Route path="/saved" element={<SavedItemsPage />} />
           <Route path="/share" element={<ShareTargetPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/events" element={<EventsPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
+      <NotificationInit />
       <SettingsPanel />
       <Toast />
     </div>
