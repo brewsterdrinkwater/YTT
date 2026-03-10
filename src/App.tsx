@@ -6,6 +6,7 @@ import { EntriesProvider, useEntries } from './contexts/EntriesContext';
 import { LocationProvider } from './contexts/LocationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ListsProvider, useLists } from './contexts/ListsContext';
+import { InventoryProvider } from './contexts/InventoryContext';
 import { notificationService } from './services/notificationService';
 
 // Layout components
@@ -27,6 +28,7 @@ import SavedItemsPage from './components/saved/SavedItemsPage';
 import ShareTargetPage from './components/saved/ShareTargetPage';
 import SettingsPage from './components/settings/SettingsPage';
 import EventsPage from './components/events/EventsPage';
+import InventoryPage from './components/inventory/InventoryPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
 const SmartHomePage: React.FC = () => {
@@ -155,6 +157,7 @@ const AppContent: React.FC = () => {
           <Route path="/share" element={<ShareTargetPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -177,9 +180,11 @@ const App: React.FC = () => {
           <SettingsProvider>
             <EntriesProvider>
               <ListsProvider>
-                <LocationProvider>
-                  <AppContent />
-                </LocationProvider>
+                <InventoryProvider>
+                  <LocationProvider>
+                    <AppContent />
+                  </LocationProvider>
+                </InventoryProvider>
               </ListsProvider>
             </EntriesProvider>
           </SettingsProvider>
