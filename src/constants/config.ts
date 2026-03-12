@@ -25,6 +25,9 @@ export const STORAGE_KEYS = {
   // Events & Reminders
   EVENTS: 'ytt-events',
   REMINDERS: 'ytt-reminders',
+  // Inventory
+  INVENTORY_ITEMS: 'ytt-inventory-items',
+  INVENTORY_LOCATIONS: 'ytt-inventory-locations',
 } as const;
 
 export const LOCATIONS = [
