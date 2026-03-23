@@ -6,6 +6,8 @@ import { useApp } from '../../contexts/AppContext';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { Input } from '../common/Input';
+import { searchRestaurant } from '../../services/googleMapsService';
+import { API_CONFIG } from '../../constants/config';
 
 interface RestaurantListProps {
   isFullPage?: boolean;
@@ -42,6 +44,30 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(emptyForm);
   const [showArchived, setShowArchived] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const hasApiKey = !!API_CONFIG.GOOGLE_MAPS_API_KEY;
+
+  const handleLookup = async (f: typeof emptyForm, setF: (v: typeof emptyForm) => void) => {
+    if (!f.name.trim()) return;
+    setLookupLoading(true);
+    try {
+      const result = await searchRestaurant(f.name.trim(), f.neighborhood.trim() || undefined);
+      if (result) {
+        setF({
+          ...f,
+          neighborhood: result.neighborhood || f.neighborhood,
+          priceRange: result.priceLevel ?? f.priceRange,
+          cuisine: result.primaryCuisine || f.cuisine,
+          googleMapsUrl: result.googleMapsUri || f.googleMapsUrl,
+        });
+        showToast('Found on Google Maps — fields updated!', 'success');
+      } else {
+        showToast('Not found — fill in manually', 'info');
+      }
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   const active = restaurants.filter((r) => (r.status || 'active') === 'active');
   const archived = restaurants.filter((r) => r.status === 'archived');
@@ -131,14 +157,28 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
     submitLabel: string;
   }) => (
     <div className="space-y-3 p-4 bg-concrete rounded-lg border-2 border-black">
-      <Input
-        placeholder="Restaurant name *"
-        value={values.name}
-        onChange={(e) => onChange({ ...values, name: e.target.value })}
-        className="!mb-0"
-        autoFocus
-        onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-      />
+      {/* Name + optional Maps lookup */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Restaurant name *"
+          value={values.name}
+          onChange={(e) => onChange({ ...values, name: e.target.value })}
+          className="!mb-0 flex-1"
+          autoFocus
+          onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+        />
+        {hasApiKey && (
+          <button
+            type="button"
+            onClick={() => handleLookup(values, onChange)}
+            disabled={!values.name.trim() || lookupLoading}
+            className="px-3 py-2 text-xs font-semibold bg-blue-50 text-blue-600 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-40 shrink-0 whitespace-nowrap"
+            title="Look up on Google Maps to auto-fill details"
+          >
+            {lookupLoading ? '…' : '🗺 Look up'}
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-2">
         <Input

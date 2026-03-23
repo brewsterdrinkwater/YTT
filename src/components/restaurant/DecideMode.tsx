@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useLists } from '../../contexts/ListsContext';
 import { RestaurantItem } from '../../types/research';
 import { storageService } from '../../services/storageService';
 import { STORAGE_KEYS } from '../../constants/config';
+import { batchGetHours, PlaceHours } from '../../services/googleMapsService';
 
 interface Filters {
   neighborhoods: string[];
@@ -58,6 +59,19 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
   const [keptIds, setKeptIds] = useState<string[]>([]);
   const [winner, setWinner] = useState<RestaurantItem | null>(null);
   const [swiping, setSwiping] = useState<'left' | 'right' | null>(null);
+  // Live hours fetched from Google Maps (keyed by placeId)
+  const [liveHours, setLiveHours] = useState<Record<string, PlaceHours>>({});
+  const [hoursFetching, setHoursFetching] = useState(false);
+
+  // Merge live hours into a restaurant card for display
+  const withHours = useCallback(
+    (r: RestaurantItem): RestaurantItem => {
+      const h = r.googleMapsPlaceId ? liveHours[r.googleMapsPlaceId] : undefined;
+      if (!h) return r;
+      return { ...r, isOpenNow: h.isOpenNow, closingTime: h.closingTime };
+    },
+    [liveHours]
+  );
 
   const buildDeck = (f: Filters = filters): RestaurantItem[] => {
     let filtered = activeRestaurants;
@@ -92,6 +106,17 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
     setKeptIds([]);
     setWinner(null);
     setStep('swipe');
+
+    // Fetch live hours for all places that have a placeId
+    const placeIds = d
+      .map((r) => r.googleMapsPlaceId)
+      .filter(Boolean) as string[];
+    if (placeIds.length > 0) {
+      setHoursFetching(true);
+      batchGetHours(placeIds)
+        .then((hours) => setLiveHours((prev) => ({ ...prev, ...hours })))
+        .finally(() => setHoursFetching(false));
+    }
   };
 
   const resolveWinner = (kept: string[], d: RestaurantItem[]) => {
@@ -146,7 +171,9 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
 
   const priceLabel = (n: number) => '$'.repeat(n);
 
-  const card = deck[currentIndex];
+  // Merge live hours into the current/winner card
+  const card = deck[currentIndex] ? withHours(deck[currentIndex]) : undefined;
+  const displayWinner = winner ? withHours(winner) : null;
 
   return (
     <motion.div
@@ -178,10 +205,15 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
                 </svg>
               </button>
             )}
-            <h2 className="font-bold text-black text-base">
+            <h2 className="font-bold text-black text-base flex items-center gap-2">
               {step === 'filters' && 'What are you feeling?'}
               {step === 'swipe' && `${currentIndex + 1} of ${deck.length}`}
               {step === 'winner' && "Tonight you're going to…"}
+              {hoursFetching && step !== 'filters' && (
+                <span className="text-xs font-normal text-slate animate-pulse">
+                  fetching hours…
+                </span>
+              )}
             </h2>
           </div>
           <button onClick={onClose} className="text-slate hover:text-black p-1">
@@ -454,54 +486,54 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
         )}
 
         {/* ── WINNER ── */}
-        {step === 'winner' && winner && (
+        {step === 'winner' && displayWinner && (
           <div className="flex-1 overflow-y-auto p-6 text-center">
             <div className="text-5xl mb-3">🎉</div>
 
             {/* Status badges */}
             <div className="flex justify-center flex-wrap gap-2 mb-3">
-              {winner.isOpenNow === false && (
+              {displayWinner.isOpenNow === false && (
                 <span className="text-sm bg-red-100 text-red-600 px-3 py-1 rounded-full font-medium">
                   ⚠ Closed right now
                 </span>
               )}
-              {winner.isOpenNow === true && (
+              {displayWinner.isOpenNow === true && (
                 <span className="text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full font-medium">
-                  Open{winner.closingTime ? ` until ${winner.closingTime}` : ''}
+                  Open{displayWinner.closingTime ? ` until ${displayWinner.closingTime}` : ''}
                 </span>
               )}
-              {winner.requiresReservation && (
+              {displayWinner.requiresReservation && (
                 <span className="text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-medium">
                   📞 Call ahead
                 </span>
               )}
             </div>
 
-            <h2 className="text-3xl font-bold text-black mb-1">{winner.name}</h2>
+            <h2 className="text-3xl font-bold text-black mb-1">{displayWinner.name}</h2>
 
             <div className="flex justify-center flex-wrap gap-2 text-slate text-sm mb-4">
-              {winner.cuisine && (
-                <span className="bg-concrete px-2 py-0.5 rounded-full">{winner.cuisine}</span>
+              {displayWinner.cuisine && (
+                <span className="bg-concrete px-2 py-0.5 rounded-full">{displayWinner.cuisine}</span>
               )}
-              {winner.priceRange && (
+              {displayWinner.priceRange && (
                 <span className="bg-concrete px-2 py-0.5 rounded-full">
-                  {'$'.repeat(winner.priceRange)}
+                  {'$'.repeat(displayWinner.priceRange)}
                 </span>
               )}
-              {winner.neighborhood && (
-                <span className="bg-concrete px-2 py-0.5 rounded-full">{winner.neighborhood}</span>
+              {displayWinner.neighborhood && (
+                <span className="bg-concrete px-2 py-0.5 rounded-full">{displayWinner.neighborhood}</span>
               )}
             </div>
 
-            {winner.notes && (
-              <p className="text-sm text-charcoal italic mb-4">"{winner.notes}"</p>
+            {displayWinner.notes && (
+              <p className="text-sm text-charcoal italic mb-4">"{displayWinner.notes}"</p>
             )}
 
             {/* Action links */}
             <div className="flex flex-col gap-2 mb-5">
-              {winner.googleMapsUrl ? (
+              {displayWinner.googleMapsUrl ? (
                 <a
-                  href={winner.googleMapsUrl}
+                  href={displayWinner.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-3 bg-black text-white font-bold rounded-xl hover:bg-charcoal transition-colors"
@@ -510,7 +542,7 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
                 </a>
               ) : (
                 <a
-                  href={`https://maps.google.com/maps?q=${encodeURIComponent(winner.name + (winner.neighborhood ? ' ' + winner.neighborhood : ''))}`}
+                  href={`https://maps.google.com/maps?q=${encodeURIComponent(displayWinner.name + (displayWinner.neighborhood ? ' ' + displayWinner.neighborhood : ''))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-3 bg-black text-white font-bold rounded-xl hover:bg-charcoal transition-colors"
@@ -518,9 +550,9 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
                   Find on Maps
                 </a>
               )}
-              {winner.resyUrl && (
+              {displayWinner.resyUrl && (
                 <a
-                  href={winner.resyUrl}
+                  href={displayWinner.resyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors"
@@ -528,9 +560,9 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
                   Book on Resy
                 </a>
               )}
-              {winner.openTableUrl && (
+              {displayWinner.openTableUrl && (
                 <a
-                  href={winner.openTableUrl}
+                  href={displayWinner.openTableUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
@@ -542,7 +574,7 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
 
             <button
               onClick={() => {
-                markRestaurantVisited(winner.id);
+                markRestaurantVisited(displayWinner.id);
                 onClose();
               }}
               className="w-full py-3 border-2 border-black text-black font-medium rounded-xl hover:bg-concrete transition-colors mb-3"

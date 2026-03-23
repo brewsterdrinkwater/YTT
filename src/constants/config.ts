@@ -53,6 +53,8 @@ export const DASHBOARD_KEYWORDS = {
 
 export const API_CONFIG = {
   GOOGLE_MAPS_API_URL: 'https://maps.googleapis.com/maps/api',
+  GOOGLE_PLACES_API_URL: 'https://places.googleapis.com/v1',
+  GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   GOOGLE_CALENDAR_API_URL: 'https://www.googleapis.com/calendar/v3',
   GOOGLE_GEOLOCATION_API_URL: 'https://www.googleapis.com/geolocation/v1/geolocate',
   GMAIL_API_URL: 'https://gmail.googleapis.com/gmail/v1',
