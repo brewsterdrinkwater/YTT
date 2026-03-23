@@ -107,6 +107,11 @@ interface ListsContextType {
   updateRestaurant: (id: string, updates: Partial<RestaurantItem>) => void;
   removeRestaurant: (id: string) => void;
   toggleRestaurantVisited: (id: string) => void;
+  markRestaurantVisited: (id: string) => void;
+  // Weekly picks
+  weeklyPicks: string[];
+  weeklyPicksGeneratedAt: string | null;
+  generateWeeklyPicks: () => void;
 
   // Saved Items
   setSavedItems: (items: SavedItem[]) => void;
@@ -187,6 +192,12 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
   const [restaurantsList, setRestaurantsList] = useState<RestaurantItem[]>(() =>
     loadLocal(STORAGE_KEYS.RESTAURANTS_LIST)
+  );
+  const [weeklyPicks, setWeeklyPicks] = useState<string[]>(() =>
+    storageService.get<string[]>(STORAGE_KEYS.WEEKLY_RESTAURANT_PICKS) || []
+  );
+  const [weeklyPicksGeneratedAt, setWeeklyPicksGeneratedAt] = useState<string | null>(() =>
+    storageService.get<string>(STORAGE_KEYS.WEEKLY_PICKS_GENERATED_AT) || null
   );
   const [savedItems, setSavedItemsState] = useState<SavedItem[]>(() =>
     loadLocal(STORAGE_KEYS.SAVED_ITEMS)
@@ -624,12 +635,57 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const toggleRestaurantVisited = useCallback(
     (id: string) => {
+      const now = new Date().toISOString();
       persistRestaurants(
-        restaurantsList.map((r) => (r.id === id ? { ...r, visited: !r.visited } : r))
+        restaurantsList.map((r) =>
+          r.id === id
+            ? { ...r, visited: !r.visited, lastVisited: !r.visited ? now : r.lastVisited }
+            : r
+        )
       );
     },
     [restaurantsList, persistRestaurants]
   );
+
+  const markRestaurantVisited = useCallback(
+    (id: string) => {
+      const now = new Date().toISOString();
+      persistRestaurants(
+        restaurantsList.map((r) =>
+          r.id === id ? { ...r, visited: true, lastVisited: now } : r
+        )
+      );
+    },
+    [restaurantsList, persistRestaurants]
+  );
+
+  const generateWeeklyPicks = useCallback(() => {
+    const active = restaurantsList.filter((r) => (r.status || 'active') === 'active');
+    if (active.length === 0) return;
+    const now = new Date();
+    const scored = active.map((r) => {
+      let score = Math.random();
+      if (!r.lastVisited) {
+        score += 3;
+      } else {
+        const weeksSince =
+          (now.getTime() - new Date(r.lastVisited).getTime()) / (7 * 24 * 60 * 60 * 1000);
+        if (weeksSince > 4) score += 2;
+        else if (weeksSince > 2) score += 1;
+        else score -= 2;
+      }
+      return { r, score };
+    });
+    const picks = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(({ r }) => r.id);
+    const generatedAt = now.toISOString();
+    storageService.set(STORAGE_KEYS.WEEKLY_RESTAURANT_PICKS, picks);
+    storageService.set(STORAGE_KEYS.WEEKLY_PICKS_GENERATED_AT, generatedAt);
+    setWeeklyPicks(picks);
+    setWeeklyPicksGeneratedAt(generatedAt);
+  }, [restaurantsList]);
 
   // ---------------------------------------------------------------------------
   // Saved Items
@@ -982,6 +1038,10 @@ export const ListsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         updateRestaurant,
         removeRestaurant,
         toggleRestaurantVisited,
+        markRestaurantVisited,
+        weeklyPicks,
+        weeklyPicksGeneratedAt,
+        generateWeeklyPicks,
         setSavedItems,
         removeSavedItem,
         addSavedItemToList,

@@ -18,6 +18,9 @@ export const STORAGE_KEYS = {
   GROCERY_LIST: 'ytt-grocery-list',
   RECIPES_LIST: 'ytt-recipes-list',
   RESTAURANTS_LIST: 'ytt-restaurants-list',
+  WEEKLY_RESTAURANT_PICKS: 'ytt-weekly-restaurant-picks',
+  WEEKLY_PICKS_GENERATED_AT: 'ytt-weekly-picks-generated-at',
+  DECIDE_FILTERS: 'ytt-decide-filters',
   // Quick Share / Saved Items
   SAVED_ITEMS: 'ytt-saved-items',
   // Custom Lists
