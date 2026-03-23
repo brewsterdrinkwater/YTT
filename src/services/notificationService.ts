@@ -6,6 +6,9 @@
  */
 
 import { Reminder, SharedEvent } from '../types/events';
+import { storageService } from './storageService';
+
+const MONDAY_NOTIF_KEY = 'ytt-monday-picks-notified';
 
 class NotificationService {
   private checkInterval: ReturnType<typeof setInterval> | null = null;
@@ -125,18 +128,56 @@ class NotificationService {
     });
   }
 
+  /** Fire Monday morning "here are your picks for the week" notification */
+  checkMondayPicksNotification(getPickNames: () => string[]): void {
+    if (this.permission !== 'granted') return;
+
+    const now = new Date();
+    const isMonday = now.getDay() === 1;
+    const isMorning = now.getHours() >= 8 && now.getHours() < 11;
+    if (!isMonday || !isMorning) return;
+
+    // Only fire once per Monday
+    const lastFired = storageService.get<string>(MONDAY_NOTIF_KEY);
+    if (lastFired) {
+      const lastDate = new Date(lastFired);
+      if (
+        lastDate.getFullYear() === now.getFullYear() &&
+        lastDate.getMonth() === now.getMonth() &&
+        lastDate.getDate() === now.getDate()
+      ) {
+        return;
+      }
+    }
+
+    const picks = getPickNames();
+    if (picks.length === 0) return;
+
+    const body =
+      picks.length === 1
+        ? `Try ${picks[0]} this week!`
+        : `How about ${picks.slice(0, 3).join(', ')}${picks.length > 3 ? '…' : ''}?`;
+
+    this.sendNotification('🍽️ Where should you eat this week?', { body, tag: 'weekly-picks' });
+    storageService.set(MONDAY_NOTIF_KEY, now.toISOString());
+  }
+
   /** Start periodic reminder checking (every 60 seconds) */
   startChecking(
     getReminders: () => Reminder[],
     getEvents: () => SharedEvent[],
     onReminderSent: (reminderId: string) => void,
     onEventReminderSent: (eventId: string, reminderId: string) => void,
+    getMondayPickNames?: () => string[],
   ): void {
     this.stopChecking();
 
     const check = () => {
       this.checkReminders(getReminders(), onReminderSent);
       this.checkEventReminders(getEvents(), onEventReminderSent);
+      if (getMondayPickNames) {
+        this.checkMondayPicksNotification(getMondayPickNames);
+      }
     };
 
     // Check immediately

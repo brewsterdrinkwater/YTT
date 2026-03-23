@@ -149,12 +149,27 @@ export interface RestaurantItem {
   id: string;
   name: string;
   cuisine?: string;
-  location?: string;
+  neighborhood?: string;
+  city?: string;
+  location?: string; // legacy field, keep for backwards compat
   url?: string;
   notes?: string;
   visited: boolean;
+  lastVisited?: string; // ISO date of most recent visit
   rating?: number; // 1-5
+  priceRange?: 1 | 2 | 3 | 4; // $ $$ $$$ $$$$
   addedAt: string;
+  status?: 'active' | 'archived'; // defaults to active
+  source?: 'manual' | 'google_maps' | 'quick_share';
+  // Links
+  googleMapsUrl?: string;
+  googleMapsPlaceId?: string;
+  resyUrl?: string;
+  openTableUrl?: string;
+  // Hours (populated via Google Maps API when available)
+  isOpenNow?: boolean;
+  closingTime?: string; // e.g. "10:00 PM"
+  requiresReservation?: boolean;
 }
 
 // Web Scraper Types

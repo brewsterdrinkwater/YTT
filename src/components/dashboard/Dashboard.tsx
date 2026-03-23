@@ -14,6 +14,7 @@ import WeatherWidget from '../weather/WeatherWidget';
 import CalendarWidget from '../calendar/CalendarWidget';
 import MapsWidget from '../maps/MapsWidget';
 import SwipeableCards from '../common/SwipeableCards';
+import RestaurantDecideCard from '../restaurant/RestaurantDecideCard';
 
 // Import list components
 import {
@@ -371,6 +372,9 @@ const Dashboard: React.FC = () => {
 
       {/* ═══════════ MOBILE LAYOUT ═══════════ */}
       <div className="md:hidden space-y-6">
+        {/* Restaurant decision card */}
+        <RestaurantDecideCard />
+
         {/* Swipeable insight cards */}
         <SwipeableCards>
           <div className="px-1">
@@ -436,6 +440,7 @@ const Dashboard: React.FC = () => {
           <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
             Insights
           </h2>
+          <RestaurantDecideCard />
           <DiarySearchSection />
           <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
           <InsightCard title="Ideas" icon="💡" items={ideas} />

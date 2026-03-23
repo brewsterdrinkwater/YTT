@@ -18,6 +18,9 @@ export const STORAGE_KEYS = {
   GROCERY_LIST: 'ytt-grocery-list',
   RECIPES_LIST: 'ytt-recipes-list',
   RESTAURANTS_LIST: 'ytt-restaurants-list',
+  WEEKLY_RESTAURANT_PICKS: 'ytt-weekly-restaurant-picks',
+  WEEKLY_PICKS_GENERATED_AT: 'ytt-weekly-picks-generated-at',
+  DECIDE_FILTERS: 'ytt-decide-filters',
   // Quick Share / Saved Items
   SAVED_ITEMS: 'ytt-saved-items',
   // Custom Lists
@@ -50,6 +53,8 @@ export const DASHBOARD_KEYWORDS = {
 
 export const API_CONFIG = {
   GOOGLE_MAPS_API_URL: 'https://maps.googleapis.com/maps/api',
+  GOOGLE_PLACES_API_URL: 'https://places.googleapis.com/v1',
+  GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   GOOGLE_CALENDAR_API_URL: 'https://www.googleapis.com/calendar/v3',
   GOOGLE_GEOLOCATION_API_URL: 'https://www.googleapis.com/geolocation/v1/geolocate',
   GMAIL_API_URL: 'https://gmail.googleapis.com/gmail/v1',

@@ -73,7 +73,7 @@ const SmartHomePage: React.FC = () => {
 // Notification initializer — runs inside ListsProvider
 const NotificationInit: React.FC = () => {
   const { settings } = useSettings();
-  const { reminders, events, markReminderSent, updateEvent } = useLists();
+  const { reminders, events, markReminderSent, updateEvent, weeklyPicks, restaurantsList } = useLists();
 
   useEffect(() => {
     if (!settings.notifications.enabled) {
@@ -99,10 +99,14 @@ const NotificationInit: React.FC = () => {
           });
         }
       },
+      () =>
+        weeklyPicks
+          .map((id) => restaurantsList.find((r) => r.id === id)?.name)
+          .filter(Boolean) as string[],
     );
 
     return () => notificationService.stopChecking();
-  }, [settings.notifications.enabled, reminders, events, markReminderSent, updateEvent]);
+  }, [settings.notifications.enabled, reminders, events, markReminderSent, updateEvent, weeklyPicks, restaurantsList]);
 
   return null;
 };
