@@ -17,8 +17,11 @@ interface RestaurantListProps {
 const PRICE_OPTIONS = [1, 2, 3, 4] as const;
 const PRICE_LABEL = (n: number) => '$'.repeat(n);
 
+type CityOption = 'nashville' | 'nyc' | '';
+
 const emptyForm = {
   name: '',
+  city: '' as CityOption,
   cuisine: '',
   neighborhood: '',
   priceRange: '' as '' | 1 | 2 | 3 | 4,
@@ -78,6 +81,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
     if (!form.name.trim()) return;
     addRestaurant({
       name: form.name.trim(),
+      city: form.city || undefined,
       cuisine: form.cuisine.trim() || undefined,
       neighborhood: form.neighborhood.trim() || undefined,
       priceRange: form.priceRange || undefined,
@@ -100,6 +104,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
     setEditingId(r.id);
     setEditForm({
       name: r.name,
+      city: (r.city as CityOption) || '',
       cuisine: r.cuisine || '',
       neighborhood: r.neighborhood || '',
       priceRange: r.priceRange || '',
@@ -115,6 +120,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
     if (!editingId || !editForm.name.trim()) return;
     updateRestaurant(editingId, {
       name: editForm.name.trim(),
+      city: editForm.city || undefined,
       cuisine: editForm.cuisine.trim() || undefined,
       neighborhood: editForm.neighborhood.trim() || undefined,
       priceRange: editForm.priceRange || undefined,
@@ -178,6 +184,29 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
             {lookupLoading ? '…' : '🗺 Look up'}
           </button>
         )}
+      </div>
+
+      {/* City */}
+      <div>
+        <p className="text-xs text-slate mb-1.5 font-medium">City</p>
+        <div className="flex gap-2">
+          {([['nashville', '🎸 Nashville'], ['nyc', '🗽 NYC'], ['', 'Other']] as [CityOption, string][]).map(
+            ([val, label]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => onChange({ ...values, city: val })}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold border-2 transition-colors ${
+                  values.city === val
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-black hover:bg-concrete'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -335,6 +364,16 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ isFullPage = false, onB
               {r.name}
             </p>
             <div className="flex flex-wrap gap-1.5 mt-1">
+              {r.city === 'nashville' && (
+                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  🎸 Nashville
+                </span>
+              )}
+              {r.city === 'nyc' && (
+                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                  🗽 NYC
+                </span>
+              )}
               {r.cuisine && (
                 <span className="text-xs bg-concrete text-charcoal px-2 py-0.5 rounded-full">
                   {r.cuisine}

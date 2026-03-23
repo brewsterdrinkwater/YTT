@@ -1,12 +1,16 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useLists } from '../../contexts/ListsContext';
+import { useEntries } from '../../contexts/EntriesContext';
 import { RestaurantItem } from '../../types/research';
 import { storageService } from '../../services/storageService';
 import { STORAGE_KEYS } from '../../constants/config';
 import { batchGetHours, PlaceHours } from '../../services/googleMapsService';
 
+type CityFilter = 'nashville' | 'nyc' | 'all';
+
 interface Filters {
+  city: CityFilter;
   neighborhoods: string[];
   priceRanges: number[];
   cuisines: string[];
@@ -14,10 +18,17 @@ interface Filters {
 }
 
 const DEFAULT_FILTERS: Filters = {
+  city: 'all',
   neighborhoods: [],
   priceRanges: [],
   cuisines: [],
   notVisitedWeeks: 0,
+};
+
+const CITY_LABELS: Record<CityFilter, string> = {
+  nashville: 'Nashville',
+  nyc: 'NYC',
+  all: 'All',
 };
 
 type Step = 'filters' | 'swipe' | 'winner';
@@ -26,27 +37,64 @@ interface Props {
   onClose: () => void;
 }
 
+/** Normalise entry location string → city key */
+const toCity = (loc?: string): CityFilter | null => {
+  if (!loc) return null;
+  const l = loc.toLowerCase().trim();
+  if (l === 'nashville') return 'nashville';
+  if (l === 'nyc' || l === 'new york' || l === 'new york city') return 'nyc';
+  return null;
+};
+
 const DecideMode: React.FC<Props> = ({ onClose }) => {
   const { restaurantsList, markRestaurantVisited } = useLists();
+  const { entries } = useEntries();
+
+  // Detect current city from the most recent diary entry
+  const detectedCity = useMemo((): CityFilter => {
+    const sorted = [...entries].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const city = toCity(sorted[0]?.location);
+    return city || 'all';
+  }, [entries]);
 
   const activeRestaurants = useMemo(
     () => restaurantsList.filter((r) => (r.status || 'active') === 'active'),
     [restaurantsList]
   );
 
+  // Compute neighborhoods/cuisines scoped to the currently selected city filter
+  const cityRestaurants = useMemo(
+    () =>
+      filters.city === 'all'
+        ? activeRestaurants
+        : activeRestaurants.filter((r) => !r.city || r.city.toLowerCase() === filters.city),
+    [activeRestaurants, filters.city]
+  );
+
   const allNeighborhoods = useMemo(
-    () => [...new Set(activeRestaurants.map((r) => r.neighborhood).filter(Boolean))] as string[],
-    [activeRestaurants]
+    () => [...new Set(cityRestaurants.map((r) => r.neighborhood).filter(Boolean))] as string[],
+    [cityRestaurants]
   );
   const allCuisines = useMemo(
-    () => [...new Set(activeRestaurants.map((r) => r.cuisine).filter(Boolean))] as string[],
-    [activeRestaurants]
+    () => [...new Set(cityRestaurants.map((r) => r.cuisine).filter(Boolean))] as string[],
+    [cityRestaurants]
   );
 
   const [filters, setFilters] = useState<Filters>(() => {
     const saved = storageService.get<Filters>(STORAGE_KEYS.DECIDE_FILTERS);
     return saved || DEFAULT_FILTERS;
   });
+
+  // On first open, snap city to detected location if filter hasn't been manually set
+  useEffect(() => {
+    if (filters.city === 'all' && detectedCity !== 'all') {
+      setFilters((prev) => ({ ...prev, city: detectedCity }));
+    }
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist filters on change
   useEffect(() => {
@@ -75,6 +123,11 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
 
   const buildDeck = (f: Filters = filters): RestaurantItem[] => {
     let filtered = activeRestaurants;
+
+    // City filter — restaurants with no city set are shown everywhere
+    if (f.city !== 'all') {
+      filtered = filtered.filter((r) => !r.city || r.city.toLowerCase() === f.city);
+    }
 
     if (f.neighborhoods.length > 0) {
       filtered = filtered.filter(
@@ -207,7 +260,16 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
             )}
             <h2 className="font-bold text-black text-base flex items-center gap-2">
               {step === 'filters' && 'What are you feeling?'}
-              {step === 'swipe' && `${currentIndex + 1} of ${deck.length}`}
+              {step === 'swipe' && (
+                <>
+                  {currentIndex + 1} of {deck.length}
+                  {filters.city !== 'all' && (
+                    <span className="ml-2 text-xs font-normal text-slate">
+                      {CITY_LABELS[filters.city]}
+                    </span>
+                  )}
+                </>
+              )}
               {step === 'winner' && "Tonight you're going to…"}
               {hoursFetching && step !== 'filters' && (
                 <span className="text-xs font-normal text-slate animate-pulse">
@@ -226,6 +288,31 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
         {/* ── FILTERS ── */}
         {step === 'filters' && (
           <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            {/* City toggle — most prominent, top of screen */}
+            <div>
+              <p className="text-xs font-bold text-slate uppercase tracking-wider mb-2">
+                Where are you?
+              </p>
+              <div className="flex gap-2">
+                {(['nashville', 'nyc', 'all'] as CityFilter[]).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setFilters((prev) => ({ ...prev, city: c, neighborhoods: [] }))}
+                    className={`flex-1 py-3 rounded-xl font-bold border-2 transition-colors text-sm ${
+                      filters.city === c
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-black border-black hover:bg-concrete'
+                    }`}
+                  >
+                    {c === 'nashville' ? '🎸 Nashville' : c === 'nyc' ? '🗽 NYC' : 'All'}
+                    {c === detectedCity && c !== 'all' && (
+                      <span className="block text-xs font-normal opacity-70">you're here</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {allNeighborhoods.length > 0 && (
               <div>
                 <p className="text-xs font-bold text-slate uppercase tracking-wider mb-2">

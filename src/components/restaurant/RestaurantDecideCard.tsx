@@ -102,7 +102,9 @@ const RestaurantDecideCard: React.FC = () => {
                 <li key={r.id} className="flex items-center justify-between px-4 py-2.5">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-black truncate">{r.name}</p>
-                    <div className="flex gap-2 text-xs text-slate mt-0.5">
+                    <div className="flex gap-2 text-xs text-slate mt-0.5 flex-wrap">
+                      {r.city === 'nashville' && <span className="text-blue-600">🎸 Nashville</span>}
+                      {r.city === 'nyc' && <span className="text-purple-600">🗽 NYC</span>}
                       {r.cuisine && <span>{r.cuisine}</span>}
                       {r.priceRange && <span>{'$'.repeat(r.priceRange)}</span>}
                       {r.neighborhood && <span>{r.neighborhood}</span>}
