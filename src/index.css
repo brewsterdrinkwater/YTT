@@ -1,52 +1,94 @@
 @import "tailwindcss";
 
 /* ============================================
-   WALT-TAB DESIGN SYSTEM
-   Brutalist minimalism meets luxury simplicity
+   WALT-TAB DESIGN SYSTEM v2
+   Warm, vibrant, mobile-first
    ============================================ */
 
 @theme {
-  /* Walt-tab Brand Colors */
-  --color-walt-black: #000000;
-  --color-walt-white: #FFFFFF;
-  --color-tab-red: #FF0000;
-  --color-memory-blue: #0055FF;
-  --color-concrete: #F5F5F5;
-  --color-steel: #E0E0E0;
-  --color-charcoal: #333333;
-  --color-slate: #666666;
-  --color-success: #00CC66;
-  --color-warning: #FFAA00;
-  --color-danger: #FF3333;
-  --color-info: #0055FF;
+  /* Brand Colors - Warm & Vibrant */
+  --color-brand-coral: #FF6B6B;
+  --color-brand-peach: #FFEAA7;
+  --color-brand-mint: #00B894;
+  --color-brand-sky: #74B9FF;
+  --color-brand-lavender: #A29BFE;
+  --color-brand-rose: #FD79A8;
+  --color-brand-sunset: #E17055;
+  --color-brand-ocean: #0984E3;
 
-  /* Legacy mappings */
-  --color-primary: #000000;
-  --color-primary-dark: #000000;
-  --color-secondary: #666666;
+  /* Neutrals - Warm tones */
+  --color-warm-50: #FFFBF5;
+  --color-warm-100: #FFF5EB;
+  --color-warm-200: #FFE8D6;
+  --color-warm-300: #DDBEA9;
+  --color-warm-400: #B7A99A;
+  --color-warm-500: #8A817C;
+  --color-warm-600: #6B6057;
+  --color-warm-700: #4A4238;
+  --color-warm-800: #2D2520;
+  --color-warm-900: #1A1512;
+
+  /* System Colors */
+  --color-success: #00B894;
+  --color-warning: #FDCB6E;
+  --color-danger: #FF6B6B;
+  --color-info: #74B9FF;
+
+  /* Legacy mappings for compatibility */
+  --color-walt-black: #2D2520;
+  --color-walt-white: #FFFBF5;
+  --color-tab-red: #FF6B6B;
+  --color-tab-orange: #E17055;
+  --color-tab-blue: #0984E3;
+  --color-memory-blue: #74B9FF;
+  --color-concrete: #FFF5EB;
+  --color-steel: #FFE8D6;
+  --color-charcoal: #4A4238;
+  --color-slate: #8A817C;
+  --color-primary: #FF6B6B;
+  --color-primary-dark: #E17055;
+  --color-secondary: #8A817C;
 }
 
 :root {
-  /* Walt-tab Brand Colors */
-  --walt-black: #000000;
-  --walt-white: #FFFFFF;
-  --tab-red: #FF0000;
-  --memory-blue: #0055FF;
-  --concrete: #F5F5F5;
-  --steel: #E0E0E0;
-  --charcoal: #333333;
-  --slate: #666666;
+  /* Brand Colors */
+  --brand-coral: #FF6B6B;
+  --brand-peach: #FFEAA7;
+  --brand-mint: #00B894;
+  --brand-sky: #74B9FF;
+  --brand-lavender: #A29BFE;
+  --brand-rose: #FD79A8;
+  --brand-sunset: #E17055;
+  --brand-ocean: #0984E3;
 
-  /* System Colors */
-  --success: #00CC66;
-  --warning: #FFAA00;
-  --danger: #FF3333;
-  --info: #0055FF;
+  /* Warm Neutrals */
+  --warm-50: #FFFBF5;
+  --warm-100: #FFF5EB;
+  --warm-200: #FFE8D6;
+  --warm-300: #DDBEA9;
+  --warm-400: #B7A99A;
+  --warm-500: #8A817C;
+  --warm-600: #6B6057;
+  --warm-700: #4A4238;
+  --warm-800: #2D2520;
+  --warm-900: #1A1512;
 
-  /* Legacy support */
-  --primary: #000000;
-  --primary-dark: #000000;
-  --secondary: #666666;
+  /* Legacy mappings */
+  --walt-black: #2D2520;
+  --walt-white: #FFFBF5;
+  --tab-red: #FF6B6B;
+  --memory-blue: #74B9FF;
+  --concrete: #FFF5EB;
+  --steel: #FFE8D6;
+  --charcoal: #4A4238;
+  --slate: #8A817C;
+  --success: #00B894;
+  --warning: #FDCB6E;
+  --danger: #FF6B6B;
+  --info: #74B9FF;
+  --primary: #FF6B6B;
+  --primary-dark: #E17055;
+  --secondary: #8A817C;
 
   /* Spacing (8px grid) */
   --space-xs: 4px;
@@ -59,30 +101,34 @@
   --space-4xl: 96px;
 
   /* Typography */
-  --font-sans: 'Futura', 'Century Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --text-hero: 48px;
-  --text-h1: 36px;
-  --text-h2: 28px;
-  --text-h3: 20px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --text-hero: 40px;
+  --text-h1: 32px;
+  --text-h2: 24px;
+  --text-h3: 18px;
   --text-body: 16px;
   --text-small: 14px;
   --text-tiny: 12px;
 
-  /* Border Radius */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  /* Border Radius - More rounded for friendlier feel */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-subtle: 0 1px 3px rgba(0,0,0,0.05);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  /* Shadows - Softer, warmer */
+  --shadow-subtle: 0 1px 3px rgba(45,37,32,0.04);
+  --shadow-sm: 0 2px 8px rgba(45,37,32,0.06);
+  --shadow-md: 0 4px 16px rgba(45,37,32,0.08);
+  --shadow-lg: 0 8px 32px rgba(45,37,32,0.12);
 
   /* Transitions */
   --transition-fast: 150ms;
-  --transition-normal: 200ms;
-  --transition-slow: 300ms;
+  --transition-normal: 250ms;
+  --transition-slow: 350ms;
   --ease-default: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 * {
@@ -94,14 +140,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--walt-white);
-  color: var(--walt-black);
+  background-color: var(--warm-50);
+  color: var(--warm-800);
   font-size: var(--text-body);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -111,71 +158,62 @@ body {
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
-  font-weight: 600;
-  color: var(--walt-black);
+  font-weight: 700;
+  color: var(--warm-800);
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
-h1 { font-size: var(--text-h1); line-height: 1.2; font-weight: 700; }
+h1 { font-size: var(--text-h1); line-height: 1.2; }
 h2 { font-size: var(--text-h2); line-height: 1.3; }
 h3 { font-size: var(--text-h3); line-height: 1.4; }
 
 p {
   margin: 0;
-  color: var(--charcoal);
+  color: var(--warm-600);
 }
 
 a {
-  color: var(--walt-black);
+  color: var(--brand-ocean);
   text-decoration: none;
   transition: color var(--transition-fast) var(--ease-default);
 }
 
 a:hover {
-  color: var(--tab-red);
+  color: var(--brand-coral);
 }
 
 /* ============================================
    ANIMATIONS
    ============================================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .animate-fadeIn {
@@ -190,8 +228,14 @@ a:hover {
   animation: slideInRight var(--transition-slow) var(--ease-default);
 }
 
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--warm-100) 25%, var(--warm-200) 50%, var(--warm-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 /* ============================================
-   SAFE AREAS
+   SAFE AREAS (iOS notch/dynamic island)
    ============================================ */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
@@ -202,7 +246,7 @@ a:hover {
 }
 
 /* ============================================
-   FORM ELEMENTS - Brutalist Style
+   FORM ELEMENTS - Warm, rounded
    ============================================ */
 input[type="text"],
 input[type="email"],
@@ -215,11 +259,11 @@ textarea,
 select {
   font-family: var(--font-sans);
   font-size: var(--text-body);
-  padding: 12px 16px;
-  border: 2px solid var(--steel);
-  border-radius: var(--radius-sm);
-  background: var(--walt-white);
-  color: var(--walt-black);
+  padding: 14px 18px;
+  border: 2px solid var(--warm-200);
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--warm-800);
   transition: border-color var(--transition-fast) var(--ease-default),
               box-shadow var(--transition-fast) var(--ease-default);
   outline: none;
@@ -229,13 +273,13 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--walt-black);
-  box-shadow: none;
+  border-color: var(--brand-coral);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--slate);
+  color: var(--warm-400);
 }
 
 /* Prevent iOS zoom on input focus */
@@ -245,56 +289,58 @@ textarea::placeholder {
   }
 }
 
-/* Range slider - minimal style */
+/* Range slider */
 input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--steel);
+  height: 6px;
+  border-radius: 3px;
+  background: var(--warm-200);
   outline: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--walt-black);
-  border: 2px solid var(--walt-white);
+  background: var(--brand-coral);
+  border: 3px solid white;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast) var(--ease-default);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast) var(--ease-bounce);
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--walt-black);
-  border: 2px solid var(--walt-white);
+  background: var(--brand-coral);
+  border: 3px solid white;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 /* Checkbox and Radio */
 input[type="checkbox"],
 input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--charcoal);
-  background: var(--walt-white);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--warm-300);
+  border-radius: 6px;
+  background: white;
   cursor: pointer;
+  accent-color: var(--brand-coral);
 }
 
 input[type="checkbox"]:checked,
 input[type="radio"]:checked {
-  background: var(--walt-black);
-  border-color: var(--walt-black);
+  background: var(--brand-coral);
+  border-color: var(--brand-coral);
 }
 
 /* ============================================
@@ -321,7 +367,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--walt-black);
+  outline: 2px solid var(--brand-coral);
   outline-offset: 2px;
 }
 
@@ -329,28 +375,16 @@ select:focus-visible {
    CARD ANIMATIONS
    ============================================ */
 @keyframes swipeLeft {
-  to {
-    transform: translateX(-120%) rotate(-10deg);
-    opacity: 0;
-  }
+  to { transform: translateX(-120%) rotate(-10deg); opacity: 0; }
 }
 
 @keyframes swipeRight {
-  to {
-    transform: translateX(120%) rotate(10deg);
-    opacity: 0;
-  }
+  to { transform: translateX(120%) rotate(10deg); opacity: 0; }
 }
 
 @keyframes cardEnter {
-  from {
-    transform: scale(0.98) translateY(8px);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
+  from { transform: scale(0.95) translateY(12px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .swipe-left { animation: swipeLeft var(--transition-slow) var(--ease-default) forwards; }
@@ -361,41 +395,41 @@ select:focus-visible {
    SCROLLBAR STYLING
    ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--concrete);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--steel);
-  border-radius: 4px;
+  background: var(--warm-300);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--slate);
+  background: var(--warm-400);
 }
 
 /* ============================================
    SELECTION STYLING
    ============================================ */
 ::selection {
-  background: var(--walt-black);
-  color: var(--walt-white);
+  background: rgba(255, 107, 107, 0.2);
+  color: var(--warm-900);
 }
 
 /* ============================================
    LOADING SPINNER
    ============================================ */
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--steel);
-  border-top-color: var(--walt-black);
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--warm-200);
+  border-top-color: var(--brand-coral);
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
@@ -407,10 +441,10 @@ select:focus-visible {
    ============================================ */
 @media (max-width: 768px) {
   :root {
-    --text-hero: 36px;
-    --text-h1: 28px;
-    --text-h2: 24px;
-    --text-h3: 18px;
+    --text-hero: 32px;
+    --text-h1: 26px;
+    --text-h2: 22px;
+    --text-h3: 17px;
   }
 
   h1 { font-size: var(--text-h1); }
@@ -446,25 +480,46 @@ select:focus-visible {
    PAGE TRANSITIONS
    ============================================ */
 @keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .page-enter {
-  animation: pageEnter 0.3s var(--ease-default);
+  animation: pageEnter 0.35s var(--ease-default);
 }
 
 /* ============================================
    GLASSMORPHISM UTILITY
    ============================================ */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 251, 245, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ============================================
+   GRADIENT UTILITIES
+   ============================================ */
+.gradient-coral {
+  background: linear-gradient(135deg, #FF6B6B 0%, #E17055 100%);
+}
+
+.gradient-ocean {
+  background: linear-gradient(135deg, #74B9FF 0%, #0984E3 100%);
+}
+
+.gradient-mint {
+  background: linear-gradient(135deg, #55EFC4 0%, #00B894 100%);
+}
+
+.gradient-lavender {
+  background: linear-gradient(135deg, #D4A5FF 0%, #A29BFE 100%);
+}
+
+.gradient-sunset {
+  background: linear-gradient(135deg, #FFEAA7 0%, #E17055 100%);
+}
+
+.gradient-warm {
+  background: linear-gradient(135deg, #FFFBF5 0%, #FFE8D6 100%);
 }

@@ -47,7 +47,6 @@ const RestaurantDecideCard: React.FC = () => {
     [weeklyPicks, restaurantsList]
   );
 
-  // Don't render until user has restaurants
   if (activeCount === 0) return null;
 
   const picksToShow = picksExpanded ? weeklyRestaurants : weeklyRestaurants.slice(0, 3);
@@ -57,22 +56,25 @@ const RestaurantDecideCard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white border-2 border-black rounded-xl overflow-hidden"
+        className="bg-white border border-warm-200 rounded-2xl overflow-hidden shadow-sm"
       >
         {/* Header row */}
         <div className="flex items-center gap-3 p-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-sunset to-brand-coral rounded-xl flex items-center justify-center">
+            <span className="text-white text-lg">🍽️</span>
+          </div>
           <div className="flex-1">
-            <h3 className="font-bold text-black text-base leading-tight">
+            <h3 className="font-bold text-warm-800 text-base leading-tight">
               Where should we eat?
             </h3>
-            <p className="text-xs text-slate mt-0.5">
+            <p className="text-xs text-warm-500 mt-0.5">
               {activeCount} place{activeCount !== 1 ? 's' : ''} in your list
             </p>
           </div>
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowDecide(true)}
-            className="px-5 py-2.5 bg-black text-white font-bold rounded-xl hover:bg-charcoal transition-colors text-sm shrink-0"
+            className="px-5 py-2.5 gradient-coral text-white font-bold rounded-xl hover:opacity-90 transition-all text-sm shrink-0 shadow-glow-coral"
           >
             Decide
           </motion.button>
@@ -80,38 +82,38 @@ const RestaurantDecideCard: React.FC = () => {
 
         {/* Weekly picks */}
         {weeklyRestaurants.length > 0 && (
-          <div className="border-t border-concrete">
-            <div className="flex items-center justify-between px-4 py-2">
-              <p className="text-xs font-bold text-slate uppercase tracking-wider">
+          <div className="border-t border-warm-100">
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <p className="text-xs font-bold text-warm-500 uppercase tracking-wider">
                 This week's picks
               </p>
               <button
                 onClick={generateWeeklyPicks}
-                className="text-xs text-slate hover:text-black flex items-center gap-1"
+                className="text-xs text-warm-400 hover:text-brand-ocean flex items-center gap-1 transition-colors"
                 title="Refresh suggestions"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
               </button>
             </div>
 
-            <ul className="divide-y divide-concrete/60">
+            <ul className="divide-y divide-warm-50">
               {picksToShow.map((r) => (
-                <li key={r.id} className="flex items-center justify-between px-4 py-2.5">
+                <li key={r.id} className="flex items-center justify-between px-4 py-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-black truncate">{r.name}</p>
-                    <div className="flex gap-2 text-xs text-slate mt-0.5 flex-wrap">
-                      {r.city === 'nashville' && <span className="text-blue-600">🎸 Nashville</span>}
-                      {r.city === 'nyc' && <span className="text-purple-600">🗽 NYC</span>}
+                    <p className="text-sm font-semibold text-warm-800 truncate">{r.name}</p>
+                    <div className="flex gap-2 text-xs text-warm-500 mt-0.5 flex-wrap">
+                      {r.city === 'nashville' && <span className="text-brand-ocean">🎸 Nashville</span>}
+                      {r.city === 'nyc' && <span className="text-brand-lavender">🗽 NYC</span>}
                       {r.cuisine && <span>{r.cuisine}</span>}
                       {r.priceRange && <span>{'$'.repeat(r.priceRange)}</span>}
                       {r.neighborhood && <span>{r.neighborhood}</span>}
                     </div>
                   </div>
                   {!r.lastVisited && (
-                    <span className="ml-2 shrink-0 text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
+                    <span className="ml-2 shrink-0 text-xs bg-brand-coral/10 text-brand-coral px-2.5 py-0.5 rounded-full font-semibold">
                       New
                     </span>
                   )}
@@ -122,7 +124,7 @@ const RestaurantDecideCard: React.FC = () => {
             {weeklyRestaurants.length > 3 && (
               <button
                 onClick={() => setPicksExpanded((v) => !v)}
-                className="w-full text-xs text-slate hover:text-black py-2 border-t border-concrete/60"
+                className="w-full text-xs text-warm-400 hover:text-warm-700 py-2.5 border-t border-warm-100 transition-colors"
               >
                 {picksExpanded
                   ? 'Show less'

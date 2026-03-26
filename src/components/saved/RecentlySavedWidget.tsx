@@ -40,12 +40,14 @@ const RecentlySavedWidget: React.FC = () => {
   }
 
   return (
-    <div className="border-2 border-black rounded-sm p-4 bg-white">
+    <div className="bg-white border border-warm-200 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-black">Recently Saved</h3>
+        <h3 className="font-bold text-warm-800 flex items-center gap-2">
+          <span className="text-lg">📥</span> Recently Saved
+        </h3>
         <button
           onClick={() => navigate('/saved')}
-          className="text-xs text-tab-blue hover:underline font-semibold"
+          className="text-xs text-brand-ocean hover:underline font-semibold"
         >
           View all →
         </button>
@@ -54,36 +56,36 @@ const RecentlySavedWidget: React.FC = () => {
       {needsReviewCount > 0 && (
         <button
           onClick={() => navigate('/saved')}
-          className="w-full mb-3 p-2 bg-amber-50 border-2 border-amber-300 rounded-sm text-sm text-amber-700 font-semibold hover:bg-amber-100 transition-colors"
+          className="w-full mb-3 p-2.5 bg-brand-sunset/5 border border-brand-sunset/20 rounded-xl text-sm text-brand-sunset font-semibold hover:bg-brand-sunset/10 transition-colors"
         >
           {needsReviewCount} item{needsReviewCount > 1 ? 's' : ''} need review
         </button>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex items-center gap-2 p-2 rounded-sm hover:bg-concrete transition-colors cursor-pointer"
+            className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-warm-50 transition-colors cursor-pointer"
             onClick={() => navigate('/saved')}
           >
             <span className="text-lg">{CATEGORY_ICONS[item.category] || '📦'}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{item.title}</p>
-              <p className="text-xs text-slate">
+              <p className="text-sm font-medium text-warm-800 truncate">{item.title}</p>
+              <p className="text-xs text-warm-500">
                 {item.source} • {formatDate(item.savedAt)}
               </p>
             </div>
             {item.addedToLists.length > 0 && (
-              <span className="text-xs text-green-600">✓</span>
+              <span className="text-xs text-brand-mint font-semibold">✓</span>
             )}
           </div>
         ))}
       </div>
 
       <button
-        onClick={() => navigate('/tools')}
-        className="w-full mt-3 p-2 border-2 border-black rounded-sm text-sm font-semibold hover:bg-black hover:text-white transition-colors"
+        onClick={() => navigate('/share')}
+        className="w-full mt-3 p-2.5 gradient-coral text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-glow-coral"
       >
         + Quick Share
       </button>

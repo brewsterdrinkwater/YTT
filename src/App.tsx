@@ -27,7 +27,6 @@ import ListPage from './components/lists/ListPage';
 import SavedItemsPage from './components/saved/SavedItemsPage';
 import ShareTargetPage from './components/saved/ShareTargetPage';
 import SettingsPage from './components/settings/SettingsPage';
-import EventsPage from './components/events/EventsPage';
 import InventoryPage from './components/inventory/InventoryPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
@@ -56,7 +55,7 @@ const SmartHomePage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent"></div>
+        <div className="w-10 h-10 border-3 border-warm-200 border-t-brand-coral rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -124,10 +123,12 @@ const AppContent: React.FC = () => {
   // Show loading while checking auth or loading settings from Supabase
   if (loading || settingsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-warm-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-black border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-charcoal font-medium">Loading...</p>
+          <div className="w-14 h-14 gradient-coral rounded-2xl flex items-center justify-center mx-auto shadow-glow-coral animate-pulse">
+            <span className="text-white text-2xl font-bold">W</span>
+          </div>
+          <p className="mt-4 text-warm-500 font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -144,11 +145,11 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-concrete flex flex-col">
+    <div className="min-h-screen min-h-dvh bg-warm-50 flex flex-col">
       <Header />
       <Navigation />
 
-      <main className="flex-1 pb-24 md:pb-6 w-full">
+      <main className="flex-1 pb-28 md:pb-6 w-full">
         <Routes>
           <Route path="/" element={<SmartHomePage />} />
           <Route path="/entry" element={<EntryForm />} />
@@ -160,7 +161,6 @@ const AppContent: React.FC = () => {
           <Route path="/saved" element={<SavedItemsPage />} />
           <Route path="/share" element={<ShareTargetPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/events" element={<EventsPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
