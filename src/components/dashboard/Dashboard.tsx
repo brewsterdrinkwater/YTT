@@ -374,53 +374,70 @@ const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6 max-w-7xl mx-auto"
+        className="mb-6 max-w-5xl mx-auto"
       >
         <h1 className="text-h2 font-bold text-warm-800">Dashboard</h1>
         <p className="text-small text-warm-500 mt-1">Your insights and lists at a glance</p>
       </motion.div>
 
-      {/* ═══════════ MOBILE LAYOUT ═══════════ */}
-      <div className="md:hidden space-y-5">
-        {/* Restaurant decision card */}
-        <RestaurantDecideCard />
+      {/* ═══════════ 2-COLUMN LAYOUT (mobile + desktop) ═══════════ */}
+      <div className="max-w-5xl mx-auto">
+        {/* Restaurant decision card - full width */}
+        <div className="mb-5">
+          <RestaurantDecideCard />
+        </div>
 
-        {/* Swipeable insight cards */}
-        <SwipeableCards>
-          <div className="px-1">
+        {/* 2-column grid */}
+        <div className="grid grid-cols-2 gap-3 md:gap-5">
+          {/* Weather */}
+          <div className="col-span-2 sm:col-span-1">
             <WeatherWidget />
           </div>
-          <div className="px-1">
+
+          {/* Location counter */}
+          <div className="col-span-2 sm:col-span-1">
             <LocationDaysCounter />
           </div>
+
+          {/* Calendar */}
+          <div className="col-span-2 sm:col-span-1">
+            <CalendarWidget />
+          </div>
+
+          {/* Maps */}
+          <div className="col-span-2 sm:col-span-1">
+            <MapsWidget />
+          </div>
+
+          {/* Recently saved */}
+          <div className="col-span-2 sm:col-span-1">
+            <RecentlySavedWidget />
+          </div>
+
+          {/* Search */}
+          <div className="col-span-2 sm:col-span-1">
+            <DiarySearchSection />
+          </div>
+
+          {/* Insights */}
           {workouts.length > 0 && (
-            <div className="px-1">
+            <div className="col-span-2 sm:col-span-1">
               <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} accentColor="bg-brand-mint/10" />
             </div>
           )}
           {ideas.length > 0 && (
-            <div className="px-1">
+            <div className="col-span-2 sm:col-span-1">
               <InsightCard title="Ideas" icon="💡" items={ideas} accentColor="bg-brand-peach/30" />
             </div>
           )}
-        </SwipeableCards>
-
-        {/* Calendar & Maps */}
-        <div className="space-y-3">
-          <CalendarWidget />
-          <MapsWidget />
         </div>
 
-        {/* Recently saved */}
-        <RecentlySavedWidget />
+        {/* Lists section - full width, then 2-column grid */}
+        <div className="mt-8">
+          <h2 className="font-bold text-warm-800 text-lg mb-4">Your Lists</h2>
 
-        {/* Search */}
-        <DiarySearchSection />
-
-        {/* Lists grid - colorful cards */}
-        <div>
-          <h2 className="font-bold text-warm-800 text-lg mb-3">Your Lists</h2>
-          <div className="grid grid-cols-3 gap-3">
+          {/* List cards grid - 3 cols on mobile, 2 on desktop for bigger cards */}
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 mb-6">
             <MobileListCard icon="🛒" label="Grocery" count={listCounts.grocery} gradient={mobileGradients.grocery} onClick={() => navigateToList('grocery')} />
             <MobileListCard icon="🍽️" label="Food" count={listCounts.restaurants} gradient={mobileGradients.restaurants} onClick={() => navigateToList('restaurants')} />
             <MobileListCard icon="🎬" label="Watch" count={listCounts.watchlist} gradient={mobileGradients.watchlist} onClick={() => navigateToList('watchlist')} />
@@ -428,65 +445,37 @@ const Dashboard: React.FC = () => {
             <MobileListCard icon="🎵" label="Music" count={listCounts.music} gradient={mobileGradients.music} onClick={() => navigateToList('music')} />
             <MobileListCard icon="📍" label="Places" count={listCounts.places} gradient={mobileGradients.places} onClick={() => navigateToList('places')} />
           </div>
-        </div>
-      </div>
 
-      {/* ═══════════ DESKTOP LAYOUT: 3-column ═══════════ */}
-      <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        {/* LEFT COLUMN */}
-        <div className="space-y-4">
-          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-coral/20 pb-2">
-            Today
-          </h2>
-          <WeatherWidget />
-          <CalendarWidget />
-          <MapsWidget />
-          <LocationDaysCounter />
-          <RecentlySavedWidget />
-        </div>
+          {/* Expandable list details - 2 columns on desktop */}
+          <div className="hidden md:grid md:grid-cols-2 gap-4">
+            <ListCard title="Grocery" icon="🛒" count={listCounts.grocery} accentColor={listAccents.grocery} isExpanded={expandedLists.has('grocery')} onToggle={() => toggleList('grocery')} onNavigate={() => navigateToList('grocery')}>
+              <GroceryList />
+            </ListCard>
 
-        {/* CENTER COLUMN */}
-        <div className="space-y-4">
-          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-ocean/20 pb-2">
-            Insights
-          </h2>
-          <RestaurantDecideCard />
-          <DiarySearchSection />
-          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} accentColor="bg-brand-mint/10" />
-          <InsightCard title="Ideas" icon="💡" items={ideas} accentColor="bg-brand-peach/30" />
-        </div>
+            <ListCard title="Restaurants" icon="🍽️" count={listCounts.restaurants} accentColor={listAccents.restaurants} isExpanded={expandedLists.has('restaurants')} onToggle={() => toggleList('restaurants')} onNavigate={() => navigateToList('restaurants')}>
+              <RestaurantList />
+            </ListCard>
 
-        {/* RIGHT COLUMN */}
-        <div className="space-y-3">
-          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-lavender/20 pb-2">
-            Lists
-          </h2>
+            <ListCard title="Watchlist" icon="🎬" count={listCounts.watchlist} accentColor={listAccents.watchlist} isExpanded={expandedLists.has('watchlist')} onToggle={() => toggleList('watchlist')} onNavigate={() => navigateToList('watchlist')}>
+              <WatchlistList />
+            </ListCard>
 
-          <ListCard title="Grocery" icon="🛒" count={listCounts.grocery} accentColor={listAccents.grocery} isExpanded={expandedLists.has('grocery')} onToggle={() => toggleList('grocery')} onNavigate={() => navigateToList('grocery')}>
-            <GroceryList />
-          </ListCard>
+            <ListCard title="Reading" icon="📚" count={listCounts.reading} accentColor={listAccents.reading} isExpanded={expandedLists.has('reading')} onToggle={() => toggleList('reading')} onNavigate={() => navigateToList('reading')}>
+              <ReadingList />
+            </ListCard>
 
-          <ListCard title="Restaurants" icon="🍽️" count={listCounts.restaurants} accentColor={listAccents.restaurants} isExpanded={expandedLists.has('restaurants')} onToggle={() => toggleList('restaurants')} onNavigate={() => navigateToList('restaurants')}>
-            <RestaurantList />
-          </ListCard>
+            <ListCard title="Music" icon="🎵" count={listCounts.music} accentColor={listAccents.music} isExpanded={expandedLists.has('music')} onToggle={() => toggleList('music')} onNavigate={() => navigateToList('music')}>
+              <MusicList />
+            </ListCard>
 
-          <ListCard title="Watchlist" icon="🎬" count={listCounts.watchlist} accentColor={listAccents.watchlist} isExpanded={expandedLists.has('watchlist')} onToggle={() => toggleList('watchlist')} onNavigate={() => navigateToList('watchlist')}>
-            <WatchlistList />
-          </ListCard>
+            <ListCard title="Places" icon="📍" count={listCounts.places} accentColor={listAccents.places} isExpanded={expandedLists.has('places')} onToggle={() => toggleList('places')} onNavigate={() => navigateToList('places')}>
+              <PlacesList />
+            </ListCard>
 
-          <ListCard title="Reading" icon="📚" count={listCounts.reading} accentColor={listAccents.reading} isExpanded={expandedLists.has('reading')} onToggle={() => toggleList('reading')} onNavigate={() => navigateToList('reading')}>
-            <ReadingList />
-          </ListCard>
-
-          <ListCard title="Music" icon="🎵" count={listCounts.music} accentColor={listAccents.music} isExpanded={expandedLists.has('music')} onToggle={() => toggleList('music')} onNavigate={() => navigateToList('music')}>
-            <MusicList />
-          </ListCard>
-
-          <ListCard title="Places" icon="📍" count={listCounts.places} accentColor={listAccents.places} isExpanded={expandedLists.has('places')} onToggle={() => toggleList('places')} onNavigate={() => navigateToList('places')}>
-            <PlacesList />
-          </ListCard>
-
-          <RecipeListSection />
+            <div className="col-span-2">
+              <RecipeListSection />
+            </div>
+          </div>
         </div>
       </div>
     </div>

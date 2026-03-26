@@ -16,14 +16,21 @@ const WeatherWidget: React.FC = () => {
       })
       .catch((err) => {
         console.error('[Weather] Error:', err);
-        setError('Failed to load weather');
+        const msg = err?.message || '';
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_CONNECTION_REFUSED')) {
+          setError('Backend server offline. Start it with: cd api && npm start');
+        } else if (msg.includes('API key not configured')) {
+          setError('OPENWEATHER_API_KEY not set in api/.env');
+        } else {
+          setError('Weather unavailable');
+        }
         setLoading(false);
       });
   }, []);
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white">
+      <div className="bg-gradient-to-br from-brand-sky to-brand-ocean rounded-2xl p-4 text-white shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🌤️</span>
           <span className="font-bold text-sm">Weather</span>
@@ -37,12 +44,12 @@ const WeatherWidget: React.FC = () => {
 
   if (error || !weather) {
     return (
-      <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white">
+      <div className="bg-gradient-to-br from-brand-sky to-brand-ocean rounded-2xl p-4 text-white shadow-sm">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">🌤️</span>
           <span className="font-bold text-sm">Weather</span>
         </div>
-        <p className="text-white/70 text-xs">
+        <p className="text-white/80 text-xs leading-relaxed">
           {error || 'Weather unavailable'}
         </p>
       </div>
@@ -60,7 +67,7 @@ const WeatherWidget: React.FC = () => {
   return (
     <motion.div
       layout
-      className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white overflow-hidden"
+      className="bg-gradient-to-br from-brand-sky to-brand-ocean rounded-2xl p-4 text-white overflow-hidden shadow-sm"
     >
       {/* City Toggle */}
       <div className="flex items-center justify-between mb-3">
@@ -75,7 +82,7 @@ const WeatherWidget: React.FC = () => {
               onClick={() => setActiveCity(key)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeCity === key
-                  ? 'bg-white text-blue-600'
+                  ? 'bg-white text-brand-ocean'
                   : 'text-white/80 hover:text-white'
               }`}
             >
@@ -108,7 +115,7 @@ const WeatherWidget: React.FC = () => {
           </div>
 
           {/* Hourly - next 4 periods */}
-          <div className="grid grid-cols-4 gap-1 mb-3 bg-white/10 rounded-lg p-2">
+          <div className="grid grid-cols-4 gap-1 mb-3 bg-white/10 rounded-xl p-2">
             {city.hourly.map((hour, i) => (
               <div key={i} className="text-center">
                 <div className="text-white/70 text-[10px]">

@@ -27,7 +27,6 @@ import ListPage from './components/lists/ListPage';
 import SavedItemsPage from './components/saved/SavedItemsPage';
 import ShareTargetPage from './components/saved/ShareTargetPage';
 import SettingsPage from './components/settings/SettingsPage';
-import EventsPage from './components/events/EventsPage';
 import InventoryPage from './components/inventory/InventoryPage';
 
 // Smart home page - shows dashboard if today's entry is complete, otherwise entry form
@@ -162,7 +161,6 @@ const AppContent: React.FC = () => {
           <Route path="/saved" element={<SavedItemsPage />} />
           <Route path="/share" element={<ShareTargetPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/events" element={<EventsPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           {/* Redirect old /search to /tools */}
           <Route path="/search" element={<Navigate to="/tools" replace />} />
