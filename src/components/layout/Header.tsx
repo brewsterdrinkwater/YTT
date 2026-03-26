@@ -3,44 +3,39 @@ import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-/**
- * Walt-tab Header Component
- * Brutalist style: Clean white background, black text, minimal decoration
- */
 const Header: React.FC = () => {
   const { setIsSettingsOpen } = useApp();
   const { settings } = useSettings();
   const { user } = useAuth();
 
   return (
-    <header className="bg-white border-b-2 border-black sticky top-0 z-40">
-      <div className="max-w-content mx-auto px-md h-16 flex items-center justify-between">
+    <header className="bg-white/80 backdrop-blur-lg border-b border-warm-200 sticky top-0 z-40 safe-area-top">
+      <div className="max-w-content mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          {/* Placeholder for Uncle Walter pixelated portrait */}
-          <div className="w-10 h-10 bg-black rounded-sm flex items-center justify-center">
-            <span className="text-white text-xl font-bold">W</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 gradient-coral rounded-xl flex items-center justify-center shadow-glow-coral">
+            <span className="text-white text-lg font-bold">W</span>
           </div>
-          <span className="text-h3 font-bold text-black tracking-tight">
+          <span className="text-lg font-bold text-warm-800 tracking-tight">
             Walt-Tab
           </span>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-4">
-          {/* User email */}
+        <div className="flex items-center gap-3">
+          {/* User email - desktop only */}
           {user && (
-            <span className="text-tiny text-slate hidden md:inline truncate max-w-[150px]">
+            <span className="text-tiny text-warm-500 hidden md:inline truncate max-w-[150px]">
               {user.email}
             </span>
           )}
 
           {/* Version badge */}
           <span
-            className={`text-tiny px-3 py-1 rounded-sm hidden sm:inline font-medium ${
+            className={`text-tiny px-2.5 py-1 rounded-full hidden sm:inline font-medium ${
               settings.version === 'trust'
-                ? 'bg-black text-white'
-                : 'bg-concrete text-charcoal border border-steel'
+                ? 'bg-brand-coral/10 text-brand-coral'
+                : 'bg-warm-100 text-warm-600 border border-warm-200'
             }`}
           >
             {settings.version === 'trust' ? 'Trust' : 'Secure'}
@@ -49,11 +44,11 @@ const Header: React.FC = () => {
           {/* Settings button */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2 text-charcoal hover:text-black hover:bg-concrete rounded-sm transition-colors duration-fast"
+            className="p-2 text-warm-500 hover:text-warm-800 hover:bg-warm-100 rounded-xl transition-all duration-fast"
             aria-label="Open settings"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

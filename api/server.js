@@ -319,7 +319,7 @@ URL: ${url}
 The app has these list categories:
 - grocery: Food items to buy
 - recipes: Recipes with ingredients
-- restaurants: Restaurants, cafes, bars to visit
+- restaurants: Restaurants, cafes, bars, food spots to visit (include cuisine type, neighborhood/city, and price range if possible)
 - places: Travel destinations, attractions, landmarks
 - watchlist: Movies, TV shows, documentaries
 - reading: Books, articles, blogs
@@ -337,27 +337,36 @@ Please analyze the content and respond with JSON only (no markdown):
     {
       "type": "category",
       "name": "item name",
-      "details": "optional details",
+      "details": "optional details (for restaurants: include cuisine type and location)",
       "quantity": "for groceries",
       "unit": "for groceries"
     }
-  ]
+  ],
+  "googleMapsSearchQuery": "If this is a restaurant/place, provide a Google Maps search query (e.g., 'Restaurant Name City') or null"
 }
 
+INSTAGRAM-SPECIFIC GUIDANCE:
+- Instagram reels/posts about food are VERY common. If the URL is from Instagram and contains food-related content, categorize as "restaurants" with high confidence.
+- For Instagram food content, extract the specific restaurant/cafe name, cuisine type, city, and neighborhood when mentioned.
+- Instagram travel content should be categorized as "places".
+- Instagram recipe content should extract individual ingredients as grocery items AND create a recipe entry.
+- For Instagram posts tagging a location or business, extract that as a restaurant or place.
+
 For recipes, extract individual ingredients as grocery items.
-For restaurant/place videos, extract the specific venue.
+For restaurant/place content, extract the specific venue with cuisine type and location details.
 For watchlists, extract the movie/show name.
 For music, extract artist and song/album.
 
 If you can't determine the category with reasonable confidence, use "uncategorized" and set confidence to "low".
 
 Important: Based on the URL structure and domain, infer what type of content this likely is. For example:
-- instagram.com/reel/* - likely food, places, or lifestyle content
+- instagram.com/reel/* or /p/* - most commonly food, restaurants, or places content. Default to "restaurants" for food-related content.
 - youtube.com/watch* - could be anything, look at URL parameters
 - spotify.com - music
 - imdb.com - movies/shows
-- yelp.com - restaurants
-- tripadvisor.com - places/restaurants`;
+- yelp.com - restaurants (high confidence)
+- tripadvisor.com - places/restaurants (high confidence)
+- google.com/maps - places/restaurants (high confidence)`;
 }
 
 // ---------------------------------------------------------------------------

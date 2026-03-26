@@ -16,7 +16,6 @@ import MapsWidget from '../maps/MapsWidget';
 import SwipeableCards from '../common/SwipeableCards';
 import RestaurantDecideCard from '../restaurant/RestaurantDecideCard';
 
-// Import list components
 import {
   GroceryList,
   WatchlistList,
@@ -41,47 +40,47 @@ const RecipeListSection: React.FC = () => {
   if (recipes.length === 0) return null;
 
   return (
-    <div className="border-2 border-steel rounded-lg overflow-hidden">
-      <div className="p-3 bg-white border-b border-steel">
-        <span className="flex items-center gap-2 font-bold text-black text-sm">
-          <span>🍳</span> Recipes
-          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-warm-200">
+      <div className="p-3 border-b border-warm-100">
+        <span className="flex items-center gap-2 font-bold text-warm-800 text-sm">
+          <span className="text-lg">🍳</span> Recipes
+          <span className="text-xs bg-brand-sunset/10 text-brand-sunset px-2 py-0.5 rounded-full font-semibold">
             {recipes.length}
           </span>
         </span>
       </div>
-      <ul className="divide-y divide-steel">
+      <ul className="divide-y divide-warm-100">
         {recipes.slice(0, 3).map((recipe) => (
-          <li key={recipe.id} className="bg-white">
+          <li key={recipe.id}>
             <button
               onClick={() => setExpandedRecipe(expandedRecipe === recipe.id ? null : recipe.id)}
-              className="w-full p-3 flex items-center justify-between text-left hover:bg-concrete transition-colors"
+              className="w-full p-3 flex items-center justify-between text-left hover:bg-warm-50 transition-colors"
             >
-              <span className="font-medium text-sm">{recipe.name}</span>
-              <span className="text-xs text-slate">{recipe.ingredients.length} items</span>
+              <span className="font-medium text-sm text-warm-800">{recipe.name}</span>
+              <span className="text-xs text-warm-500">{recipe.ingredients.length} items</span>
             </button>
             {expandedRecipe === recipe.id && (
-              <div className="px-3 pb-3 border-t border-concrete">
-                <ul className="text-sm text-charcoal mt-2 space-y-1">
+              <div className="px-3 pb-3 border-t border-warm-100">
+                <ul className="text-sm text-warm-600 mt-2 space-y-1">
                   {recipe.ingredients.slice(0, 5).map((ing, i) => (
                     <li key={i} className="text-xs">
                       • {ing.name} {ing.quantity > 0 && `(${ing.quantity} ${ing.unit})`}
                     </li>
                   ))}
                   {recipe.ingredients.length > 5 && (
-                    <li className="text-xs text-slate">+{recipe.ingredients.length - 5} more</li>
+                    <li className="text-xs text-warm-400">+{recipe.ingredients.length - 5} more</li>
                   )}
                 </ul>
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => handleAddToGrocery(recipe.id)}
-                    className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                    className="text-xs bg-brand-mint/10 text-brand-mint px-3 py-1.5 rounded-lg font-semibold hover:bg-brand-mint/20 transition-colors"
                   >
-                    + Grocery
+                    + Add to Grocery
                   </button>
                   <button
                     onClick={() => removeRecipe(recipe.id)}
-                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1 ml-auto"
+                    className="text-xs text-brand-coral hover:text-brand-coral/80 px-2 py-1 ml-auto"
                   >
                     Remove
                   </button>
@@ -131,10 +130,10 @@ const DiarySearchSection: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg border-2 border-black p-4"
+      className="bg-white rounded-2xl border border-warm-200 p-4 shadow-sm"
     >
-      <h3 className="font-bold text-black mb-3 flex items-center gap-2">
-        <span>🔍</span> Search Diary
+      <h3 className="font-bold text-warm-800 mb-3 flex items-center gap-2">
+        <span className="text-lg">🔍</span> Search Diary
       </h3>
       <Input
         type="text"
@@ -144,15 +143,15 @@ const DiarySearchSection: React.FC = () => {
         className="mb-2 text-sm"
       />
       {results.length > 0 && (
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {results.map((entry) => (
             <li
               key={entry.id}
               onClick={() => handleEntryClick(entry)}
-              className="p-2 bg-concrete rounded-md cursor-pointer hover:bg-steel transition-colors text-xs"
+              className="p-2.5 bg-warm-50 rounded-xl cursor-pointer hover:bg-warm-100 transition-colors text-xs"
             >
-              <p className="font-medium">{formatDisplayDate(entry.date)}</p>
-              <p className="text-slate truncate">{entry.highlights || entry.location}</p>
+              <p className="font-medium text-warm-800">{formatDisplayDate(entry.date)}</p>
+              <p className="text-warm-500 truncate mt-0.5">{entry.highlights || entry.location}</p>
             </li>
           ))}
         </ul>
@@ -166,19 +165,20 @@ interface InsightCardProps {
   title: string;
   icon: string;
   items: DashboardItem[];
+  accentColor?: string;
 }
 
-const InsightCard: React.FC<InsightCardProps> = ({ title, icon, items }) => {
+const InsightCard: React.FC<InsightCardProps> = ({ title, icon, items, accentColor = 'bg-brand-sky/10' }) => {
   if (items.length === 0) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg border-2 border-black p-4"
+      className="bg-white rounded-2xl border border-warm-200 p-4 shadow-sm"
     >
-      <h3 className="font-bold text-black mb-3 flex items-center gap-2">
-        <span>{icon}</span> {title}
+      <h3 className="font-bold text-warm-800 mb-3 flex items-center gap-2">
+        <span className="text-lg">{icon}</span> {title}
       </h3>
       <ul className="space-y-2">
         {items.slice(0, 3).map((item, index) => (
@@ -187,10 +187,10 @@ const InsightCard: React.FC<InsightCardProps> = ({ title, icon, items }) => {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="p-2 bg-concrete rounded-md"
+            className={`p-3 rounded-xl ${accentColor}`}
           >
-            <p className="text-sm text-black">{item.text}</p>
-            <p className="text-xs text-slate mt-1">{formatDisplayDate(item.date)}</p>
+            <p className="text-sm text-warm-800">{item.text}</p>
+            <p className="text-xs text-warm-500 mt-1">{formatDisplayDate(item.date)}</p>
           </motion.li>
         ))}
       </ul>
@@ -203,6 +203,7 @@ interface ListCardProps {
   title: string;
   icon: string;
   count: number;
+  accentColor: string;
   isExpanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
@@ -213,6 +214,7 @@ const ListCard: React.FC<ListCardProps> = ({
   title,
   icon,
   count,
+  accentColor,
   isExpanded,
   onToggle,
   onNavigate,
@@ -221,24 +223,24 @@ const ListCard: React.FC<ListCardProps> = ({
   return (
     <motion.div
       layout
-      className="bg-white rounded-lg border-2 border-steel overflow-hidden hover:border-charcoal transition-colors"
+      className="bg-white rounded-2xl border border-warm-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex items-center">
         <button
           onClick={onToggle}
-          className="flex-1 flex items-center gap-2 p-3 hover:bg-concrete transition-colors"
+          className="flex-1 flex items-center gap-2.5 p-3.5 hover:bg-warm-50 transition-colors"
         >
-          <span className="text-lg">{icon}</span>
-          <span className="font-bold text-sm text-black">{title}</span>
+          <span className="text-xl">{icon}</span>
+          <span className="font-bold text-sm text-warm-800">{title}</span>
           {count > 0 && (
-            <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full">
+            <span className={`text-xs ${accentColor} px-2.5 py-0.5 rounded-full font-semibold`}>
               {count}
             </span>
           )}
         </button>
         <button
           onClick={onNavigate}
-          className="px-3 py-2 text-xs text-slate hover:text-black transition-colors"
+          className="px-3 py-2 text-warm-400 hover:text-warm-700 transition-colors"
           title="Open full list"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,7 +255,7 @@ const ListCard: React.FC<ListCardProps> = ({
             animate={{ height: 'auto' }}
             exit={{ height: 0 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-steel overflow-hidden"
+            className="border-t border-warm-100 overflow-hidden"
           >
             <div className="max-h-72 overflow-y-auto">
               {children}
@@ -265,25 +267,25 @@ const ListCard: React.FC<ListCardProps> = ({
   );
 };
 
-// Mobile list card
+// Mobile list card - colorful
 interface MobileListCardProps {
   icon: string;
   label: string;
   count: number;
-  color: string;
+  gradient: string;
   onClick: () => void;
 }
 
-const MobileListCard: React.FC<MobileListCardProps> = ({ icon, label, count, color, onClick }) => (
+const MobileListCard: React.FC<MobileListCardProps> = ({ icon, label, count, gradient, onClick }) => (
   <motion.button
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className="p-4 rounded-xl border-2 border-steel hover:border-black transition-all text-left bg-white shadow-sm hover:shadow-md"
+    className={`p-4 rounded-2xl transition-all text-left shadow-sm hover:shadow-md ${gradient} relative overflow-hidden`}
   >
     <span className="text-3xl block mb-2">{icon}</span>
-    <span className="font-bold text-black text-sm block">{label}</span>
+    <span className="font-bold text-warm-800 text-sm block">{label}</span>
     {count > 0 && (
-      <span className={`text-xs font-medium ${color} mt-1 inline-block`}>
+      <span className="text-xs font-semibold text-warm-600 mt-1 inline-block">
         {count} item{count !== 1 ? 's' : ''}
       </span>
     )}
@@ -321,7 +323,6 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { groceryList, watchlist: watchlistItems, readingList, spotifyList, placesList, restaurantsList } = useLists();
 
-  // Track which lists are expanded
   const [expandedLists, setExpandedLists] = useState<Set<ListType>>(new Set(['grocery']));
 
   const listCounts = {
@@ -349,29 +350,38 @@ const Dashboard: React.FC = () => {
   const workouts = extractWorkouts(entries);
   const ideas = extractIdeas(entries);
 
-  const listColors = {
-    grocery: 'text-green-600',
-    restaurants: 'text-orange-600',
-    watchlist: 'text-purple-600',
-    reading: 'text-blue-600',
-    music: 'text-pink-600',
-    places: 'text-teal-600',
+  const listAccents = {
+    grocery: 'bg-brand-mint/10 text-brand-mint',
+    restaurants: 'bg-brand-sunset/10 text-brand-sunset',
+    watchlist: 'bg-brand-lavender/10 text-brand-lavender',
+    reading: 'bg-brand-ocean/10 text-brand-ocean',
+    music: 'bg-brand-rose/10 text-brand-rose',
+    places: 'bg-brand-sky/10 text-brand-sky',
+  };
+
+  const mobileGradients = {
+    grocery: 'bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100',
+    restaurants: 'bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100',
+    watchlist: 'bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-100',
+    reading: 'bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100',
+    music: 'bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100',
+    places: 'bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-100',
   };
 
   return (
-    <div className="w-full px-4 py-6 pb-24 md:pb-6">
+    <div className="w-full px-4 py-6 pb-28 md:pb-6">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-6 max-w-7xl mx-auto"
       >
-        <h1 className="text-h2 font-bold text-black">Dashboard</h1>
-        <p className="text-small text-slate mt-1">Your insights and lists at a glance</p>
+        <h1 className="text-h2 font-bold text-warm-800">Dashboard</h1>
+        <p className="text-small text-warm-500 mt-1">Your insights and lists at a glance</p>
       </motion.div>
 
       {/* ═══════════ MOBILE LAYOUT ═══════════ */}
-      <div className="md:hidden space-y-6">
+      <div className="md:hidden space-y-5">
         {/* Restaurant decision card */}
         <RestaurantDecideCard />
 
@@ -385,12 +395,12 @@ const Dashboard: React.FC = () => {
           </div>
           {workouts.length > 0 && (
             <div className="px-1">
-              <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
+              <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} accentColor="bg-brand-mint/10" />
             </div>
           )}
           {ideas.length > 0 && (
             <div className="px-1">
-              <InsightCard title="Ideas" icon="💡" items={ideas} />
+              <InsightCard title="Ideas" icon="💡" items={ideas} accentColor="bg-brand-peach/30" />
             </div>
           )}
         </SwipeableCards>
@@ -407,25 +417,25 @@ const Dashboard: React.FC = () => {
         {/* Search */}
         <DiarySearchSection />
 
-        {/* Lists grid */}
+        {/* Lists grid - colorful cards */}
         <div>
-          <h2 className="font-bold text-black text-lg mb-3">Your Lists</h2>
-          <div className="grid grid-cols-3 gap-2">
-            <MobileListCard icon="🛒" label="Grocery" count={listCounts.grocery} color={listColors.grocery} onClick={() => navigateToList('grocery')} />
-            <MobileListCard icon="🍽️" label="Food" count={listCounts.restaurants} color={listColors.restaurants} onClick={() => navigateToList('restaurants')} />
-            <MobileListCard icon="🎬" label="Watch" count={listCounts.watchlist} color={listColors.watchlist} onClick={() => navigateToList('watchlist')} />
-            <MobileListCard icon="📚" label="Read" count={listCounts.reading} color={listColors.reading} onClick={() => navigateToList('reading')} />
-            <MobileListCard icon="🎵" label="Music" count={listCounts.music} color={listColors.music} onClick={() => navigateToList('music')} />
-            <MobileListCard icon="📍" label="Places" count={listCounts.places} color={listColors.places} onClick={() => navigateToList('places')} />
+          <h2 className="font-bold text-warm-800 text-lg mb-3">Your Lists</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <MobileListCard icon="🛒" label="Grocery" count={listCounts.grocery} gradient={mobileGradients.grocery} onClick={() => navigateToList('grocery')} />
+            <MobileListCard icon="🍽️" label="Food" count={listCounts.restaurants} gradient={mobileGradients.restaurants} onClick={() => navigateToList('restaurants')} />
+            <MobileListCard icon="🎬" label="Watch" count={listCounts.watchlist} gradient={mobileGradients.watchlist} onClick={() => navigateToList('watchlist')} />
+            <MobileListCard icon="📚" label="Read" count={listCounts.reading} gradient={mobileGradients.reading} onClick={() => navigateToList('reading')} />
+            <MobileListCard icon="🎵" label="Music" count={listCounts.music} gradient={mobileGradients.music} onClick={() => navigateToList('music')} />
+            <MobileListCard icon="📍" label="Places" count={listCounts.places} gradient={mobileGradients.places} onClick={() => navigateToList('places')} />
           </div>
         </div>
       </div>
 
       {/* ═══════════ DESKTOP LAYOUT: 3-column ═══════════ */}
       <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        {/* LEFT COLUMN: Weather + Calendar + Maps + Insights */}
+        {/* LEFT COLUMN */}
         <div className="space-y-4">
-          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-coral/20 pb-2">
             Today
           </h2>
           <WeatherWidget />
@@ -435,44 +445,44 @@ const Dashboard: React.FC = () => {
           <RecentlySavedWidget />
         </div>
 
-        {/* CENTER COLUMN: Insights + Search */}
+        {/* CENTER COLUMN */}
         <div className="space-y-4">
-          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-ocean/20 pb-2">
             Insights
           </h2>
           <RestaurantDecideCard />
           <DiarySearchSection />
-          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} />
-          <InsightCard title="Ideas" icon="💡" items={ideas} />
+          <InsightCard title="Recent Workouts" icon="🏋️" items={workouts} accentColor="bg-brand-mint/10" />
+          <InsightCard title="Ideas" icon="💡" items={ideas} accentColor="bg-brand-peach/30" />
         </div>
 
-        {/* RIGHT COLUMN: All Lists */}
+        {/* RIGHT COLUMN */}
         <div className="space-y-3">
-          <h2 className="font-bold text-black text-lg border-b-2 border-black pb-2">
+          <h2 className="font-bold text-warm-800 text-lg border-b-2 border-brand-lavender/20 pb-2">
             Lists
           </h2>
 
-          <ListCard title="Grocery" icon="🛒" count={listCounts.grocery} isExpanded={expandedLists.has('grocery')} onToggle={() => toggleList('grocery')} onNavigate={() => navigateToList('grocery')}>
+          <ListCard title="Grocery" icon="🛒" count={listCounts.grocery} accentColor={listAccents.grocery} isExpanded={expandedLists.has('grocery')} onToggle={() => toggleList('grocery')} onNavigate={() => navigateToList('grocery')}>
             <GroceryList />
           </ListCard>
 
-          <ListCard title="Restaurants" icon="🍽️" count={listCounts.restaurants} isExpanded={expandedLists.has('restaurants')} onToggle={() => toggleList('restaurants')} onNavigate={() => navigateToList('restaurants')}>
+          <ListCard title="Restaurants" icon="🍽️" count={listCounts.restaurants} accentColor={listAccents.restaurants} isExpanded={expandedLists.has('restaurants')} onToggle={() => toggleList('restaurants')} onNavigate={() => navigateToList('restaurants')}>
             <RestaurantList />
           </ListCard>
 
-          <ListCard title="Watchlist" icon="🎬" count={listCounts.watchlist} isExpanded={expandedLists.has('watchlist')} onToggle={() => toggleList('watchlist')} onNavigate={() => navigateToList('watchlist')}>
+          <ListCard title="Watchlist" icon="🎬" count={listCounts.watchlist} accentColor={listAccents.watchlist} isExpanded={expandedLists.has('watchlist')} onToggle={() => toggleList('watchlist')} onNavigate={() => navigateToList('watchlist')}>
             <WatchlistList />
           </ListCard>
 
-          <ListCard title="Reading" icon="📚" count={listCounts.reading} isExpanded={expandedLists.has('reading')} onToggle={() => toggleList('reading')} onNavigate={() => navigateToList('reading')}>
+          <ListCard title="Reading" icon="📚" count={listCounts.reading} accentColor={listAccents.reading} isExpanded={expandedLists.has('reading')} onToggle={() => toggleList('reading')} onNavigate={() => navigateToList('reading')}>
             <ReadingList />
           </ListCard>
 
-          <ListCard title="Music" icon="🎵" count={listCounts.music} isExpanded={expandedLists.has('music')} onToggle={() => toggleList('music')} onNavigate={() => navigateToList('music')}>
+          <ListCard title="Music" icon="🎵" count={listCounts.music} accentColor={listAccents.music} isExpanded={expandedLists.has('music')} onToggle={() => toggleList('music')} onNavigate={() => navigateToList('music')}>
             <MusicList />
           </ListCard>
 
-          <ListCard title="Places" icon="📍" count={listCounts.places} isExpanded={expandedLists.has('places')} onToggle={() => toggleList('places')} onNavigate={() => navigateToList('places')}>
+          <ListCard title="Places" icon="📍" count={listCounts.places} accentColor={listAccents.places} isExpanded={expandedLists.has('places')} onToggle={() => toggleList('places')} onNavigate={() => navigateToList('places')}>
             <PlacesList />
           </ListCard>
 

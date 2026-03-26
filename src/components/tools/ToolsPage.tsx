@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import DeepResearchAgent from '../research/DeepResearchAgent';
 import QuickShare from './QuickShare';
 import VoiceInput from './VoiceInput';
 
-type ToolTab = 'voice' | 'research' | 'share';
+type ToolTab = 'share' | 'voice' | 'research';
 
 const ToolsPage: React.FC = () => {
-  // Check if on mobile (for voice input - mobile only)
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -16,73 +16,102 @@ const ToolsPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Default to voice on mobile, research on desktop
-  const [activeTab, setActiveTab] = useState<ToolTab>('research');
+  // Default to share on mobile (the primary use case), research on desktop
+  const [activeTab, setActiveTab] = useState<ToolTab>('share');
 
   useEffect(() => {
-    if (isMobile) {
-      setActiveTab('voice');
-    } else {
-      setActiveTab('research');
+    if (!isMobile) {
+      setActiveTab('share');
     }
   }, [isMobile]);
 
+  const tabs: { key: ToolTab; label: string; icon: string; color: string; mobileOnly?: boolean }[] = [
+    { key: 'share', label: 'Quick Share', icon: '📥', color: 'bg-brand-coral/10 text-brand-coral border-brand-coral' },
+    { key: 'voice', label: 'Voice', icon: '🎤', color: 'bg-brand-sunset/10 text-brand-sunset border-brand-sunset', mobileOnly: true },
+    { key: 'research', label: 'Research', icon: '🧠', color: 'bg-brand-ocean/10 text-brand-ocean border-brand-ocean' },
+  ];
+
+  const filteredTabs = isMobile ? tabs : tabs.filter(t => !t.mobileOnly);
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <div className="mb-4 md:mb-6">
-        <h1 className="text-h2 font-bold text-black">Tools</h1>
-        <p className="text-slate text-small mt-1">Voice input, research, and quick share</p>
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-28 md:pb-6">
+      {/* Header with quick links */}
+      <div className="mb-5">
+        <h1 className="text-h2 font-bold text-warm-800">Tools</h1>
+        <p className="text-warm-500 text-small mt-1">Share, research, and organize content</p>
       </div>
 
-      {/* Tool Tabs - Walt-tab brutalist style */}
-      <div className="flex gap-0.5 md:gap-1 mb-4 md:mb-6 border-b-2 border-black overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-        {/* Voice Input - Mobile Only */}
-        {isMobile && (
+      {/* Quick access cards on mobile */}
+      {isMobile && (
+        <div className="flex gap-2 mb-5">
+          <Link
+            to="/saved"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-3 bg-white border border-warm-200 rounded-xl text-sm font-semibold text-warm-700 hover:bg-warm-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+            </svg>
+            Saved Items
+          </Link>
+          <Link
+            to="/timeline"
+            className="flex items-center justify-center gap-2 px-3 py-3 bg-white border border-warm-200 rounded-xl text-sm font-semibold text-warm-700 hover:bg-warm-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Timeline
+          </Link>
+          <Link
+            to="/events"
+            className="flex items-center justify-center gap-2 px-3 py-3 bg-white border border-warm-200 rounded-xl text-sm font-semibold text-warm-700 hover:bg-warm-50 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Events
+          </Link>
+        </div>
+      )}
+
+      {/* Tool Tabs - pill style */}
+      <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+        {filteredTabs.map((tab) => (
           <button
-            onClick={() => setActiveTab('voice')}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-              activeTab === 'voice'
-                ? 'bg-tab-orange/10 text-black border-tab-orange'
-                : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap border-2 ${
+              activeTab === tab.key
+                ? tab.color
+                : 'bg-white text-warm-500 border-warm-200 hover:border-warm-300 hover:text-warm-700'
             }`}
           >
-            <span>🎤</span>
-            <span>Voice</span>
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
           </button>
-        )}
-        <button
-          onClick={() => setActiveTab('research')}
-          className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'research'
-              ? 'bg-tab-blue/10 text-black border-tab-blue'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          <span>🧠</span>
-          <span>Research</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('share')}
-          className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm transition-all border-b-4 -mb-0.5 whitespace-nowrap ${
-            activeTab === 'share'
-              ? 'bg-success/10 text-black border-success'
-              : 'bg-transparent text-slate hover:text-black border-transparent hover:bg-concrete'
-          }`}
-        >
-          <span>📥</span>
-          <span>Share</span>
-        </button>
+        ))}
       </div>
 
       {/* Tool Content */}
-      {/* Voice Input - Mobile Only */}
+      {activeTab === 'share' && (
+        <div>
+          <div className="mb-4 p-4 bg-gradient-to-r from-brand-coral/5 to-brand-sunset/5 rounded-2xl border border-brand-coral/10">
+            <h3 className="font-bold text-warm-800 mb-1">Quick Share</h3>
+            <p className="text-small text-warm-600">
+              Share links from Instagram, YouTube, and more. AI analyzes content and adds items to your lists or Google Maps.
+            </p>
+          </div>
+          <QuickShare />
+        </div>
+      )}
+
       {activeTab === 'voice' && isMobile && (
         <div>
-          <div className="mb-4 p-4 bg-tab-orange/5 rounded-sm border-2 border-tab-orange/20">
-            <h3 className="font-semibold text-black mb-1">Voice Input</h3>
-            <p className="text-small text-charcoal">
+          <div className="mb-4 p-4 bg-gradient-to-r from-brand-sunset/5 to-brand-peach/20 rounded-2xl border border-brand-sunset/10">
+            <h3 className="font-bold text-warm-800 mb-1">Voice Input</h3>
+            <p className="text-small text-warm-600">
               Use your voice to quickly add items to any list. Just say "Add eggs to groceries"
-              or "Add The Office to watchlist" and it will be added automatically.
+              or "Add The Office to watchlist".
             </p>
           </div>
           <VoiceInput />
@@ -91,27 +120,13 @@ const ToolsPage: React.FC = () => {
 
       {activeTab === 'research' && (
         <div>
-          <div className="mb-4 p-4 bg-tab-blue/5 rounded-sm border-2 border-tab-blue/20">
-            <h3 className="font-semibold text-black mb-1">Deep Research Agent</h3>
-            <p className="text-small text-charcoal">
-              Research artists, authors, actors, and more. Build lists of music to listen to,
-              books to read, movies to watch, and places to visit.
+          <div className="mb-4 p-4 bg-gradient-to-r from-brand-ocean/5 to-brand-sky/10 rounded-2xl border border-brand-ocean/10">
+            <h3 className="font-bold text-warm-800 mb-1">Deep Research Agent</h3>
+            <p className="text-small text-warm-600">
+              Research artists, authors, actors, and more. Build lists of music, books, movies, and places.
             </p>
           </div>
           <DeepResearchAgent defaultExpanded />
-        </div>
-      )}
-
-      {activeTab === 'share' && (
-        <div>
-          <div className="mb-4 p-4 bg-success/5 rounded-sm border-2 border-success/20">
-            <h3 className="font-semibold text-black mb-1">Quick Share</h3>
-            <p className="text-small text-charcoal">
-              Paste URLs from Instagram, YouTube, websites, and more. Content is auto-categorized
-              and added to your lists. Use batch mode to save multiple links at once.
-            </p>
-          </div>
-          <QuickShare />
         </div>
       )}
     </div>

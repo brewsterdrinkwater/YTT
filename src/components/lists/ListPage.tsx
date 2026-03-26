@@ -19,16 +19,17 @@ interface ListOption {
   label: string;
   shortLabel: string;
   icon: string;
+  color: string;
   isCustom?: boolean;
 }
 
 export const BUILT_IN_LIST_OPTIONS: ListOption[] = [
-  { value: 'grocery', label: 'Grocery List', shortLabel: 'Grocery', icon: '🛒' },
-  { value: 'restaurants', label: 'Restaurants', shortLabel: 'Food', icon: '🍽️' },
-  { value: 'watchlist', label: 'Watchlist', shortLabel: 'Watch', icon: '🎬' },
-  { value: 'reading', label: 'Reading List', shortLabel: 'Read', icon: '📚' },
-  { value: 'music', label: 'Listen List', shortLabel: 'Music', icon: '🎵' },
-  { value: 'places', label: 'Places to Visit', shortLabel: 'Places', icon: '📍' },
+  { value: 'grocery', label: 'Grocery List', shortLabel: 'Grocery', icon: '🛒', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { value: 'restaurants', label: 'Restaurants', shortLabel: 'Food', icon: '🍽️', color: 'bg-red-50 text-red-600 border-red-200' },
+  { value: 'watchlist', label: 'Watchlist', shortLabel: 'Watch', icon: '🎬', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { value: 'reading', label: 'Reading List', shortLabel: 'Read', icon: '📚', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'music', label: 'Listen List', shortLabel: 'Music', icon: '🎵', color: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { value: 'places', label: 'Places to Visit', shortLabel: 'Places', icon: '📍', color: 'bg-blue-50 text-blue-700 border-blue-200' },
 ];
 
 // Keep backward compat export
@@ -45,7 +46,6 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  // Build combined list options (built-in + custom)
   const allListOptions: ListOption[] = [
     ...BUILT_IN_LIST_OPTIONS,
     ...customLists.map((cl) => ({
@@ -53,23 +53,21 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
       label: cl.name,
       shortLabel: cl.name.length > 8 ? cl.name.slice(0, 8) + '...' : cl.name,
       icon: cl.icon,
+      color: 'bg-warm-100 text-warm-700 border-warm-200',
       isCustom: true,
     })),
   ];
 
-  // Get list from URL params or default
   const listParam = searchParams.get('list') as ListType | null;
   const [activeList, setActiveList] = useState<ListType>(listParam || defaultList);
   const [direction, setDirection] = useState(0);
 
-  // Update URL when list changes
   useEffect(() => {
     if (listParam !== activeList) {
       setSearchParams({ list: activeList });
     }
   }, [activeList, listParam, setSearchParams]);
 
-  // Update active list when URL changes
   useEffect(() => {
     if (listParam && listParam !== activeList && allListOptions.some(o => o.value === listParam)) {
       setActiveList(listParam);
@@ -101,14 +99,13 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
   const currentIndex = allListOptions.findIndex(o => o.value === activeList);
 
   const renderListContent = () => {
-    // Check if it's a custom list
     if (activeList.startsWith('custom-')) {
       const customListId = activeList.replace('custom-', '');
       const customList = customLists.find((cl) => cl.id === customListId);
       if (!customList) {
         return (
           <div className="text-center py-8">
-            <p className="text-slate">List not found.</p>
+            <p className="text-warm-500">List not found.</p>
           </div>
         );
       }
@@ -127,31 +124,31 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-warm-50">
       {/* Header with scrollable tab bar */}
-      <div className="sticky top-0 bg-white border-b-2 border-black z-20">
-        <div className="flex items-center gap-2 px-3 py-2">
+      <div className="sticky top-0 bg-white/90 backdrop-blur-lg border-b border-warm-200 z-20">
+        <div className="flex items-center gap-2 px-3 py-2.5">
           {/* Back button */}
           <button
             onClick={handleBack}
-            className="p-2 -ml-1 hover:bg-concrete rounded-lg flex-shrink-0"
+            className="p-2 -ml-1 hover:bg-warm-100 rounded-xl flex-shrink-0 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-warm-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
           {/* Scrollable tab bar */}
           <div className="flex-1 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-1 min-w-max">
+            <div className="flex gap-1.5 min-w-max">
               {allListOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleListChange(option.value)}
-                  className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                  className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap border ${
                     activeList === option.value
-                      ? 'bg-black text-white shadow-md'
-                      : 'text-charcoal hover:bg-concrete'
+                      ? `${option.color} shadow-sm font-semibold`
+                      : 'text-warm-500 border-transparent hover:bg-warm-100 hover:text-warm-700'
                   }`}
                 >
                   <span className="text-base">{option.icon}</span>
@@ -162,7 +159,7 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
               {/* + New List button */}
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-slate hover:bg-concrete hover:text-black transition-all whitespace-nowrap border-2 border-dashed border-steel"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-warm-400 hover:bg-warm-100 hover:text-warm-700 transition-all whitespace-nowrap border border-dashed border-warm-300"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -183,19 +180,18 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: direction * -200 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="px-4 py-4 pb-24 max-w-3xl mx-auto"
+          className="px-4 py-4 pb-28 max-w-3xl mx-auto"
         >
           {/* List title */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <span className="text-2xl">{currentList?.icon}</span>
-              <h1 className="text-xl font-bold text-black">{currentList?.label}</h1>
+              <h1 className="text-xl font-bold text-warm-800">{currentList?.label}</h1>
             </div>
-            {/* Delete button for custom lists */}
             {currentList?.isCustom && (
               <button
                 onClick={() => setShowDeleteConfirm(activeList.replace('custom-', ''))}
-                className="p-2 text-slate hover:text-red-500 transition-colors"
+                className="p-2 text-warm-400 hover:text-brand-coral transition-colors rounded-xl"
                 title="Delete list"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,8 +206,8 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
       </AnimatePresence>
 
       {/* Swipe hint on mobile */}
-      <div className="fixed bottom-20 left-0 right-0 flex justify-center md:hidden pointer-events-none">
-        <div className="flex items-center gap-4 text-slate text-xs">
+      <div className="fixed bottom-24 left-0 right-0 flex justify-center md:hidden pointer-events-none">
+        <div className="flex items-center gap-4 text-warm-400 text-xs bg-white/80 backdrop-blur-sm rounded-full px-4 py-1.5 shadow-sm">
           {currentIndex > 0 && (
             <span className="flex items-center gap-1">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,7 +216,7 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
               {allListOptions[currentIndex - 1]?.shortLabel}
             </span>
           )}
-          <span className="w-1 h-1 bg-steel rounded-full" />
+          <span className="w-1 h-1 bg-warm-300 rounded-full" />
           {currentIndex < allListOptions.length - 1 && (
             <span className="flex items-center gap-1">
               {allListOptions[currentIndex + 1]?.shortLabel}
@@ -242,20 +238,20 @@ const ListPage: React.FC<ListPageProps> = ({ defaultList = 'grocery' }) => {
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-50" onClick={() => setShowDeleteConfirm(null)} />
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border-2 border-black rounded-sm p-6 z-50 w-80">
-            <h3 className="font-bold text-black mb-2">Delete this list?</h3>
-            <p className="text-sm text-slate mb-4">This will permanently delete the list and all its items.</p>
+          <div className="fixed inset-0 bg-warm-900/50 backdrop-blur-sm z-50" onClick={() => setShowDeleteConfirm(null)} />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-warm-200 rounded-2xl p-6 z-50 w-80 shadow-lg">
+            <h3 className="font-bold text-warm-800 mb-2">Delete this list?</h3>
+            <p className="text-sm text-warm-500 mb-5">This will permanently delete the list and all its items.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border-2 border-steel rounded-sm font-semibold text-sm hover:border-black transition-colors"
+                className="flex-1 px-4 py-2.5 border border-warm-200 rounded-xl font-semibold text-sm text-warm-600 hover:bg-warm-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteList(showDeleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-sm font-semibold text-sm hover:bg-red-600 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-brand-coral text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all"
               >
                 Delete
               </button>
