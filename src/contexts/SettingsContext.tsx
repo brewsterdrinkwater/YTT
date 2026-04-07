@@ -60,6 +60,19 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     // Check the legacy onboarding flag for users upgrading from the old system
     const legacyOnboardingDone = localStorage.getItem('ytt-onboarding-complete') === 'true';
 
+    // Safety timeout: if the Supabase request hangs, don't leave the user
+    // stuck on the loading spinner — fall back to localStorage settings.
+    let done = false;
+    const timeout = setTimeout(() => {
+      if (done) return;
+      done = true;
+      console.warn('[Settings] Supabase load timed out, using local settings');
+      if (legacyOnboardingDone && !localSettings.onboardingComplete) {
+        setLocalSettings({ ...localSettings, onboardingComplete: true });
+      }
+      setSettingsLoading(false);
+    }, 5000);
+
     (async () => {
       try {
         const { data, error } = await supabase
@@ -67,6 +80,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           .select('settings')
           .eq('user_id', user.id)
           .maybeSingle();
+
+        if (done) return;
+        done = true;
+        clearTimeout(timeout);
 
         if (error) {
           console.error('[Settings] Error loading from Supabase:', error);
@@ -107,7 +124,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         setSettingsLoading(false);
       } catch (err) {
         console.error('[Settings] Unexpected error:', err);
-        setSettingsLoading(false);
+        if (!done) {
+          done = true;
+          clearTimeout(timeout);
+          setSettingsLoading(false);
+        }
       }
     })();
     // We only want to re-run this when the logged-in user actually changes

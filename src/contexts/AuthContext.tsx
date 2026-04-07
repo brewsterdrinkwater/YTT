@@ -39,23 +39,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let resolved = false;
+    const finish = (session: Session | null) => {
+      resolved = true;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+    };
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!resolved) finish(session);
+    }).catch((err) => {
+      console.error('[Auth] getSession error:', err);
+      if (!resolved) finish(null);
     });
+
+    // Safety timeout: if getSession() hangs (known Supabase issue, especially
+    // on mobile after tab suspension), don't leave the user stuck on the
+    // loading spinner forever. Fall back to unauthenticated after 5s — the
+    // onAuthStateChange listener will still update state if a session arrives.
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.warn('[Auth] getSession() timed out, falling back');
+        finish(null);
+      }
+    }, 5000);
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        resolved = true;
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
