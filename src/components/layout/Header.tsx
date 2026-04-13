@@ -14,10 +14,26 @@ const Header: React.FC = () => {
         {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 gradient-coral rounded-xl flex items-center justify-center shadow-glow-coral">
-            <span className="text-white text-lg font-bold">W</span>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Vault door outer ring */}
+              <circle cx="11" cy="11" r="9.5" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.5)" strokeWidth="1"/>
+              {/* Inner groove */}
+              <circle cx="11" cy="11" r="6.5" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
+              {/* Wheel spokes */}
+              <line x1="11" y1="5.5" x2="11" y2="16.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="5.5" y1="11" x2="16.5" y2="11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              {/* Center hub */}
+              <circle cx="11" cy="11" r="2.2" fill="white"/>
+              <circle cx="11" cy="11" r="0.9" fill="rgba(255,107,107,0.8)"/>
+              {/* Rivets */}
+              <circle cx="11" cy="2" r="0.9" fill="rgba(255,255,255,0.6)"/>
+              <circle cx="20" cy="11" r="0.9" fill="rgba(255,255,255,0.6)"/>
+              <circle cx="11" cy="20" r="0.9" fill="rgba(255,255,255,0.6)"/>
+              <circle cx="2" cy="11" r="0.9" fill="rgba(255,255,255,0.6)"/>
+            </svg>
           </div>
           <span className="text-lg font-bold text-warm-800 tracking-tight">
-            Walt-Tab
+            Valt-tab
           </span>
         </div>
 

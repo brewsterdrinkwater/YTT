@@ -1,8 +1,8 @@
-# Walt-Tab
+# Valt-tab
 
-A personal data management application built for human experience. Walt-Tab organizes all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
+A personal data management application built for human experience. Valt-tab organizes all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
 
-**Walt-Tab is a product of Alt-Tab.**
+**Valt-tab is a product of Alt-Tab.**
 
 ## Features
 
