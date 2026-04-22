@@ -101,13 +101,13 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
   // Google Maps entries from restaurant list
   const googleMapsEntries = useMemo(() => {
     return restaurantsList
-      .filter((r) => r.googleMapsUrl || r.googleMapsUri)
+      .filter((r) => r.googleMapsUrl || r.googleMapsUrl)
       .map((r) => ({
         id: r.id,
         name: r.name,
         cuisine: r.cuisine,
         neighborhood: r.neighborhood,
-        url: r.googleMapsUrl || r.googleMapsUri,
+        url: r.googleMapsUrl || r.googleMapsUrl,
         isNew: !r.lastVisited,
         city: r.city,
       }));
@@ -462,9 +462,9 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
                             {r.neighborhood && <span>• {r.neighborhood}</span>}
                           </div>
                         </div>
-                        {(r.googleMapsUrl || r.googleMapsUri) && (
+                        {(r.googleMapsUrl || r.googleMapsUrl) && (
                           <a
-                            href={r.googleMapsUrl || r.googleMapsUri || '#'}
+                            href={r.googleMapsUrl || r.googleMapsUrl || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="shrink-0 ml-2 px-3 py-1.5 bg-brand-ocean/10 text-brand-ocean text-xs font-semibold rounded-lg hover:bg-brand-ocean/20 transition-colors"
