@@ -64,6 +64,11 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
     [restaurantsList]
   );
 
+  const [filters, setFilters] = useState<Filters>(() => {
+    const saved = storageService.get<Filters>(STORAGE_KEYS.DECIDE_FILTERS);
+    return saved || DEFAULT_FILTERS;
+  });
+
   // Compute neighborhoods/cuisines scoped to the currently selected city filter
   const cityRestaurants = useMemo(
     () =>
@@ -81,11 +86,6 @@ const DecideMode: React.FC<Props> = ({ onClose }) => {
     () => [...new Set(cityRestaurants.map((r) => r.cuisine).filter(Boolean))] as string[],
     [cityRestaurants]
   );
-
-  const [filters, setFilters] = useState<Filters>(() => {
-    const saved = storageService.get<Filters>(STORAGE_KEYS.DECIDE_FILTERS);
-    return saved || DEFAULT_FILTERS;
-  });
 
   // On first open, snap city to detected location if filter hasn't been manually set
   useEffect(() => {
