@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useLists } from '../../contexts/ListsContext';
 
 /**
- * Walt-tab Navigation Component v2
+ * Valt-Tab Navigation Component v2
  * Mobile: Fixed bottom bar with 4 core tabs + floating share button
  * Desktop: Top bar below header
  */

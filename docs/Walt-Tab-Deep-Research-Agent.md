@@ -1,10 +1,10 @@
-# Walt-Tab - Personal Life Tracking App
+# Valt-Tab - Personal Life Tracking App
 
 ## Mission
 
-Walt-Tab is a personal data management application built for human experience. It helps you organize all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
+Valt-Tab is a personal data management application built for human experience. It helps you organize all of your information, recommendations, and opinions from real life and online, transforming them into real-world lived experiences.
 
-**Walt-Tab is a product of Alt-Tab.**
+**Valt-Tab is a product of Alt-Tab.**
 
 The app provides a simple, intentional way to:
 
@@ -14,7 +14,7 @@ The app provides a simple, intentional way to:
 - **Research and discover** new artists, authors, and creators to explore
 - **Build personal lists** of music to listen to, books to read, and films to watch
 
-Walt-Tab is built with privacy in mind—your data stays on your device unless you explicitly choose to integrate external services.
+Valt-Tab is built with privacy in mind—your data stays on your device unless you explicitly choose to integrate external services.
 
 ---
 
@@ -22,7 +22,7 @@ Walt-Tab is built with privacy in mind—your data stays on your device unless y
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                       Walt-Tab Application                          │
+│                       Valt-Tab Application                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
@@ -138,7 +138,7 @@ The Deep Research Agent is available on every page:
 
 ## Persistent Storage
 
-Walt-Tab uses browser localStorage for all data persistence. This means your data stays on your device and is available offline.
+Valt-Tab uses browser localStorage for all data persistence. This means your data stays on your device and is available offline.
 
 ### Storage Keys
 
@@ -393,7 +393,7 @@ export default async function handler(req, res) {
 | Anthropic API | N/A | ~$0.03/research query |
 | Web Hosting | Varies by provider | $5-20/mo |
 | Supabase DB | 500MB, 50K requests | $25/mo |
-| Domain (www.walt-tab.com) | N/A | $12/year |
+| Domain (www.valt-tab.com) | N/A | $12/year |
 
 **For personal use**: Likely $0-5/month total
 

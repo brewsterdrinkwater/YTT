@@ -77,11 +77,11 @@ const VersionSelector: React.FC = () => {
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Welcome to Walt-Tab
+              Welcome to Valt-Tab
             </h1>
-            <p className="text-xl text-gray-600">Your personal life dashboard</p>
+            <p className="text-xl text-gray-600">Your private personal vault</p>
             <p className="text-gray-500 mt-4">
-              Track your life, your way. Choose how you want to use Walt-Tab.
+              Track your life, your way. Choose how you want to use Valt-Tab.
             </p>
           </div>
 

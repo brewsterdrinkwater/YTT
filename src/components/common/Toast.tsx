@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 
 /**
- * Walt-tab Toast Component
+ * Valt-Tab Toast Component
  * Brutalist style: Sharp corners, high contrast, bold messaging
  */
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useAuth } from '../../contexts/AuthContext';
+import VaultIcon from '../VaultIcon';
 
 const Header: React.FC = () => {
   const { setIsSettingsOpen } = useApp();
@@ -13,11 +14,11 @@ const Header: React.FC = () => {
       <div className="max-w-content mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 gradient-coral rounded-xl flex items-center justify-center shadow-glow-coral">
-            <span className="text-white text-lg font-bold">W</span>
+          <div style={{ color: 'var(--color-vault-accent)' }}>
+            <VaultIcon size={28} />
           </div>
-          <span className="text-lg font-bold text-warm-800 tracking-tight">
-            Walt-Tab
+          <span className="text-lg font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-vault-text)' }}>
+            Valt-Tab
           </span>
         </div>
 

@@ -11,7 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    storageKey: 'walt-tab-auth',
+    storageKey: 'valt-tab-auth',
     storage: localStorage,
     // Session will persist until JWT expires (configured in Supabase dashboard)
     // Default is 1 week, can be extended to 2 weeks in Supabase Auth settings

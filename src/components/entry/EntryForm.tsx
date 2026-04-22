@@ -153,7 +153,7 @@ const EntryForm: React.FC = () => {
       // Supabase REST API: POST with Prefer: resolution=merge-duplicates for upsert.
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const authToken = localStorage.getItem('walt-tab-auth');
+      const authToken = localStorage.getItem('valt-tab-auth');
       let accessToken = supabaseKey; // fallback to anon key
       if (authToken) {
         try {

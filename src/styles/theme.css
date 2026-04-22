@@ -1,0 +1,123 @@
+:root {
+  --color-vault-black:   #0D0F14;
+  --color-vault-navy:    #141928;
+  --color-vault-steel:   #1E2740;
+  --color-vault-accent:  #4F8EF7;
+  --color-vault-gold:    #C9A84C;
+  --color-vault-text:    #E8EAF0;
+  --color-vault-muted:   #6B7394;
+  --color-vault-border:  #252B3B;
+  --color-vault-success: #3ECF8E;
+  --color-vault-danger:  #F05454;
+
+  --font-display: 'Sora', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+}
+
+body {
+  background: var(--color-vault-black);
+  color: var(--color-vault-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.text-display {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.text-h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.text-h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.text-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-small {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-vault-muted);
+}
+
+.vault-card {
+  background: var(--color-vault-steel);
+  border: 1px solid var(--color-vault-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.vault-card:hover {
+  border-color: var(--color-vault-accent);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--color-vault-accent);
+  color: white;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-vault-border);
+  color: var(--color-vault-text);
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.2s ease-out;
+}
+
+@keyframes vault-unlock {
+  0%   { transform: rotate(-15deg); opacity: 0.6; }
+  100% { transform: rotate(0deg);   opacity: 1; }
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-vault-navy);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-vault-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-vault-muted);
+}

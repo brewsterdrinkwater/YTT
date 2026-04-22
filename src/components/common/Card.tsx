@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 
 /**
- * Walt-tab Card Component
+ * Valt-Tab Card Component
  * Brutalist style: white background, subtle border, minimal shadow
  */
 interface CardProps {

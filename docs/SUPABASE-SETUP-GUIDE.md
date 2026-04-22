@@ -1,6 +1,6 @@
-# Walt-Tab Supabase Setup Guide
+# Valt-Tab Supabase Setup Guide
 
-Complete step-by-step guide to add authentication and persistent storage to Walt-Tab.
+Complete step-by-step guide to add authentication and persistent storage to Valt-Tab.
 
 ---
 
@@ -8,7 +8,7 @@ Complete step-by-step guide to add authentication and persistent storage to Walt
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Your Walt-Tab App                       │
+│                     Your Valt-Tab App                       │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │   Login     │  │   Entries   │  │   CSV Export        │  │
 │  │   Page      │  │   CRUD      │  │   (taxes, mapping)  │  │
@@ -83,7 +83,7 @@ Paste this SQL and click **Run**:
 
 ```sql
 -- =============================================
--- Walt-Tab Database Schema
+-- Valt-Tab Database Schema
 -- =============================================
 
 -- Enable UUID extension
@@ -373,19 +373,19 @@ You should see "Success. No rows returned" - that means it worked.
 
 Go to **Authentication → URL Configuration**:
 
-- **Site URL:** `https://www.walt-tab.com`
+- **Site URL:** `https://www.valt-tab.com`
   - This is the PRIMARY redirect URL after OAuth authentication
   - **MUST be set to your production domain, NOT the Vercel URL**
   - The app will NOT work correctly if this points to a Vercel URL
 
 - **Redirect URLs:** Add ALL of these (one per line):
-  - `https://www.walt-tab.com`
-  - `https://www.walt-tab.com/`
-  - `https://www.walt-tab.com/dashboard`
+  - `https://www.valt-tab.com`
+  - `https://www.valt-tab.com/`
+  - `https://www.valt-tab.com/dashboard`
   - `http://localhost:5173` (for development)
   - `http://localhost:5173/` (for development)
 
-**Verification:** After saving, when you click "Sign in with Google", the OAuth flow should redirect back to `https://www.walt-tab.com`, NOT to any Vercel URL.
+**Verification:** After saving, when you click "Sign in with Google", the OAuth flow should redirect back to `https://www.valt-tab.com`, NOT to any Vercel URL.
 
 ### Step 3.3b: Update Google OAuth Redirect URIs
 
@@ -397,7 +397,7 @@ If using Google Sign-In, you must also update Google Cloud Console:
 4. Under **Authorized redirect URIs**, ensure you have:
    - `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
 5. Under **Authorized JavaScript origins**, add:
-   - `https://www.walt-tab.com`
+   - `https://www.valt-tab.com`
 
 ### Step 3.4: Configure Session Duration (2 Weeks)
 

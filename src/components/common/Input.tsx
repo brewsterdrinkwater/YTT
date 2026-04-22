@@ -1,7 +1,7 @@
 import React, { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from 'react';
 
 /**
- * Walt-tab Input Components
+ * Valt-Tab Input Components
  * Brutalist style: clean borders, high contrast focus states
  */
 

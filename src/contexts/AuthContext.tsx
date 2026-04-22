@@ -9,12 +9,12 @@ const getSiteUrl = (): string => {
   if (import.meta.env.VITE_SITE_URL) {
     return import.meta.env.VITE_SITE_URL;
   }
-  // In production, always use the walt-tab.com domain
+  // In production, always use the valt-tab.com domain
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://www.walt-tab.com';
+    return 'https://www.valt-tab.com';
   }
   // For local development, use current origin
-  return typeof window !== 'undefined' ? window.location.origin : 'https://www.walt-tab.com';
+  return typeof window !== 'undefined' ? window.location.origin : 'https://www.valt-tab.com';
 };
 
 interface AuthContextType {

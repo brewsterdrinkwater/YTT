@@ -276,7 +276,7 @@ const QuickShare: React.FC<QuickShareProps> = ({ initialUrl, onComplete }) => {
           </div>
           {/* Instagram hint */}
           <p className="text-xs text-warm-400 flex items-center gap-1.5">
-            <span>📸</span> Tip: Share Instagram posts directly to Walt-Tab from the share menu
+            <span>📸</span> Tip: Share Instagram posts directly to Valt-Tab from the share menu
           </p>
         </div>
       ) : (

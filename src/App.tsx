@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AppProvider } from './contexts/AppContext';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { EntriesProvider, useEntries } from './contexts/EntriesContext';
@@ -9,9 +9,12 @@ import { ListsProvider, useLists } from './contexts/ListsContext';
 import { InventoryProvider } from './contexts/InventoryContext';
 import { notificationService } from './services/notificationService';
 
-// Layout components
-import Header from './components/layout/Header';
-import Navigation from './components/layout/Navigation';
+// New vault shell components
+import TopBar from './components/TopBar';
+import Sidebar from './components/Sidebar';
+import CommandPalette from './components/CommandPalette';
+
+// Legacy layout components (kept for SettingsPanel, Toast)
 import SettingsPanel from './components/layout/SettingsPanel';
 import Toast from './components/common/Toast';
 
@@ -120,16 +123,49 @@ const AppContent: React.FC = () => {
     document.documentElement.setAttribute('data-ui-style', settings.uiStyle);
   }, [settings.uiStyle]);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Cmd+K / Ctrl+K opens command palette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // Show loading while checking auth or loading settings from Supabase
   if (loading || settingsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-warm-50">
-        <div className="text-center">
-          <div className="w-14 h-14 gradient-coral rounded-2xl flex items-center justify-center mx-auto shadow-glow-coral animate-pulse">
-            <span className="text-white text-2xl font-bold">W</span>
-          </div>
-          <p className="mt-4 text-warm-500 font-medium">Loading...</p>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--color-vault-black)',
+        flexDirection: 'column',
+        gap: '16px',
+      }}>
+        <div style={{ animation: 'vault-unlock 0.6s ease-out' }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="var(--color-vault-accent)" strokeWidth="2" strokeLinecap="round">
+            <circle cx="24" cy="24" r="20" />
+            <circle cx="24" cy="24" r="12" />
+            <circle cx="24" cy="24" r="3" fill="var(--color-vault-accent)" />
+            <line x1="24" y1="12" x2="24" y2="4" />
+            <line x1="24" y1="36" x2="24" y2="44" />
+            <line x1="12" y1="24" x2="4" y2="24" />
+            <line x1="36" y1="24" x2="44" y2="24" />
+          </svg>
         </div>
+        <p style={{ color: 'var(--color-vault-muted)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+          Opening your vault...
+        </p>
       </div>
     );
   }
@@ -145,29 +181,53 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen min-h-dvh bg-warm-50 flex flex-col">
-      <Header />
-      <Navigation />
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      background: 'var(--color-vault-black)',
+      overflow: 'hidden',
+    }}>
+      <TopBar
+        onMenuToggle={() => setSidebarCollapsed(c => !c)}
+        onSearchOpen={() => setPaletteOpen(true)}
+      />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          currentPath={location.pathname}
+          onNavigate={(path) => navigate(path)}
+        />
+        <main style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '32px 40px',
+          background: 'var(--color-vault-black)',
+        }}>
+          <Routes>
+            <Route path="/" element={<SmartHomePage />} />
+            <Route path="/entry" element={<EntryForm />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/missing-days" element={<MissingDaysPage />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/tools" element={<ToolsPage />} />
+            <Route path="/lists" element={<ListPage />} />
+            <Route path="/saved" element={<SavedItemsPage />} />
+            <Route path="/share" element={<ShareTargetPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            {/* Redirect old /search to /tools */}
+            <Route path="/search" element={<Navigate to="/tools" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
 
-      <main className="flex-1 pb-28 md:pb-6 w-full">
-        <Routes>
-          <Route path="/" element={<SmartHomePage />} />
-          <Route path="/entry" element={<EntryForm />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/missing-days" element={<MissingDaysPage />} />
-          <Route path="/timeline" element={<Timeline />} />
-          <Route path="/tools" element={<ToolsPage />} />
-          <Route path="/lists" element={<ListPage />} />
-          <Route path="/saved" element={<SavedItemsPage />} />
-          <Route path="/share" element={<ShareTargetPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/inventory" element={<InventoryPage />} />
-          {/* Redirect old /search to /tools */}
-          <Route path="/search" element={<Navigate to="/tools" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-
+      <CommandPalette
+        isOpen={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onNavigate={(path) => navigate(path)}
+      />
       <NotificationInit />
       <SettingsPanel />
       <Toast />
