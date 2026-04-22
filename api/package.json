@@ -1,7 +1,7 @@
 {
   "name": "walt-tab-api",
   "version": "1.0.0",
-  "description": "Backend proxy for Walt-Tab LLM features",
+  "description": "Backend proxy for Valt-Tab LLM features",
   "main": "server.js",
   "type": "module",
   "scripts": {

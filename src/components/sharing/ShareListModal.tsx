@@ -181,7 +181,7 @@ const ShareListModal: React.FC<ShareListModalProps> = ({
           {/* Info */}
           <div className="bg-tab-blue/10 p-3 rounded-sm">
             <p className="text-sm text-tab-blue">
-              <strong>Note:</strong> The person you share with must have a Walt-Tab account
+              <strong>Note:</strong> The person you share with must have a Valt-Tab account
               with their phone number registered to see the shared list.
             </p>
           </div>

@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useCallback } from 'react';
 
 /**
- * Walt-tab Modal Component
+ * Valt-Tab Modal Component
  * Brutalist style: Clean borders, high contrast, minimal decoration
  */
 

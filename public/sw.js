@@ -1,4 +1,4 @@
-// Walt-Tab Service Worker
+// Valt-Tab Service Worker
 // Enables PWA installation, share target support, and push notifications
 
 const CACHE_NAME = 'walt-tab-v2';
@@ -67,7 +67,7 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
   };
 
-  let title = 'Walt-Tab';
+  let title = 'Valt-Tab';
   let options = defaultOptions;
 
   if (event.data) {
@@ -90,7 +90,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  // Try to find and focus an existing Walt-Tab tab
+  // Try to find and focus an existing Valt-Tab tab
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       // Focus existing window if available

@@ -139,8 +139,8 @@ const analyzeCache = new ResponseCache(60 * 60 * 1000);        // 1 hour
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://walt-tab.com',
-  'https://www.walt-tab.com',
+  'https://valt-tab.com',
+  'https://www.valt-tab.com',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -508,7 +508,7 @@ For sources, include 5-8 high-quality primary and secondary sources only.`;
 }
 
 app.listen(PORT, () => {
-  console.log(`Walt-Tab API server running on port ${PORT}`);
+  console.log(`Valt-Tab API server running on port ${PORT}`);
   console.log(`Rate limits: Weather 30/hr, Analyze 20/hr, Research 15/hr per IP`);
   console.log(`DeepSeek queue concurrency: ${deepseekQueue.concurrency}`);
 });

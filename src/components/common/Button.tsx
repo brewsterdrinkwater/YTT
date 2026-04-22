@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../utils/cn';
 
 /**
- * Walt-tab Button Component
+ * Valt-Tab Button Component
  * Brutalist style: high contrast, minimal decoration
  */
 const buttonVariants = cva(

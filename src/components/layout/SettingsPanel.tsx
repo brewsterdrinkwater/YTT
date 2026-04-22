@@ -20,7 +20,7 @@ const ENTRY_FIELD_OPTIONS: { key: EntryFieldType; label: string; icon: string }[
 ];
 
 /**
- * Walt-tab Settings Panel
+ * Valt-Tab Settings Panel
  * Brutalist style: Clean sections, high contrast, minimal decoration
  */
 

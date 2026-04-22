@@ -1,4 +1,4 @@
-# Walt-Tab UI/UX Options - Mockups
+# Valt-Tab UI/UX Options - Mockups
 
 ## Option 1: Modern Flow (Instagram/Tinder Style)
 

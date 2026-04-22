@@ -6,7 +6,7 @@ import Button from '../common/Button';
 import { Input } from '../common/Input';
 
 /**
- * Walt-tab Voice Input Component
+ * Valt-Tab Voice Input Component
  * Add items to lists using voice commands
  * Examples: "Add apples to groceries", "Add Mighty Ducks to watchlist"
  */

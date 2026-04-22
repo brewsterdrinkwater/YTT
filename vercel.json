@@ -36,7 +36,7 @@
           "value": "ytt-green.vercel.app"
         }
       ],
-      "destination": "https://www.walt-tab.com",
+      "destination": "https://www.valt-tab.com",
       "permanent": true
     },
     {
@@ -47,7 +47,7 @@
           "value": "ytt-green.vercel.app"
         }
       ],
-      "destination": "https://www.walt-tab.com/:path*",
+      "destination": "https://www.valt-tab.com/:path*",
       "permanent": true
     }
   ]

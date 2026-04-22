@@ -1,4 +1,4 @@
-# Walt-Tab Features Guide
+# Valt-Tab Features Guide
 
 ## Location Days Counter
 
@@ -27,7 +27,7 @@ The counter automatically resets on **January 1st** each year.
 
 ## List Sharing
 
-Share your lists with other Walt-Tab users via phone number.
+Share your lists with other Valt-Tab users via phone number.
 
 ### Setup (One-Time)
 1. Go to **Settings** (gear icon in header)
@@ -54,7 +54,7 @@ This allows others to share lists with you.
 3. Tap **Remove**
 
 ### Status Indicators
-- **Connected**: The person has a Walt-Tab account with that phone number
+- **Connected**: The person has a Valt-Tab account with that phone number
 - **Pending**: Waiting for them to add their phone number to their account
 
 ---

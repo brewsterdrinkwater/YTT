@@ -1,11 +1,11 @@
 {
-  "name": "Walt-Tab",
-  "short_name": "Walt-Tab",
-  "description": "Own Your Story. Navigate Your Life.",
+  "name": "Valt-Tab",
+  "short_name": "Valt-Tab",
+  "description": "Your life. Locked in.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#0D0F14",
+  "theme_color": "#0D0F14",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -35,7 +35,7 @@
     {
       "name": "Quick Share",
       "short_name": "Share",
-      "description": "Save content to your lists",
+      "description": "Save content to your vault",
       "url": "/share",
       "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     }
