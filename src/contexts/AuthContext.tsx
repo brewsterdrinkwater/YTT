@@ -24,6 +24,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  linkGoogleCalendar: () => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -76,7 +77,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithGoogle = async () => {
     const redirectUrl = getSiteUrl();
-    console.log('[Auth] OAuth redirect URL:', redirectUrl);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+    return { error };
+  };
+
+  // Request Google Calendar access separately — only called from Settings
+  // when the user explicitly enables calendar integration.
+  const linkGoogleCalendar = async () => {
+    const redirectUrl = getSiteUrl();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -104,6 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signUp,
         signIn,
         signInWithGoogle,
+        linkGoogleCalendar,
         signOut,
       }}
     >

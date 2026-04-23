@@ -52,7 +52,7 @@ const SECTIONS: SectionConfig[] = [
 const SettingsPage: React.FC = () => {
   const { settings, updateSettings, setVersion, toggleApi, resetSettings } = useSettings();
   const { entries, migrateFromLocalStorage } = useEntries();
-  const { user, signOut } = useAuth();
+  const { user, signOut, linkGoogleCalendar } = useAuth();
   const { showToast } = useApp();
 
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
@@ -521,7 +521,12 @@ const SettingsPage: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={settings.apis[api.key]}
-                        onChange={() => toggleApi(api.key)}
+                        onChange={() => {
+                          if (api.key === 'calendar' && !settings.apis.calendar) {
+                            linkGoogleCalendar();
+                          }
+                          toggleApi(api.key);
+                        }}
                         className="w-5 h-5 text-black rounded-sm border-2 border-black focus:ring-black"
                       />
                     </label>
