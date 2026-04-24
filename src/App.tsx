@@ -125,8 +125,20 @@ const AppContent: React.FC = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 768);
   const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Track mobile breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+      if (e.matches) setSidebarCollapsed(true);
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Cmd+K / Ctrl+K opens command palette
   useEffect(() => {
@@ -139,6 +151,11 @@ const AppContent: React.FC = () => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobile) setSidebarCollapsed(true);
+  };
 
   // Show loading while checking auth or loading settings from Supabase
   if (loading || settingsLoading) {
@@ -184,24 +201,39 @@ const AppContent: React.FC = () => {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      height: '100dvh',
       background: 'var(--color-vault-black)',
       overflow: 'hidden',
     }}>
       <TopBar
+        isMobile={isMobile}
         onMenuToggle={() => setSidebarCollapsed(c => !c)}
         onSearchOpen={() => setPaletteOpen(true)}
       />
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* Backdrop for mobile sidebar */}
+        {isMobile && !sidebarCollapsed && (
+          <div
+            onClick={() => setSidebarCollapsed(true)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.6)',
+              zIndex: 55,
+            }}
+          />
+        )}
         <Sidebar
           collapsed={sidebarCollapsed}
+          isMobile={isMobile}
           currentPath={location.pathname}
-          onNavigate={(path) => navigate(path)}
+          onNavigate={handleNavigate}
         />
         <main style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '32px 40px',
+          padding: isMobile ? '16px' : '32px 40px',
+          paddingBottom: isMobile ? 'calc(16px + env(safe-area-inset-bottom, 0px))' : '32px',
           background: 'var(--color-vault-black)',
         }}>
           <Routes>
