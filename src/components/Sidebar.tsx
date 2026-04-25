@@ -36,25 +36,49 @@ const NAV: NavGroup[] = [
 
 interface SidebarProps {
   collapsed: boolean;
+  isMobile?: boolean;
   currentPath: string;
   onNavigate: (path: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, currentPath, onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed, isMobile, currentPath, onNavigate }) => {
+  // On mobile: sidebar is a fixed overlay drawer (slide in/out)
+  // On desktop: sidebar is inline and collapses to icon-only
+  const showLabels = isMobile || !collapsed;
+
+  const navStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
+        top: 'calc(56px + env(safe-area-inset-top, 0px))',
+        left: 0,
+        bottom: 0,
+        width: '260px',
+        background: 'var(--color-vault-navy)',
+        borderRight: '1px solid var(--color-vault-border)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        transform: collapsed ? 'translateX(-100%)' : 'translateX(0)',
+        transition: 'transform 0.25s ease',
+        zIndex: 60,
+        willChange: 'transform',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }
+    : {
+        width: collapsed ? '56px' : '220px',
+        background: 'var(--color-vault-navy)',
+        borderRight: '1px solid var(--color-vault-border)',
+        height: '100%',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        transition: 'width 0.2s ease',
+        flexShrink: 0,
+      };
+
   return (
-    <nav style={{
-      width: collapsed ? '56px' : '220px',
-      background: 'var(--color-vault-navy)',
-      borderRight: '1px solid var(--color-vault-border)',
-      height: '100%',
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      transition: 'width 0.2s ease',
-      flexShrink: 0,
-    }}>
+    <nav style={navStyle}>
       {NAV.map(group => (
         <div key={group.section} style={{ marginTop: '16px' }}>
-          {!collapsed && (
+          {showLabels && (
             <div style={{
               padding: '4px 16px',
               fontSize: '10px',
@@ -72,13 +96,13 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, currentPath, onNavigate })
               <button
                 key={item.path}
                 onClick={() => onNavigate(item.path)}
-                title={collapsed ? item.label : undefined}
+                title={!showLabels ? item.label : undefined}
                 style={{
                   width: '100%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  padding: collapsed ? '10px 16px' : '9px 16px',
+                  gap: '12px',
+                  padding: isMobile ? '14px 20px' : (collapsed ? '10px 16px' : '9px 16px'),
                   background: active ? 'rgba(79,142,247,0.1)' : 'transparent',
                   borderLeft: active ? '3px solid var(--color-vault-accent)' : '3px solid transparent',
                   border: 'none',
@@ -87,12 +111,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, currentPath, onNavigate })
                   borderBottom: 'none',
                   color: active ? 'var(--color-vault-text)' : 'var(--color-vault-muted)',
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '15px' : '14px',
                   fontFamily: 'var(--font-body)',
                   textAlign: 'left',
                   transition: 'background 0.1s, color 0.1s',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
+                  minHeight: 0,
+                  minWidth: 0,
                 }}
                 onMouseOver={e => {
                   if (!active) {
@@ -107,8 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, currentPath, onNavigate })
                   }
                 }}
               >
-                <span style={{ fontSize: '16px', flexShrink: 0 }}>{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
+                <span style={{ fontSize: isMobile ? '20px' : '16px', flexShrink: 0 }}>{item.icon}</span>
+                {showLabels && <span>{item.label}</span>}
               </button>
             );
           })}
