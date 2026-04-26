@@ -4,6 +4,7 @@ interface NavItem {
   icon: string;
   label: string;
   path: string;
+  featured?: boolean;
 }
 
 interface NavGroup {
@@ -12,25 +13,16 @@ interface NavGroup {
 }
 
 const NAV: NavGroup[] = [
+  { section: '', items: [
+    { icon: '📊', label: 'Dashboard', path: '/dashboard', featured: true },
+  ]},
   { section: 'PERSONAL', items: [
-    { icon: '📅', label: 'Today',    path: '/' },
-    { icon: '📆', label: 'Calendar', path: '/calendar' },
-    { icon: '📓', label: 'Journal',  path: '/entry' },
-  ]},
-  { section: 'FAMILY', items: [
-    { icon: '👨‍👩‍👧', label: 'Family',    path: '/family' },
-    { icon: '📇', label: 'Contacts', path: '/contacts' },
-    { icon: '🗂️', label: 'Documents', path: '/documents' },
-  ]},
-  { section: 'LIFE', items: [
-    { icon: '🎯', label: 'Goals',    path: '/goals' },
-    { icon: '💡', label: 'Notes',    path: '/notes' },
-    { icon: '📊', label: 'Insights', path: '/dashboard' },
+    { icon: '📅', label: 'Today',     path: '/' },
+    { icon: '📦', label: 'Inventory', path: '/inventory' },
   ]},
   { section: 'VAULT', items: [
-    { icon: '🔒', label: 'Private',  path: '/timeline' },
-    { icon: '⚙️', label: 'Settings', path: '/settings' },
-    { icon: '🔐', label: 'Security', path: '/security' },
+    { icon: '🔒', label: 'Private',   path: '/timeline' },
+    { icon: '⚙️', label: 'Settings',  path: '/settings' },
   ]},
 ];
 
@@ -42,8 +34,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, isMobile, currentPath, onNavigate }) => {
-  // On mobile: sidebar is a fixed overlay drawer (slide in/out)
-  // On desktop: sidebar is inline and collapses to icon-only
   const showLabels = isMobile || !collapsed;
 
   const navStyle: React.CSSProperties = isMobile
@@ -77,8 +67,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, isMobile, currentPath, onN
   return (
     <nav style={navStyle}>
       {NAV.map(group => (
-        <div key={group.section} style={{ marginTop: '16px' }}>
-          {showLabels && (
+        <div key={group.section || '__top'} style={{ marginTop: '16px' }}>
+          {showLabels && group.section && (
             <div style={{
               padding: '4px 16px',
               fontSize: '10px',
@@ -92,6 +82,59 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, isMobile, currentPath, onN
           )}
           {group.items.map(item => {
             const active = currentPath === item.path;
+            const isFeatured = item.featured;
+
+            if (isFeatured) {
+              return (
+                <div key={item.path} style={{ padding: collapsed && !isMobile ? '0 4px' : '0 8px' }}>
+                  <button
+                    onClick={() => onNavigate(item.path)}
+                    title={!showLabels ? item.label : undefined}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
+                      gap: '10px',
+                      padding: isMobile ? '12px 14px' : '10px 12px',
+                      background: active ? 'rgba(79,142,247,0.18)' : 'rgba(79,142,247,0.08)',
+                      border: `1px solid ${active ? 'rgba(79,142,247,0.5)' : 'rgba(79,142,247,0.25)'}`,
+                      borderRadius: '8px',
+                      color: active ? 'var(--color-vault-text)' : 'var(--color-vault-accent)',
+                      cursor: 'pointer',
+                      fontSize: isMobile ? '15px' : '14px',
+                      fontFamily: 'var(--font-body)',
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      minHeight: 0,
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                    }}
+                    onMouseOver={e => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'rgba(79,142,247,0.14)';
+                        e.currentTarget.style.borderColor = 'rgba(79,142,247,0.4)';
+                        e.currentTarget.style.color = 'var(--color-vault-text)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!active) {
+                        e.currentTarget.style.background = 'rgba(79,142,247,0.08)';
+                        e.currentTarget.style.borderColor = 'rgba(79,142,247,0.25)';
+                        e.currentTarget.style.color = 'var(--color-vault-accent)';
+                      }
+                    }}
+                  >
+                    <span style={{ fontSize: isMobile ? '20px' : '18px', flexShrink: 0 }}>{item.icon}</span>
+                    {showLabels && <span>{item.label}</span>}
+                  </button>
+                </div>
+              );
+            }
+
             return (
               <button
                 key={item.path}
